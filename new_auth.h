@@ -36,6 +36,17 @@ void enable_terminal_echo(struct termios old);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
+
+
+/*-----------------FIXES-START------------------*/
+
+// 1. all methods that return a pointer by passing it as an arguments should be modified 
+//    to return the pointer as a return value.
+
+/*------------------FIXES-END-------------------*/
+
+
+
 // auth function returns 0 for good auth (no errors), 
 // and -1 for errors.  
 
@@ -89,38 +100,38 @@ int signin()
 {
     int buff_len = PASS_LENGTH;
     int hash_len = HASH_LENGTH;
-    int pass_reading_code = 0;
-    int input_pass_len = 0;
+    int pass_code = 0;
+    int pass_len = 0;
 
-    char *input_pass = (char *) sodium_malloc(buff_len);
-    unsigned char *input_hash = (unsigned char *) sodium_malloc(hash_len);
+    unsigned char *pass = (unsigned char *) sodium_malloc(buff_len);
+    unsigned char *hash = (unsigned char *) sodium_malloc(hash_len);
 
     printf("%s", "choose a password: ");
 
-    if ((pass_reading_code = psm_read_pass(input_pass)) == -1) {
+    if ((pass_code = psm_read_pass(pass)) == -1) {
         return -1;
-    } else if (pass_reading_code == 0) {
+    } else if (pass_code == 0) {
         return 0;
     }
     
     printf("%s", "\n");
 
-    if (auth_pass(input_pass) == -1) {
+    if (auth_pass(pass) == -1) {
         return 0;
     }
 
-    input_pass_len = strlen(input_pass);
+    pass_len = strlen(pass);
 
-    if (generate_masterkey(input_pass, input_hash) != 0) {
+    if (generate_masterkey(pass, hash) != 0) {
         return -1;
     }
 
-    if (store_key(input_hash, HASH_FILE_PATH) == -1) {
+    if (store_key(hash, HASH_FILE_PATH) == -1) {
         return -1;
     }
 
-    sodium_free(input_pass);
-    sodium_free(input_hash);
+    sodium_free(pass);
+    sodium_free(hash);
 
     return 1;
 }
