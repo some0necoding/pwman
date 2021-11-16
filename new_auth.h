@@ -1,7 +1,16 @@
-#include <stdio.h>
-#include <sodium.h>
-#include <termios.h>
 #include <string.h>
+
+#ifndef ECHOCTL
+    #include <termios.h>
+#endif
+
+#ifndef STDIO_PLUS_PLUS
+    #include <stdioplusplus.h>
+#endif
+
+#ifndef SODIUM_PLUS_PLUS
+    #include <sodiumplusplus.h>
+#endif
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
@@ -52,7 +61,7 @@ void enable_terminal_echo(struct termios old);
 
 int auth(void) 
 {
-    int hash_file_size = get_file_size(HASH_FILE_PATH);
+    int hash_file_size = fsize(HASH_FILE_PATH);
     int correct_file_size = HASH_FILE_SIZE;
     int auth_code = 0;
 
@@ -72,25 +81,6 @@ int auth(void)
     }
 
     return 0;
-}
-
-int get_file_size(char *file_path)
-{
-    FILE *file = fopen(file_path, "r");
-    int size = 0;
-    
-    if (!file) {
-        perror("psm: allocation error\n");
-        return -1;
-    }
-
-    if (fseek(file, 0, SEEK_END) != 0) {
-        return -1;
-    }
-
-    size = ftell(file);
-
-    return size;
 }
 
 // signin function returns 1 for true (good signin),
