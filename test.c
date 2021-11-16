@@ -93,23 +93,8 @@
     - verify that indexes correspond or make it impossible to corrupt account-password relation
 */
 
-char *read_line(void);
-
 int main(int argc, char const *argv[])
 {    
     /* Hi, you can code here! */
-
-    int code = sodium_init();
-
-    char *file_path = "./test_file.txt";
-    unsigned char *key = (unsigned char *) sodium_malloc(crypto_secretstream_xchacha20poly1305_KEYBYTES);
-
-    crypto_secretstream_xchacha20poly1305_keygen(key);
-
-    if (encrypt_file(file_path, key) != 0) {
-        perror("psm: file encryption failed\n");
-        return -1;
-    }
-
     return 0;
 }
