@@ -34,14 +34,11 @@
 
 int signin(void);
 int login(void);
-int get_file_size(char *file_path);
 int psm_read_pass(char *buff);
 int auth_pass(char *password);
 int store_key(char *bytes, char *file_path);
 int get_hash(char *file_path, char *hash_and_salt);
 int if_char_occur_one(char *str, char *str_of_char);
-struct termios disable_terminal_echo();
-void enable_terminal_echo(struct termios old);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -179,7 +176,7 @@ int if_char_occur_one(char *str, char *str_of_char)
     int str_len = strlen(str_of_char);
 
     for (int i=0; i<str_len; i++) {
-        if (strchr(str, str_of_char[i]) != NULL) {
+        if (!strchr(str, str_of_char[i])) {
             return 0;
         }
     }
