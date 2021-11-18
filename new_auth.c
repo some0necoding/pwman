@@ -32,6 +32,7 @@
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
+int auth(void);
 int signin(void);
 int login(void);
 int psm_read_pass(char *buff);
@@ -39,6 +40,8 @@ int auth_pass(char *password);
 int store_key(char *bytes, char *file_path);
 int get_hash(char *file_path, char *hash_and_salt);
 int if_char_occur_one(char *str, char *str_of_char);
+int generate_masterkey(char *password, unsigned char *key);
+int write_key(unsigned char *key, char *file_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
