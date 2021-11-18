@@ -1,4 +1,6 @@
-#include <string.h>
+#ifndef NULL
+    #include <string.h>
+#endif
 
 #ifndef TERMIOS_PLUS_PLUS
     #include <termiosplusplus.h>
@@ -40,7 +42,6 @@ int auth_pass(char *password);
 int store_key(char *bytes, char *file_path);
 int get_hash(char *file_path, char *hash_and_salt);
 int if_char_occur_one(char *str, char *str_of_char);
-int generate_masterkey(char *password, unsigned char *key);
 int write_key(unsigned char *key, char *file_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
@@ -164,7 +165,7 @@ int auth_pass(char *password)
     char *upper = UPPER;
 
     if (strlen(password) < min_len) {
-        printf("%s\n", "Your password must have at least 15 characters long");
+        printf("%s\n", "Your password must be at least 15 characters long");
         return -1;
     } else if (if_char_occur_one(password, nums) == -1 || if_char_occur_one(password, upper) == -1) {
         printf("%s\n", "Your password must contain at least 1 number and 1 uppercase letter");
@@ -185,63 +186,6 @@ int if_char_occur_one(char *str, char *str_of_char)
     }
 
     return -1;
-}
-
-int generate_masterkey(char *password, unsigned char *key)
-{
-    unsigned char *salt = (unsigned char *) sodium_malloc(crypto_pwhash_SALTBYTES);
-
-    randombytes_buf(salt, sizeof salt);
-
-    if (crypto_pwhash(key, sizeof key, 
-                      password, strlen(password), 
-                      salt, 
-                      crypto_pwhash_OPSLIMIT_SENSITIVE, 
-                      crypto_pwhash_MEMLIMIT_SENSITIVE, 
-                      crypto_pwhash_ALG_DEFAULT) != 0) 
-    {
-        sodium_free(salt);
-        return -1;
-    }
-
-    sodium_free(salt);
-    return 0;
-}
-
-int store_key(unsigned char *key, char *file_path)
-{
-    if (write_key(key, file_path) != 0) {
-        return -1;
-    }
-
-    if (encrypt(key, file_path) != 0) {
-        return -1;
-    }
-
-    return 0;
-}
-
-int write_key(unsigned char *key, char *file_path)
-{
-    FILE *key_file = fopen(file_path, "w"); // 'w' opening will automatically clear the file
-    int key_len = HASH_LENGTH;
-
-    if (!key_file) {
-        perror("psm: file opening error\n");
-        return -1;
-    }
-
-    for (int i=0; i<key_len; i++) {
-        int status = putc((int) key[i], key_file);
-        if (status == EOF) {
-            perror("psm: file writing error\n");
-            return -1;
-        }
-    }
-
-    fclose(key_file);
-
-    return 0;
 }
 
 // login function will return 1 for true (access allowed),

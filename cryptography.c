@@ -1,4 +1,6 @@
-#include <string.h>
+#ifndef NULL
+    #include <string.h>
+#endif
 
 #ifndef STDIO_PLUS_PLUS
     #include <stdioplusplus.h>
@@ -21,6 +23,9 @@
 unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t *cypher_text_len);
 int write_cypher_to_file(unsigned char *header, size_t header_len, unsigned char *cypher_text, size_t cypher_text_len, char *file_path);
 unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff);
+
+int generate_masterkey(char *password, unsigned char *key);
+int write_key(unsigned char *key, size_t key_len, char *file_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -60,7 +65,7 @@ int encrypt_buffer(unsigned char *plain_buff, unsigned char *key, char *file_pat
 
     // encrypt the buffer
     if (!(cypher_text = encrypt(&state, plain_buff, &cypher_text_len))) {
-        perror("psm: buffer encryption failed");
+        perror("psm: encryption failed");
         return -1;
     }
     
@@ -105,7 +110,7 @@ int encrypt_file(char *file_path, unsigned char *key)
 
     // encrypt the file content
     if (!(cypher_text = encrypt(&state, plain_text, &cypher_text_len))) {
-        perror("psm: buffer encryption failed");
+        perror("psm: encryption failed");
         return -1;
     }
     
@@ -151,6 +156,9 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
             // doc.libsodium.org for more info about this.
             if(crypto_secretstream_xchacha20poly1305_push(state, out_buff, &out_len, cnk_buff, cnk_buff_pos, NULL, 0, 0) != 0) {
+                perror("psm: corrupted chunk");
+                sodium_free(cnk_buff);
+                sodium_free(out_buff);
                 return NULL;
             }
 
@@ -177,6 +185,9 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     }
 
     if (crypto_secretstream_xchacha20poly1305_push(state, out_buff, &out_len, cnk_buff, cnk_buff_pos, NULL, 0, crypto_secretstream_xchacha20poly1305_TAG_FINAL) != 0) {
+        perror("psm: corrupted chunk");
+        sodium_free(cnk_buff);
+        sodium_free(out_buff);
         return NULL;
     }
 
@@ -206,11 +217,13 @@ int write_cypher_to_file(unsigned char *header, size_t header_len, unsigned char
 
     if ((rlen = fwrite(header, 1, header_len, file)) != header_len) {
         perror("psm: I/O error0");
+        fclose(file);
         return -1;
     }
 
     if ((rlen = fwrite(cypher_text, 1, cypher_text_len, file)) != cypher_text_len) {
         perror("psm: I/O error1");
+        fclose(file);
         return -1;
     }
 
@@ -246,23 +259,32 @@ unsigned char *decrypt_file(char *file_path, unsigned char *key)
 
     FILE *file = fopen(file_path, "rb");
 
+    if (!file) {
+        perror("psm: I/O error");
+        return NULL;
+    }
+
     if ((rlen = fread(header, 1, header_len, file)) != header_len) {
         perror("psm: I/O error");
+        fclose(file);
         return NULL;
     }
 
     if (crypto_secretstream_xchacha20poly1305_init_pull(&state, header, key) != 0) {
         perror("psm: incomplete header");
+        fclose(file);
         return NULL;
     }
 
     if (!(cypher_text = fgetfroms(file_path, header_len))) {
-        perror("psm: I/O error1");
+        perror("psm: I/O error");
+        fclose(file);
         return NULL;
     }
 
     if (!(plain_text = decrypt(&state, cypher_text))) {
-        perror("psm: buffer decryption failed");
+        perror("psm: decryption failed");
+        fclose(file);
         return NULL;
     }
 
@@ -307,12 +329,16 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
             // doc.libsodium.org for more info about this.
             if(crypto_secretstream_xchacha20poly1305_pull(state, out_buff, &out_len, &tag, cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
                 perror("psm: corrupted chunk");
+                sodium_free(cnk_buff);
+                sodium_free(out_buff);
                 return NULL;
             }
 
             // checking for premature end (end of file reached before the end of the stream)
             if(tag == crypto_secretstream_xchacha20poly1305_TAG_FINAL) {
-                perror("psm: EOF reached before end of the stream");
+                perror("psm: EOF reached before the end of the stream");
+                sodium_free(cnk_buff);
+                sodium_free(out_buff);
                 return NULL;
             }
 
@@ -340,6 +366,8 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     if (crypto_secretstream_xchacha20poly1305_pull(state, out_buff, &out_len, &tag, cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
         perror("psm: corrupted chunk");
+        sodium_free(cnk_buff);
+        sodium_free(out_buff);
         return NULL;
     }
 
@@ -363,3 +391,53 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 }
 
 /*----------------DECRYPTION-END----------------*/
+
+
+
+/*--------------KEY-HANDLING-START--------------*/
+
+int generate_masterkey(char *password, unsigned char *key)
+{
+    unsigned char *salt = (unsigned char *) sodium_malloc(crypto_pwhash_SALTBYTES);
+
+    randombytes_buf(salt, sizeof salt);
+
+    if (crypto_pwhash(key, 
+                      sizeof key, 
+                      password, 
+                      strlen(password), 
+                      salt, 
+                      crypto_pwhash_OPSLIMIT_SENSITIVE, 
+                      crypto_pwhash_MEMLIMIT_SENSITIVE, 
+                      crypto_pwhash_ALG_DEFAULT) != 0) 
+    {
+        sodium_free(salt);
+        return -1;
+    }
+
+    sodium_free(salt);
+    return 0;
+}
+
+int write_key(unsigned char *key, size_t key_len, char *file_path)
+{
+    size_t wlen;
+    FILE *file = fopen(file_path, "w"); // 'w' opening will automatically clear the file
+
+    if (!file) {
+        perror("psm: allocation error");
+        return -1;
+    }
+
+    if ((wlen = fwrite(key, 1, key_len, file_path)) != key_len) {
+        perror("psm: I/O error");
+        fclose(file);
+        return -1;
+    }
+
+    fclose(file);
+
+    return 0;
+}
+
+/*---------------KEY-HANDLING-END---------------*/
