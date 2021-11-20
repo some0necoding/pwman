@@ -4,29 +4,29 @@
 
 #ifndef STDIO_PLUS_PLUS
     #include <stdioplusplus.h>
+#endif
 
 #ifndef SODIUM_PLUS_PLUS
     #include <sodiumplusplus.h>
 #endif
-
-/*----------CONSTANTS-DEFINITION-START----------*/
-
-/*-----------CONSTANTS-DEFINITION-END-----------*/
-
-
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 char *pass_hash(char *pass, size_t pass_len);
 int store_hash(char *hash, char *file_path);
 int get_hash(char *hash, char *file_path);
+
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
+// this function hashes a password pass of pass_len length using 
+// libsodium library (doc.libsodium.org)
 char *pass_hash(char *pass, size_t pass_len) 
 {
-    size_t hash_len = crypto_pwhash_STRBYTES;
-    char *hash = (char *) sodium_malloc(hash_len);
+    size_t hash_len = crypto_pwhash_STRBYTES;          // hash buffer length (doc.libsodium.org)
+    char *hash = (char *) sodium_malloc(hash_len);     // allocating hash buffer (doc.libsodium.org)
 
+    // the actual hashing function (doc.libsodium.org). 
+    // (I cast into unsigned long long only here because I refuse to use this data type when someone invented size_t for this purpose)
     if (crypto_pwhash_str(hash, pass, (unsigned long long) pass_len, crypto_pwhash_OPSLIMIT_SENSITIVE, crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
         perror("psm: hash failed");
         return NULL;
@@ -35,10 +35,11 @@ char *pass_hash(char *pass, size_t pass_len)
     return hash;
 }
 
+// this function stores a hash in a file
 int store_hash(char *hash, char *file_path)
 {
-    size_t wlen;
-    size_t hash_len = crypto_pwhash_STRBYTES;
+    size_t wlen;                                        // rlen stays for "Wrote (bytes) LENgth"
+    size_t hash_len = crypto_pwhash_STRBYTES;           // hash buffer length (doc.libsodium.org)
 
     FILE *file = fopen(file_path, "wb");
 
@@ -47,7 +48,9 @@ int store_hash(char *hash, char *file_path)
         return -1;
     }
 
-    if ((wlen = fwrite(hash, 1, hash_len, file)) != hash_len) {
+    // writing hash value. hash values can be shorter than hash_len, so it's used > sign
+    // to validate the writing (doc.libsodium.org for more info)
+    if ((wlen = fwrite(hash, 1, hash_len, file)) > hash_len) {
         perror("psm: I/O error");
         return -1;
     }
@@ -56,11 +59,12 @@ int store_hash(char *hash, char *file_path)
     return 0;
 }
 
+// this function retrieves a hash from a file
 char *get_hash(char *file_path)
 {
-    size_t rlen;
-    size_t hash_len = crypto_pwhash_STRBYTES;
-    char *hash = (char *) sodium_malloc(hash_len);
+    size_t rlen;                                        // rlen stays for "Read (bytes) LENgth"
+    size_t hash_len = crypto_pwhash_STRBYTES;           // hash buffer length (doc.libsodium.org)
+    char *hash = (char *) sodium_malloc(hash_len);      // allocating hash buffer (doc.libsodium.org)
 
     FILE *file = fopen(file_path, "rb");
 
@@ -69,7 +73,9 @@ char *get_hash(char *file_path)
         return NULL;
     }
 
-    if ((rlen = fread(hash, 1, hash_len, file)) != 0) {
+    // reading hash value. hash values can be shorter than hash_len, so it's used > sign
+    // to validate the reading (doc.libsodium.org for more info)
+    if ((rlen = fread(hash, 1, hash_len, file)) > hash_len) {
         perror("psm: I/O error");
         return NULL;
     }
