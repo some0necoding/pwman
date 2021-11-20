@@ -230,31 +230,4 @@ int login()
     sodium_free(stored_hash);
 
     return 1;
-} 
-
-int get_hash(char *file_path, char *hash) 
-{
-    int position = 0;
-    char c = 0x00;
-
-    FILE *hash_file = fopen(file_path, "r");
-
-    if (!hash_file || !hash) {
-        perror("psm: allocation error\n");
-        return -1;
-    }
-
-    while ((c = getc(hash_file)) != EOF) {
-        hash[position] = c;
-        position++;
-    }
-    
-    if (ferror(hash_file)) {
-        perror("psm: file reading error\n");
-        return -1;
-    }
-
-    fclose(hash_file);
-
-    return 0;    
 }
