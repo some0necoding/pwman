@@ -39,10 +39,8 @@ int signin(void);
 int login(void);
 int psm_read_pass(char *buff);
 int auth_pass(char *password);
-int store_key(char *bytes, char *file_path);
-int get_hash(char *file_path, char *hash_and_salt);
 int if_char_occur_one(char *str, char *str_of_char);
-int write_key(unsigned char *key, char *file_path);
+int get_hash(char *file_path, char *hash_and_salt);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
