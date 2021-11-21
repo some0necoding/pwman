@@ -2,12 +2,12 @@
     #include <string.h>
 #endif
 
-#ifndef STDIO_PLUS_PLUS
-    #include "stdioplusplus.h"
-#endif
-
 #ifndef SODIUM_PLUS_PLUS
     #include "sodiumplusplus.h"
+#endif
+
+#ifndef STDIO_PLUS_PLUS
+    #include "stdioplusplus.h"
 #endif
 
 #include "hashing.h"

@@ -6,6 +6,10 @@
     #include "sodiumplusplus.h"
 #endif
 
+#ifndef STDIO_PLUS_PLUS
+    #include "stdioplusplus.h"
+#endif
+
 #ifndef TERMIOS_PLUS_PLUS
     #include "termiosplusplus.h"
 #endif
