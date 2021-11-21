@@ -2,8 +2,11 @@
     #include <stdio.h>
 #endif
 
+#ifndef NULL
+    #include <string.h>
+#endif
+
 #include <sodium.h>
-#include <string.h>
 
 #include "sodiumplusplus.h"
 
