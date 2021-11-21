@@ -3,15 +3,15 @@
 #endif
 
 #ifndef TERMIOS_PLUS_PLUS
-    #include <termiosplusplus.h>
+    #include "termiosplusplus.h"
 #endif
 
 #ifndef STDIO_PLUS_PLUS
-    #include <stdioplusplus.h>
+    #include "stdioplusplus.h"
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include <sodiumplusplus.h>
+    #include "sodiumplusplus.h"
 #endif
 
 #include "hashing.h"

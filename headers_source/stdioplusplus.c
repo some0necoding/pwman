@@ -3,7 +3,7 @@
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include <sodiumplusplus.h>
+    #include "sodiumplusplus.h"
 #endif
 
 #include "stdioplusplus.h"

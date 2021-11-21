@@ -3,10 +3,10 @@
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include <sodiumplusplus.h>
+    #include "sodiumplusplus.h"
 
 #ifndef TERMIOS_PLUS_PLUS
-    #include <termiosplusplus.h>
+    #include "termiosplusplus.h"
 #endif
 
 #include "input_acquisition.c"
