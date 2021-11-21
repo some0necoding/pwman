@@ -44,17 +44,6 @@ int get_hash(char *file_path, char *hash_and_salt);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
-
-
-/*-----------------FIXES-START------------------*/
-
-// 1. all methods that return a pointer by passing it as an arguments should be modified 
-//    to return the pointer as a return value.
-
-/*------------------FIXES-END-------------------*/
-
-
-
 // auth function returns 0 for good auth (no errors), 
 // and -1 for errors.  
 
@@ -121,37 +110,6 @@ int signin()
 
     sodium_free(pass);
     sodium_free(hash);
-
-    return 1;
-}
-
-int psm_read_pass(char *buffer) 
-{
-    int bufsize = PASS_BUFF_LENGTH;
-    int position = 0;
-    char c = 0x00;
-    struct termios old;
-
-    if (!buffer) {
-        perror("psm: allocation error\n");
-        return -1;
-    }
-
-    old = disable_terminal_echo();
-
-    while ((c = getchar()) != EOF && c != '\n') {
-        buffer[position] = c;
-        position++;
-        if (position > bufsize) {
-            enable_terminal_echo(old);
-            printf("psm: password length cannot be larger than %d\n", bufsize);
-            return 0;
-        }
-    }
-
-    buffer[position] = '\0';
-
-    enable_terminal_echo(old);
 
     return 1;
 }
