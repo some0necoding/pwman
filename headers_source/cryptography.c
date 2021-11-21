@@ -395,7 +395,7 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
 /*--------------KEY-HANDLING-START--------------*/
 
-int generate_masterkey(char *password, unsigned char *key)
+int generate_masterkey(char *pass, unsigned char *key)
 {
     unsigned char *salt = (unsigned char *) sodium_malloc(crypto_pwhash_SALTBYTES);
 
@@ -403,8 +403,8 @@ int generate_masterkey(char *password, unsigned char *key)
 
     if (crypto_pwhash(key, 
                       sizeof key, 
-                      password, 
-                      strlen(password), 
+                      pass, 
+                      strlen(pass), 
                       salt, 
                       crypto_pwhash_OPSLIMIT_SENSITIVE, 
                       crypto_pwhash_MEMLIMIT_SENSITIVE, 

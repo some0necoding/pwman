@@ -14,19 +14,20 @@
     #include <sodiumplusplus.h>
 #endif
 
+#include "hashing.h"
+#include "cryptography.h"
+#include "input_acquisition.h"
+
 /*----------CONSTANTS-DEFINITION-START----------*/
 
-#define HASH_FILE_PATH "./.resources/.authashes"
+#define HASH_FILE_PATH "./config_files/login.hash"
 #define HASH_FILE_SIZE crypto_pwhash_STRBYTES       // i.e 128 bytes
 
 #define PASS_LENGTH 65                              // 64 bytes + '\0'
-#define PASS_BUFF_LENGTH 64
 #define HASH_LENGTH crypto_box_SEEDBYTES
 
 #define MIN_LENGTH 15
-#define MIN_NUMS 1
-#define MIN_UPPER 1
-#define MIN_SYMS 1
+#define MAX_LENGTH 64
 #define NUMS "0123456789"
 #define UPPER "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -74,20 +75,20 @@ int auth(void)
 
 int signin() 
 {
-    int buff_len = PASS_LENGTH;
-    int hash_len = HASH_LENGTH;
-    int pass_code = 0;
-    int pass_len = 0;
+    size_t buff_len = PASS_LENGTH;
+    size_t hash_len = HASH_LENGTH;
+    size_t pass_len = 0;
 
     unsigned char *pass = (unsigned char *) sodium_malloc(buff_len);
     unsigned char *hash = (unsigned char *) sodium_malloc(hash_len);
 
+    char *file_path = HASH_FILE_PATH;
+
     printf("%s", "choose a password: ");
 
-    if ((pass_code = psm_read_pass(pass)) == -1) {
+    if (!(pass = read_line_s())) {
+        perror("psm: I/O error");
         return -1;
-    } else if (pass_code == 0) {
-        return 0;
     }
     
     printf("%s", "\n");
@@ -98,13 +99,22 @@ int signin()
 
     pass_len = strlen(pass);
 
-    if (generate_masterkey(pass, hash) != 0) {
+    if (!(hash = pass_hash(pass, pass_len))) {
+        perror("psm: cryptography error");
         return -1;
     }
 
-    if (store_key(hash, HASH_FILE_PATH) == -1) {
+    if (store_hash(hash, file_path) != 0) {
+        perror("psm: I/O error");
         return -1;
     }
+
+    if (generate_masterkey(pass, hash) != 0) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    // here I need to generate two subkeys from the masterkey
 
     sodium_free(pass);
     sodium_free(hash);
@@ -114,12 +124,17 @@ int signin()
 
 int auth_pass(char *password) 
 {
-    int min_len = MIN_LENGTH;
+    size_t min_len = MIN_LENGTH;
+    size_t max_len = MAX_LENGTH;
+
     char *nums = NUMS;
     char *upper = UPPER;
 
     if (strlen(password) < min_len) {
-        printf("%s\n", "Your password must be at least 15 characters long");
+        printf("Your password must be at least 15 characters long\n");
+        return -1;
+    } else if {
+        printf("Your password has to be maximum 64 characters long\n");
         return -1;
     } else if (if_char_occur_one(password, nums) == -1 || if_char_occur_one(password, upper) == -1) {
         printf("%s\n", "Your password must contain at least 1 number and 1 uppercase letter");
@@ -129,12 +144,12 @@ int auth_pass(char *password)
     return 0;
 }
 
-int if_char_occur_one(char *str, char *str_of_char)
+int if_char_occur_one(char *str, char *char_array)
 {
-    int str_len = strlen(str_of_char);
+    int str_len = strlen(char_array);
 
     for (int i=0; i<str_len; i++) {
-        if (!strchr(str, str_of_char[i])) {
+        if (!strchr(str, char_array[i])) {
             return 0;
         }
     }
