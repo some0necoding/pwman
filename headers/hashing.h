@@ -8,6 +8,6 @@ char *pass_hash(char *pass, size_t pass_len);
 int store_hash(char *hash, char *file_path);
 
 // retrieves a hash "hash" in a file stored at "file_path" path
-int get_hash(char *hash, char *file_path);
+char *get_hash(char *file_path);
 
 #endif

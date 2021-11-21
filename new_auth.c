@@ -134,14 +134,17 @@ int auth_pass(char *password)
 {
     size_t min_len = MIN_LENGTH;
     size_t max_len = MAX_LENGTH;
+    size_t str_len;
 
     char *nums = NUMS;
     char *upper = UPPER;
 
-    if (strlen(password) < min_len) {
+    str_len = strlen(password);
+
+    if (str_len < min_len) {
         printf("your password must be at least 15 characters long\n");
         return -1;
-    } else if {
+    } else if (str_len > max_len) {
         printf("your password has to be maximum 64 characters long\n");
         return -1;
     } else if (if_char_occur_one(password, nums) == -1 || if_char_occur_one(password, upper) == -1) {
