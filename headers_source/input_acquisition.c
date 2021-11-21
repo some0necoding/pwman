@@ -9,20 +9,13 @@
     #include <termiosplusplus.h>
 #endif
 
+#include "input_acquisition.c"
+
 /*----------CONSTANTS-DEFINITION-START----------*/
 
 #define LINE_BUFSIZE 1024
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
-
-
-
-/*----------FUNCTIONS-DEFINITION-START----------*/
-
-char *read_line_s(void);
-char *read_line(void) ;
-
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 // this function securely reads all bytes from stdin using libsodium library (doc.libsodium.org).
 char *read_line_s(void) 
