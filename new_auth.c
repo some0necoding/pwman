@@ -48,15 +48,15 @@ int if_char_occur_one(char *str, char *str_of_char);
 
 int auth(void) 
 {
-    int hash_file_size = fsize(HASH_FILE_PATH);
+    int file_size = fsize(HASH_FILE_PATH);
     int correct_file_size = HASH_FILE_SIZE;
     int auth_code = 0;
 
-    if (hash_file_size == -1) {
+    if (file_size == -1) {
         return -1;
     }
 
-    if (hash_file_size != correct_file_size) {
+    if (file_size != correct_file_size) {
         // delete the encrypted password file
         while ((auth_code = signin()) == 0);
     } else {
@@ -79,47 +79,55 @@ int signin()
     size_t hash_len = HASH_LENGTH;
     size_t pass_len = 0;
 
-    unsigned char *pass = (unsigned char *) sodium_malloc(buff_len);
-    unsigned char *hash = (unsigned char *) sodium_malloc(hash_len);
-
+    char *pass = (unsigned char *) sodium_malloc(buff_len);
+    char *hash = (unsigned char *) sodium_malloc(hash_len);
     char *file_path = HASH_FILE_PATH;
 
-    printf("%s", "choose a password: ");
+    int ret_code = -1;
+
+    if (!pass || !hash) {
+        perror("psm: allocation error\n");
+        return -1;
+    }
+
+    printf("choose a password: ");
 
     if (!(pass = read_line_s())) {
         perror("psm: I/O error");
-        return -1;
+        goto ret;
     }
     
-    printf("%s", "\n");
+    printf("\n");
 
     if (auth_pass(pass) == -1) {
-        return 0;
+        ret_code = 0;
+        goto ret;
     }
 
     pass_len = strlen(pass);
 
     if (!(hash = pass_hash(pass, pass_len))) {
         perror("psm: cryptography error");
-        return -1;
+        ret_code = -1;
+        goto ret;
     }
 
     if (store_hash(hash, file_path) != 0) {
         perror("psm: I/O error");
-        return -1;
+        ret_code = -1;
+        goto ret;
     }
 
-    if (generate_masterkey(pass, hash) != 0) {
-        perror("psm: cryptography error");
-        return -1;
-    }
+    // here I need to generate a masterkey
 
     // here I need to generate two subkeys from the masterkey
+    
+    ret_code = 1;
 
+ret:
     sodium_free(pass);
     sodium_free(hash);
-
-    return 1;
+    return ret_code;
 }
 
 int auth_pass(char *password) 
@@ -131,13 +139,13 @@ int auth_pass(char *password)
     char *upper = UPPER;
 
     if (strlen(password) < min_len) {
-        printf("Your password must be at least 15 characters long\n");
+        printf("your password must be at least 15 characters long\n");
         return -1;
     } else if {
-        printf("Your password has to be maximum 64 characters long\n");
+        printf("your password has to be maximum 64 characters long\n");
         return -1;
     } else if (if_char_occur_one(password, nums) == -1 || if_char_occur_one(password, upper) == -1) {
-        printf("%s\n", "Your password must contain at least 1 number and 1 uppercase letter");
+        printf("your password must contain at least 1 number and 1 uppercase letter\n");
         return -1;
     }
     
@@ -162,43 +170,47 @@ int if_char_occur_one(char *str, char *char_array)
 
 int login()
 {
-    int buff_len = PASS_LENGTH;
-    int hash_len = HASH_LENGTH;
-    int input_pass_len = 0;
-    int pass_reading_code = 0;
+    size_t buff_len = PASS_LENGTH;
+    size_t hash_len = HASH_LENGTH;
+    size_t pass_len = 0;
 
-    char *input_pass = (char *) sodium_malloc(buff_len);
-    char *stored_hash = (char *) sodium_malloc(hash_len);
-    char *hash_file_path = HASH_FILE_PATH;
+    char *pass = (char *) sodium_malloc(buff_len);
+    char *hash = (char *) sodium_malloc(hash_len);
+    char *file_path = HASH_FILE_PATH;
+
+    int ret_code = -1;
     
-    if (!input_pass || !stored_hash) {
+    if (!pass || !hash) {
         perror("psm: allocation error\n");
         return -1;
     }
 
-    printf("%s", "insert password: ");
+    printf("insert password: ");
 
-    if ((pass_reading_code = psm_read_pass(input_pass)) == -1) {
-        return -1;
-    } else if (pass_reading_code == 0) {
-        return 0;
+    if (!(pass = read_line_s())) {
+        perror("psm: I/O error");
+        goto ret;
     }
 
-    printf("%s", "\n");
+    printf("\n");
 
-    input_pass_len = strlen(input_pass);
+    pass_len = strlen(pass);
 
-    if (get_hash(hash_file_path, stored_hash) == -1) {
-        return -1;
+    if (!(hash = get_hash(file_path))) {
+        perror("psm: I/O error");
+        goto ret;
     } 
 
-    if (crypto_pwhash_str_verify(stored_hash, input_pass, input_pass_len) != 0) {
-        printf("%s\n", "Wrong password!");
-        return 0;
+    if (crypto_pwhash_str_verify(hash, pass, pass_len) != 0) {
+        printf("wrong password!\n");
+        ret_code = 0;
+        goto ret;
     }
 
-    sodium_free(input_pass);
-    sodium_free(stored_hash);
+    ret_code = 1;
 
-    return 1;
+ret:
+    sodium_free(pass);
+    sodium_free(hash);
+    return ret_code;
 }
