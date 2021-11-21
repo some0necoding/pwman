@@ -59,7 +59,7 @@ int store_hash(char *hash, char *file_path)
     return 0;
 }
 
-// this function retrieves a hash from a file
+// this function retrieves a hash from a file and saves it in a secure-allocated buffer
 char *get_hash(char *file_path)
 {
     size_t rlen;                                        // rlen stays for "Read (bytes) LENgth"
