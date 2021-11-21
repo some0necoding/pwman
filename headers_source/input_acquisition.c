@@ -4,12 +4,13 @@
 
 #ifndef SODIUM_PLUS_PLUS
     #include "sodiumplusplus.h"
+#endif
 
 #ifndef TERMIOS_PLUS_PLUS
     #include "termiosplusplus.h"
 #endif
 
-#include "input_acquisition.c"
+#include "input_acquisition.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 

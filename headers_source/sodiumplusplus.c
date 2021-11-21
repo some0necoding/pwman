@@ -1,9 +1,9 @@
-#ifndef EOF
-    #include <stdio.h>
-#endif
-
 #ifndef NULL
     #include <string.h>
+#endif
+
+#ifndef EOF
+    #include <stdio.h>
 #endif
 
 #include <sodium.h>
