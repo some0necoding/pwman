@@ -3,6 +3,8 @@
 #include <sodium.h>
 #include <string.h>
 #include <termios.h>
+#include "headers/auth.h"
+#include "headers/input_acquisition.h"
 
 
 /*
