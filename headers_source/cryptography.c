@@ -3,14 +3,14 @@
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include "sodiumplusplus.h"
+    #include "headers/sodiumplusplus.h"
 #endif
 
 #ifndef STDIO_PLUS_PLUS
-    #include "stdioplusplus.h"
+    #include "headers/stdioplusplus.h"
 #endif
 
-#include "cryptography.h"
+#include "headers/cryptography.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 

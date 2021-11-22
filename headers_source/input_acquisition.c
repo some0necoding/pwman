@@ -3,18 +3,18 @@
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include "sodiumplusplus.h"
+    #include "headers/sodiumplusplus.h"
 #endif
 
 #ifndef STDIO_PLUS_PLUS
-    #include "stdioplusplus.h"
+    #include "headers/stdioplusplus.h"
 #endif
 
 #ifndef TERMIOS_PLUS_PLUS
-    #include "termiosplusplus.h"
+    #include "headers/termiosplusplus.h"
 #endif
 
-#include "input_acquisition.h"
+#include "headers/input_acquisition.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 

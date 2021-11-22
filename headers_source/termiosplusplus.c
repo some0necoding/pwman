@@ -1,10 +1,12 @@
 #ifndef STDIO_PLUS_PLUS
-    #include "stdioplusplus.h"
+    #include "headers/stdioplusplus.h"
 #endif
 
 #ifndef ECHOCTL
     #include <termios.h>
 #endif
+
+#include "headers/termiosplusplus.h"
 
 struct termios disable_terminal_echo() {
 

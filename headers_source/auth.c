@@ -3,20 +3,30 @@
 #endif
 
 #ifndef TERMIOS_PLUS_PLUS
-    #include "termiosplusplus.h"
+    #include "headers/termiosplusplus.h"
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include "sodiumplusplus.h"
+    #include "headers/sodiumplusplus.h"
 #endif
 
 #ifndef STDIO_PLUS_PLUS
-    #include "stdioplusplus.h"
+    #include "headers/stdioplusplus.h"
 #endif
 
-#include "hashing.h"
-#include "cryptography.h"
-#include "input_acquisition.h"
+#ifndef HASHING
+    #include "headers/hashing.h"
+#endif
+
+#ifndef CRYPTOGRAPHY
+    #include "headers/cryptography.h"
+#endif
+
+#ifndef INPUT_ACQUISITION
+    #include "headers/input_acquisition.h"
+#endif
+
+#include "headers/auth.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
@@ -35,7 +45,6 @@
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
-int auth(void);
 int signin(void);
 int login(void);
 int auth_pass(char *password);
