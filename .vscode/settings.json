@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "auth.h": "c"
+        "auth.h": "c",
+        "sodiumplusplus.h": "c",
+        "termios.h": "c"
     }
 }

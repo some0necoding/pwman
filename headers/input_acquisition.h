@@ -5,6 +5,6 @@
 char *read_line_s(void);
 
 // reads all bytes from stdin
-char *read_line(void) ;
+char *read_line(void);
 
 #endif

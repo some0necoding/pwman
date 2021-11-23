@@ -3,10 +3,10 @@
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include "headers/sodiumplusplus.h"
+    #include "../headers/sodiumplusplus.h"
 #endif
 
-#include "headers/stdioplusplus.h"
+#include "../headers/stdioplusplus.h"
 
 // returns the size of a file
 int fsize(char *file_path)

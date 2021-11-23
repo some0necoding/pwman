@@ -3,18 +3,18 @@
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include "headers/sodiumplusplus.h"
+    #include "../headers/sodiumplusplus.h"
 #endif
 
 #ifndef STDIO_PLUS_PLUS
-    #include "headers/stdioplusplus.h"
+    #include "../headers/stdioplusplus.h"
 #endif
 
 #ifndef TERMIOS_PLUS_PLUS
-    #include "headers/termiosplusplus.h"
+    #include "../headers/termiosplusplus.h"
 #endif
 
-#include "headers/input_acquisition.h"
+#include "../headers/input_acquisition.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
@@ -57,7 +57,7 @@ char *read_line_s(void)
 
     // re-enabling echo
     enable_terminal_echo(old);
-
+    
     return buffer;
 }
 
@@ -87,7 +87,7 @@ char *read_line(void)
             buffer = realloc(buffer, bufsize);
             if (!buffer) {
                 perror("psm: allocation error\n");
-                return -1;
+                return NULL;
             }
         }
     }

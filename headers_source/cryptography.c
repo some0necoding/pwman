@@ -3,14 +3,14 @@
 #endif
 
 #ifndef SODIUM_PLUS_PLUS
-    #include "headers/sodiumplusplus.h"
+    #include "../headers/sodiumplusplus.h"
 #endif
 
 #ifndef STDIO_PLUS_PLUS
-    #include "headers/stdioplusplus.h"
+    #include "../headers/stdioplusplus.h"
 #endif
 
-#include "headers/cryptography.h"
+#include "../headers/cryptography.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
@@ -428,7 +428,7 @@ int write_key(unsigned char *key, size_t key_len, char *file_path)
         return -1;
     }
 
-    if ((wlen = fwrite(key, 1, key_len, file_path)) != key_len) {
+    if ((wlen = fwrite(key, 1, key_len, file)) != key_len) {
         perror("psm: I/O error");
         fclose(file);
         return -1;

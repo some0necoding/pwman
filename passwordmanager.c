@@ -19,11 +19,11 @@
 #endif
 
 #ifndef AUTH
-    #include "headers/auth.h"
+    #include "./headers/auth.h"
 #endif
     
 #ifndef INPUT_ACQUISITION
-    #include "headers/input_acquisition.h"
+    #include "./headers/input_acquisition.h"
 #endif
 
 /*
