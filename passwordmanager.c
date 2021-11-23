@@ -1,30 +1,11 @@
-#ifndef NULL
-    #include <string.h>
-#endif
+#include <string.h>
+#include <stdlib.h>
+#include <termios.h>
+#include <stdio.h>
+#include <sodium.h>
 
-#ifndef RAND_MAX
-    #include <stdlib.h>
-#endif
-
-#ifndef TERMIOS_PLUS_PLUS
-    #include <termios.h>
-#endif
-
-#ifndef STDIO_PLUS_PLUS
-    #include <stdio.h>
-#endif
-
-#ifndef SOIDUM_PLUS_PLUS
-    #include <sodium.h>
-#endif
-
-#ifndef AUTH
-    #include "./headers/auth.h"
-#endif
-    
-#ifndef INPUT_ACQUISITION
-    #include "./headers/input_acquisition.h"
-#endif
+#include "./headers/auth.h"
+#include "./headers/input_acquisition.h"
 
 /*
     Pretty amazing password manager written in C

@@ -1,14 +1,6 @@
-#ifndef NULL
-    #include <string.h>
-#endif
-
-#ifndef EOF
-    #include <stdio.h>
-#endif
-
-#ifndef crypto_pwhash_STRBYTES
-    #include <sodium.h>
-#endif
+#include <string.h>
+#include <stdio.h>
+#include <sodium.h>
 
 #include "../headers/sodiumplusplus.h"
 

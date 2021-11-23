@@ -1,13 +1,7 @@
-#ifndef NULL
-    #include <string.h>
-#endif
+#include <string.h>
 
 #include "../headers/sodiumplusplus.h"
-
-#ifndef STDIO_PLUS_PLUS
-    #include "../headers/stdioplusplus.h"
-#endif
-
+#include "../headers/stdioplusplus.h"
 #include "../headers/cryptography.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/

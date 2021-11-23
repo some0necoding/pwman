@@ -1,9 +1,6 @@
-#ifndef EOF
-    #include <stdio.h>
-#endif
+#include <stdio.h>
 
 #include "../headers/sodiumplusplus.h"
-
 #include "../headers/stdioplusplus.h"
 
 // returns the size of a file

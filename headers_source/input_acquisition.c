@@ -1,17 +1,8 @@
-#ifndef NULL
-    #include <string.h>
-#endif
+#include <string.h>
 
 #include "../headers/sodiumplusplus.h"
-
-#ifndef STDIO_PLUS_PLUS
-    #include "../headers/stdioplusplus.h"
-#endif
-
-#ifndef TERMIOS_PLUS_PLUS
-    #include "../headers/termiosplusplus.h"
-#endif
-
+#include "../headers/stdioplusplus.h"
+#include "../headers/termiosplusplus.h"
 #include "../headers/input_acquisition.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
