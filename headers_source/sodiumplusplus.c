@@ -6,7 +6,9 @@
     #include <stdio.h>
 #endif
 
-#include <sodium.h>
+#ifndef crypto_pwhash_STRBYTES
+    #include <sodium.h>
+#endif
 
 #include "../headers/sodiumplusplus.h"
 

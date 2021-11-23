@@ -2,9 +2,7 @@
     #include <string.h>
 #endif
 
-#ifndef SODIUM_PLUS_PLUS
-    #include "../headers/sodiumplusplus.h"
-#endif
+#include "../headers/sodiumplusplus.h"
 
 #ifndef STDIO_PLUS_PLUS
     #include "../headers/stdioplusplus.h"

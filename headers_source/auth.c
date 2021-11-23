@@ -2,12 +2,10 @@
     #include <string.h>
 #endif
 
+#include "../headers/sodiumplusplus.h"
+
 #ifndef TERMIOS_PLUS_PLUS
     #include "../headers/termiosplusplus.h"
-#endif
-
-#ifndef SODIUM_PLUS_PLUS
-    #include "../headers/sodiumplusplus.h"
 #endif
 
 #ifndef STDIO_PLUS_PLUS
