@@ -1,6 +1,8 @@
 #include <string.h>
 
+#ifndef SODIUM_PLUS_PLUS
 #include "../headers/sodiumplusplus.h"
+#endif
 #include "../headers/termiosplusplus.h"
 #include "../headers/stdioplusplus.h"
 #include "../headers/hashing.h"

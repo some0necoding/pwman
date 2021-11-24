@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <stdio.h>
+
+#ifndef sodium_H
 #include <sodium.h>
+#endif
 
 #include "./headers/auth.h"
 #include "./headers/input_acquisition.h"
