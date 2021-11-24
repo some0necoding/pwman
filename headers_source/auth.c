@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include "../headers/termiosplusplus.h"
 #include "../headers/sodiumplusplus.h"
+#include "../headers/termiosplusplus.h"
 #include "../headers/stdioplusplus.h"
 #include "../headers/hashing.h"
 #include "../headers/cryptography.h"
