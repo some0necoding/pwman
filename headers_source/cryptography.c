@@ -1,10 +1,9 @@
+#include "../headers/cryptography.h"
+
 #include <string.h>
 
-#ifndef SODIUM_PLUS_PLUS
 #include "../headers/sodiumplusplus.h"
-#endif
 #include "../headers/stdioplusplus.h"
-#include "../headers/cryptography.h"
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 

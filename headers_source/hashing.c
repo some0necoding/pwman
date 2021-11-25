@@ -1,10 +1,9 @@
+#include "../headers/hashing.h"
+
 #include <string.h>
 
-#ifndef SODIUM_PLUS_PLUS
 #include "../headers/sodiumplusplus.h"
-#endif
 #include "../headers/stdioplusplus.h"
-#include "../headers/hashing.h"
 
 // this function hashes a password pass of pass_len length using 
 // libsodium library (doc.libsodium.org)

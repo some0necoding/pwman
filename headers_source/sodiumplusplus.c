@@ -1,13 +1,8 @@
+#include "../headers/sodiumplusplus.h"
+
 #include <string.h>
 #include <stdio.h>
-
-#ifndef sodium_H
 #include <sodium.h>
-#endif
-
-#ifndef SODIUM_PLUS_PLUS
-#include "../headers/sodiumplusplus.h"
-#endif
 
 // reallocs a buffer allocated with sodium
 void *sodium_realloc(void *ptr, size_t old_size, size_t new_size)
