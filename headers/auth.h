@@ -2,6 +2,6 @@
 #define AUTH
 
 // authenticates the user
-int auth(void);
+extern int auth(void);
 
 #endif
