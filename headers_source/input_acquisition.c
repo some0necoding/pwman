@@ -1,10 +1,10 @@
 #include "../headers/input_acquisition.h"
 
-#include <string.h>
-
 #include "../headers/sodiumplusplus.h"
 #include "../headers/stdioplusplus.h"
 #include "../headers/termiosplusplus.h"
+
+#include <string.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 

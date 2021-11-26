@@ -1,13 +1,13 @@
 #include "../headers/auth.h"
 
-#include <string.h>
-
 #include "../headers/sodiumplusplus.h"
 #include "../headers/termiosplusplus.h"
 #include "../headers/stdioplusplus.h"
 #include "../headers/hashing.h"
 #include "../headers/cryptography.h"
 #include "../headers/input_acquisition.h"
+
+#include <string.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 

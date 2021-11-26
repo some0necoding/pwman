@@ -1,9 +1,9 @@
 #include "../headers/cryptography.h"
 
-#include <string.h>
-
 #include "../headers/sodiumplusplus.h"
 #include "../headers/stdioplusplus.h"
+
+#include <string.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 

@@ -1,8 +1,8 @@
 #include "../headers/stdioplusplus.h"
 
-#include <stdio.h>
-
 #include "../headers/sodiumplusplus.h"
+
+#include <stdio.h>
 
 // returns the size of a file
 int fsize(char *file_path)
