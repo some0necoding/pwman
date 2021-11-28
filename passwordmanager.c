@@ -1,11 +1,11 @@
+#include "./headers/auth.h"
+#include "./headers/input_acquisition.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <stdio.h>
 #include <sodium.h>
-
-#include "./headers/auth.h"
-#include "./headers/input_acquisition.h"
 
 /*
     Pretty amazing password manager written in C

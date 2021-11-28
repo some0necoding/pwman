@@ -4,9 +4,9 @@
 #include <termios.h>
 
 // disables echo on terminal and returns old configs with echo enabled
-extern struct termios disable_terminal_echo();
+struct termios disable_terminal_echo();
 
 // reapply old configs returned before to re-enable echo on terminal
-extern void enable_terminal_echo(struct termios old_t);
+void enable_terminal_echo(struct termios old_t);
 
 #endif

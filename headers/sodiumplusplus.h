@@ -4,6 +4,6 @@
 #include <string.h>
 
 // reallocs a buffer allocated with sodium
-extern void *sodium_realloc(void *ptr, size_t old_size, size_t new_size);
+void *sodium_realloc(void *ptr, size_t old_size, size_t new_size);
 
 #endif
