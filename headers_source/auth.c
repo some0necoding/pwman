@@ -137,7 +137,7 @@ int auth_pass(char *password)
     } else if (str_len > max_len) {
         printf("your password has to be maximum 64 characters long\n");
         return -1;
-    } else if (if_char_occur_one(password, nums) == -1 | if_char_occur_one(password, upper) == -1) {
+    } else if (if_char_occur_one(password, nums) == -1 || if_char_occur_one(password, upper) == -1) {
         printf("your password must contain at least 1 number and 1 uppercase letter\n");
         return -1;
     }
@@ -150,7 +150,7 @@ int if_char_occur_one(char *str, char *char_array)
     int array_len = strlen(char_array);
 
     for (int i=0; i<array_len; i++) {
-        if (!strchr(str, char_array[i])) {
+        if (strchr(str, char_array[i]) != NULL) {
             return 0;
         }
     }
