@@ -2,7 +2,6 @@
 #define STDIO_PLUS_PLUS
 
 #include <stdio.h>
-#include <sodiumplusplus.h>
 
 // returns the size of a file
 int fsize(char *file_path);
