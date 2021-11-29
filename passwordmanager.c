@@ -65,8 +65,8 @@
         all of these may be put in two files, one for keeping accounts' and users'
         names, the other for keeping passwords (/etc/passwd and /etc/shadow style). 
         This because if the user calls show() with all data saved in the same file, 
-        it will decrypt all account_name, user_or_name and password, putting the 
-        latter at risk uselessly 'cause it will not be shown. 
+        it will be decrypted all account_name, user_or_name and password, putting 
+        the latter at risk uselessly 'cause it will not be used to produce the output.
 */
 
 /*----------CONSTANTS-DEFINITION-START----------*/
