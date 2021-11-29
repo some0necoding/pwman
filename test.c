@@ -1,7 +1,4 @@
 #include <stdio.h>
-#include <termios.h>
-#include <sodium.h>
-#include <string.h>
 
 /*  password input
     password conversion to key1 in secure memory
