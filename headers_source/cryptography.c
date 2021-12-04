@@ -412,6 +412,11 @@ int generate_masterkey(char *pass, unsigned char *key)
     return 0;
 }
 
+int generate_subkeys()
+{
+    // some function that returns an array of n subkeys derived from a masterkey
+}
+
 int write_key(unsigned char *key, size_t key_len, char *file_path)
 {
     size_t wlen;
