@@ -200,6 +200,10 @@ int login()
         goto ret;
     }
 
+    // here I need to generate a masterkey
+
+    // here I need to generate two subkeys from the masterkey
+
     ret_code = 1;
 
 ret:
