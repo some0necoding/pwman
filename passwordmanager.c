@@ -172,20 +172,11 @@ int psm_add(char **args)
     printf("add\n");
 
     // time_line:
-    // 1. get user input
-    // 2. validate user input
-    // 3. decrypt the accounts
+    // 1. validate user input
+    // 2. decrypt the accounts
     //    file
-    // 4. add input to the file
-    // 5. recrypt the file
-
-    // vulnerabilities:
-    // 1. to add a single
-    //    account I have to
-    //    decrypt the entire
-    //    file, putting all
-    //    other passes at risk
-   
+    // 3. add input to the file
+    // 4. recrypt the file
 }
 
 int psm_modify(char **args)
@@ -193,21 +184,14 @@ int psm_modify(char **args)
     printf("modify\n");
 
     // time_line:
-    // 1. get user input
-    // 2. validate input
-    // 3. decrypt the accounts
+    // 1. validate input
+    // 2. decrypt the accounts
     //    file
-    // 4. if it exists, remove         
+    // 3. if it exists, remove         
     //    the old account and 
     //    replace it with the 
     //    modified one
-    // 5. recrypt the file
-
-    // vulnerabilities:
-    // 1. it's needed to decrypt
-    //    the entire accounts
-    //    file putting all other
-    //    passes at risk
+    // 4. recrypt the file
 }
 
 int psm_remove(char **args) 
@@ -215,39 +199,25 @@ int psm_remove(char **args)
     printf("remove\n");
 
     // time_line
-    // 1. get user input
-    // 2. validate user input
-    // 3. decrypt accounts file
-    // 4. if it exists, remove 
+    // 1. validate user input
+    // 2. decrypt accounts file
+    // 3. if it exists, remove 
     //    the account
-    // 5. recrypt the file
-
-    // vulnerabilities
-    // 1. it's needed to decrypt
-    //    the entire accounts
-    //    file putting all other
-    //    passes at risk
+    // 4. recrypt the file
 } 
 
 int psm_get(char **args)
 {
     printf("get\n");
 
-    // 1. get user input
-    // 2. validate used input
-    // 3. decrypt accounts file
-    // 4. if it exists, copy the
+    // 1. validate used input
+    // 2. decrypt accounts file
+    // 3. if it exists, copy the
     //    pass in the clipboard
-    // 5. recrypt the file
-    // 6. after a while (1 min
+    // 4. recrypt the file
+    // 5. after a while (1 min
     //    or less) clear the 
     //    the clipboard
-
-    // vulnerabilities:
-    // 1. it's needed to decrypt
-    //    the entire accounts
-    //    file putting all other
-    //    passes at risk
 }
 
 int psm_exit(char **args) {
