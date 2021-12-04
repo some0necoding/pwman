@@ -390,9 +390,10 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
 int generate_masterkey(char *pass, unsigned char *key)
 {
-    unsigned char *salt = (unsigned char *) sodium_malloc(crypto_pwhash_SALTBYTES);
+    size_t salt_len = crypto_pwhash_SALTBYTES;
+    unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
 
-    randombytes_buf(salt, sizeof salt);
+    randombytes_buf(salt, salt_len);
 
     if (crypto_pwhash(key, 
                       sizeof key, 
