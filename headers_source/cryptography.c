@@ -8,6 +8,7 @@
 /*----------CONSTANTS-DEFINITION-START----------*/
 
 #define CHUNK_SIZE 4096
+#define CONTEXT "decrypt_"
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
@@ -388,7 +389,7 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
 /*--------------KEY-HANDLING-START--------------*/
 
-int generate_masterkey(char *pass, unsigned char *key)
+int generate_masterkey(char *password, unsigned char *key, size_t key_len)
 {
     size_t salt_len = crypto_pwhash_SALTBYTES;
     unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
@@ -396,9 +397,9 @@ int generate_masterkey(char *pass, unsigned char *key)
     randombytes_buf(salt, salt_len);
 
     if (crypto_pwhash(key, 
-                      sizeof key, 
-                      pass, 
-                      strlen(pass), 
+                      (unsigned long long) key_len, 
+                      password, 
+                      (unsigned long long) strlen(password), 
                       salt, 
                       crypto_pwhash_OPSLIMIT_SENSITIVE, 
                       crypto_pwhash_MEMLIMIT_SENSITIVE, 
@@ -412,9 +413,29 @@ int generate_masterkey(char *pass, unsigned char *key)
     return 0;
 }
 
-int generate_subkeys()
+// some function that returns an array of n subkeys derived from a masterkey
+unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
 {
-    // some function that returns an array of n subkeys derived from a masterkey
+
+    size_t subkey_len = crypto_kdf_BYTES_MAX;
+    unsigned char **subkeys = (unsigned char **) sodium_malloc(sizeof(char) * subkey_len);
+
+    int pos = 0;
+    uint64_t subkey_id = 1;
+
+    for (int i=0; i<qty; i++) {
+
+        uint8_t *subkey = (uint8_t *) sodium_malloc(subkey_len);
+
+        if (crypto_kdf_derive_from_key(subkey, subkey_len, subkey_id++, CONTEXT, masterkey) != 0) {
+            return NULL;
+        }
+
+        subkeys[pos] = subkey;
+        pos++;
+    }
+
+    return subkeys;
 }
 
 int write_key(unsigned char *key, size_t key_len, char *file_path)

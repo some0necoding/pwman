@@ -1,5 +1,8 @@
 #include <stdio.h>
 
+#include "headers/cryptography.h"
+#include "headers/sodiumplusplus.h"
+
 /*  password input
     password conversion to key1 in secure memory
     password conversion to key2 in secure memory
@@ -94,5 +97,28 @@
 int main(int argc, char const *argv[])
 {    
     /* Hi, you can code here! */
+
+    int code = sodium_init();
+
+    size_t key_len = crypto_box_SEEDBYTES;
+    size_t subkey_len = 64;
+    char *pass = "someCrazyPassword";
+    unsigned char *key = (unsigned char *) sodium_malloc(key_len);
+    unsigned char **subkeys = (unsigned char **) sodium_malloc(sizeof(char) * subkey_len);
+
+    if (generate_masterkey(pass, key, key_len) != 0) {
+        perror("test: masterkey generation failed");
+        return -1;
+    }
+
+    printf("masterkey generated\n");
+
+    if (!(subkeys = generate_subkeys(2, key))) {
+        perror("test: subkeys generation failed");
+        return -1;
+    }
+
+    printf("subkeys generated\n");
+
     return 0;
 }
