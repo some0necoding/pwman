@@ -69,8 +69,8 @@ int signin()
     size_t hash_len = HASH_LENGTH;
     size_t pass_len = 0;
 
-    char *pass = (unsigned char *) sodium_malloc(buff_len);
-    char *hash = (unsigned char *) sodium_malloc(hash_len);
+    char *pass = (char *) sodium_malloc(buff_len);
+    char *hash = (char *) sodium_malloc(hash_len);
     char *file_path = HASH_FILE_PATH;
 
     int ret_code = -1;
