@@ -389,13 +389,19 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
 /*--------------KEY-HANDLING-START--------------*/
 
-int generate_masterkey(char *password, unsigned char *key, size_t key_len)
+// this function generates an high entropy masterkey out of a password
+unsigned char *generate_masterkey(char *password)
 {
+    size_t key_len = crypto_kdf_KEYBYTES;
     size_t salt_len = crypto_pwhash_SALTBYTES;
+
+    unsigned char *key = (unsigned char *) sodium_malloc(key_len);
     unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
 
+    // this fills salt with random bytes (doc.libsodium.org for info)
     randombytes_buf(salt, salt_len);
 
+    // this creates the actual hash using the password and the salt (doc.libsodium.org)
     if (crypto_pwhash(key, 
                       (unsigned long long) key_len, 
                       password, 
@@ -405,36 +411,42 @@ int generate_masterkey(char *password, unsigned char *key, size_t key_len)
                       crypto_pwhash_MEMLIMIT_SENSITIVE, 
                       crypto_pwhash_ALG_DEFAULT) != 0) 
     {
+        sodium_free(key);
         sodium_free(salt);
-        return -1;
+        return NULL;
     }
 
     sodium_free(salt);
-    return 0;
+    return key;
 }
 
-// some function that returns an array of n subkeys derived from a masterkey
+// this function returns an array of qty subkeys derived from a masterkey
 unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
 {
+    uint64_t subkey_id = 1;
 
     size_t subkey_len = crypto_kdf_BYTES_MAX;
     unsigned char **subkeys = (unsigned char **) sodium_malloc(sizeof(char) * subkey_len);
-    uint64_t subkey_id = 1;
 
     for (int i=0; i<qty; i++) {
 
         uint8_t *subkey = (uint8_t *) sodium_malloc(subkey_len);
 
+        // this derives a subkey from the masterkey (doc.libsodium.org)
         if (crypto_kdf_derive_from_key(subkey, subkey_len, subkey_id++, CONTEXT, masterkey) != 0) {
+            sodium_free(subkey);
+            sodium_free(subkeys);
             return NULL;
         }
 
+        // adding the subkey to an array that will be returned
         subkeys[i] = subkey;
     }
 
     return subkeys;
 }
 
+// simply writes key bytes in a file
 int write_key(unsigned char *key, size_t key_len, char *file_path)
 {
     size_t wlen;

@@ -12,8 +12,8 @@ int encrypt_file(char *file_path, unsigned char *key);
 // decrypts a file stored at "file_path" using the key "key", then it stores the result in the same location as the input file.
 unsigned char *decrypt_file(char *file_path, unsigned char *key);
 
-// generates a masterkey out of a password "password" that gets stored in "key" buffer. 
-int generate_masterkey(char *password, unsigned char *key, size_t key_len);
+// generates a masterkey out of a password "password". 
+unsigned char *generate_masterkey(char *password);
 
 // generates qty subkeys out of an high entropy masterkey that can be generated or derived from a password
 unsigned char **generate_subkeys(int qty, unsigned char *masterkey);
