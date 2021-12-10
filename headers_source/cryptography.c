@@ -389,17 +389,24 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
 /*--------------KEY-HANDLING-START--------------*/
 
-// this function generates an high entropy masterkey out of a password
-unsigned char *generate_masterkey(char *password)
+// this function generates an high entropy masterkey out of a password and
+// a salt
+unsigned char *generate_masterkey(char *password, unsigned char *salt, size_t salt_len)
 {
     size_t key_len = crypto_kdf_KEYBYTES;
-    size_t salt_len = crypto_pwhash_SALTBYTES;
-
     unsigned char *key = (unsigned char *) sodium_malloc(key_len);
-    unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
+    
+    if (salt_len != crypto_pwhash_SALTBYTES) {
+        perror("psm: invalid argument");
+        sodium_free(key);
+        return NULL;
+    }
 
-    // this fills salt with random bytes (doc.libsodium.org for info)
-    randombytes_buf(salt, salt_len);
+    if (!salt || !key) {
+        perror("psm: allocation error");
+        sodium_free(key);
+        return NULL;
+    }
 
     // this creates the actual hash using the password and the salt (doc.libsodium.org)
     if (crypto_pwhash(key, 
@@ -412,11 +419,9 @@ unsigned char *generate_masterkey(char *password)
                       crypto_pwhash_ALG_DEFAULT) != 0) 
     {
         sodium_free(key);
-        sodium_free(salt);
         return NULL;
     }
 
-    sodium_free(salt);
     return key;
 }
 

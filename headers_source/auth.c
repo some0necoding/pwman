@@ -68,10 +68,12 @@ int signin()
     size_t buff_len = PASS_LENGTH;
     size_t hash_len = HASH_LENGTH;
     size_t pass_len = 0;
+    size_t mkey_len = crypto_kdf_KEYBYTES;
 
     char *pass = (char *) sodium_malloc(buff_len);
     char *hash = (char *) sodium_malloc(hash_len);
     char *file_path = HASH_FILE_PATH;
+    unsigned char *mkey = (unsigned char *) sodium_malloc(mkey_len);
 
     int ret_code = -1;
 
@@ -108,7 +110,11 @@ int signin()
         goto ret;
     }
 
-    // here I need to generate a masterkey
+    if (!(mkey = generate_masterkey(pass))) {
+        perror("psm: cryptography error");
+        ret_code = -1;
+        goto ret;
+    }
 
     // here I need to generate two subkeys from the masterkey
     
