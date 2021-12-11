@@ -390,17 +390,11 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 /*--------------KEY-HANDLING-START--------------*/
 
 // this function generates an high entropy masterkey out of a password and
-// a salt
-unsigned char *generate_masterkey(char *password, unsigned char *salt, size_t salt_len)
+// a user-provided salt
+unsigned char *generate_masterkey_with_salt(char *password, unsigned char *salt)
 {
     size_t key_len = crypto_kdf_KEYBYTES;
     unsigned char *key = (unsigned char *) sodium_malloc(key_len);
-    
-    if (salt_len != crypto_pwhash_SALTBYTES) {
-        perror("psm: invalid argument");
-        sodium_free(key);
-        return NULL;
-    }
 
     if (!salt || !key) {
         perror("psm: allocation error");
@@ -425,7 +419,47 @@ unsigned char *generate_masterkey(char *password, unsigned char *salt, size_t sa
     return key;
 }
 
-// this function returns an array of qty subkeys derived from a masterkey
+// this function generates an high entropy masterkey out of a password
+// using an auto-generated random salt that will be stored in "salt" pointer
+// so that it can be used to generate the same output at login time. 
+unsigned char *generate_masterkey(char *password, unsigned char *salt)
+{
+    size_t key_len = crypto_kdf_KEYBYTES;
+    size_t salt_len = crypto_pwhash_SALTBYTES;
+
+    unsigned char *key = (unsigned char *) sodium_malloc(key_len);
+    unsigned char *this_salt = (unsigned char *) sodium_malloc(salt_len);
+
+    if (!this_salt || !key) {
+        perror("psm: allocation error");
+        sodium_free(key);
+        sodium_free(this_salt);
+        return NULL;
+    }
+
+    randombytes_buf(this_salt, salt_len);
+
+    // this creates the actual hash using the password and the salt (doc.libsodium.org)
+    if (crypto_pwhash(key, 
+                      (unsigned long long) key_len, 
+                      password, 
+                      (unsigned long long) strlen(password), 
+                      this_salt, 
+                      crypto_pwhash_OPSLIMIT_SENSITIVE, 
+                      crypto_pwhash_MEMLIMIT_SENSITIVE, 
+                      crypto_pwhash_ALG_DEFAULT) != 0) 
+    {
+        sodium_free(key);
+        sodium_free(this_salt);
+        return NULL;
+    }
+
+    salt = this_salt;
+
+    return key;
+}
+
+// this function returns an array of "qty" subkeys derived from a masterkey
 unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
 {
     uint64_t subkey_id = 1;
@@ -451,18 +485,42 @@ unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
     return subkeys;
 }
 
-// simply writes key bytes in a file
-int write_key(unsigned char *key, size_t key_len, char *file_path)
+// simply writes salt bytes in a file
+int write_salt(unsigned char *salt, char *file_path)
 {
     size_t wlen;
-    FILE *file = fopen(file_path, "w"); // 'w' opening will automatically clear the file
+    size_t salt_len = crypto_pwhash_SALTBYTES;
+    FILE *file = fopen(file_path, "w+"); // 'w' opening will automatically clear the file
 
     if (!file) {
         perror("psm: allocation error");
         return -1;
     }
 
-    if ((wlen = fwrite(key, 1, key_len, file)) != key_len) {
+    if ((wlen = fwrite(salt, 1, salt_len, file)) != salt_len) {
+        perror("psm: I/O error");
+        fclose(file);
+        return -1;
+    }
+
+    fclose(file);
+
+    return 0;
+}
+
+// simply retrieves salt bytes from a file
+int get_salt(unsigned char *salt, char *file_path)
+{
+    size_t rlen;
+    size_t salt_len = crypto_pwhash_SALTBYTES;
+    FILE *file = fopen(file_path, "r+");
+
+    if (!file) {
+        perror("psm: allocation error");
+        return -1;
+    }
+
+    if ((rlen = fread(salt, 1, salt_len, file)) != salt_len) {
         perror("psm: I/O error");
         fclose(file);
         return -1;
