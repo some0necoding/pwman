@@ -130,7 +130,7 @@ char *command_names[] = {
     "show",
     "add",
     "modify",
-    "remove",
+    "rm",
     "get",
     "exit"
 };
