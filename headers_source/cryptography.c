@@ -422,7 +422,7 @@ unsigned char *generate_masterkey_with_salt(char *password, unsigned char *salt)
 // this function generates an high entropy masterkey out of a password
 // using an auto-generated random salt that will be stored in "salt" pointer
 // so that it can be used to generate the same output at login time. 
-unsigned char *generate_masterkey(char *password, unsigned char *salt)
+unsigned char *generate_masterkey(char *password, unsigned char **salt)
 {
     size_t key_len = crypto_kdf_KEYBYTES;
     size_t salt_len = crypto_pwhash_SALTBYTES;
@@ -454,7 +454,7 @@ unsigned char *generate_masterkey(char *password, unsigned char *salt)
         return NULL;
     }
 
-    salt = this_salt;
+    *salt = this_salt;
 
     return key;
 }
@@ -477,6 +477,16 @@ unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
             sodium_free(subkeys);
             return NULL;
         }
+
+        /*--------------TEST-START----------------*/
+        
+        /*printf("subkey %d generated:", i+1);
+        for (int j=0; j<subkey_len; j++) {
+            printf(" %d", subkey[j]);
+        }
+        printf("\n");*/
+
+        /*---------------TEST-END-----------------*/
 
         // adding the subkey to an array that will be returned
         subkeys[i] = subkey;
