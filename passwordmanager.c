@@ -94,14 +94,6 @@ char **psm_split_line(char *line);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
-/*------GLOBAL-VARIABLES-DEFINITION-START-------*/
-
-char *masterkey;
-unsigned char *key1;
-unsigned char *key2;
-
-/*-------GLOBAL-VARIABLES-DEFINITION-END--------*/
-
 int main(int argc, char const *argv[])
 {
     crypto_alg_init();

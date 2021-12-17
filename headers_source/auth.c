@@ -229,8 +229,6 @@ int login()
     unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
 
     int skey_qty = 2;
-    int skey_one = 0;
-    int skey_two = 1;
     int ret_code = -1;
     
     if (!pass || !hash) {
