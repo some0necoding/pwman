@@ -1,5 +1,6 @@
 #include "./headers/auth.h"
 #include "./headers/input_acquisition.h"
+#include "./headers/cryptography.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -7,72 +8,14 @@
 #include <stdio.h>
 #include <sodium.h>
 
-/*
-    Pretty amazing password manager written in C
-
-    1. Tasks
-
-        Authentication
-
-        - get the password
-        - verify the password (login) or validate input (signin)
-        - grant or not the access
-        
-        Execution
-
-        - show passwords (by user)
-        - add password (by user)
-        - remove password (by user)
-        - modify password (by user)
-        - retrieve password (by user)
-        - encrypting/decrypting passwords
-        - saving passwords in the clipboard
-        - clearing the clipboard after a defined amount of time
-        - keeping all buffers clean
-
-        Closure
-
-        - clear everything (buffers, clipboard)
-
-    2. Commands
-
-        - show(char **args): it shows all accounts with hidden passwords (for security 
-            purposes), because its task is to make the user see what are his accounts; 
-            if the user wants to retrieve a password he will have to call the get() 
-            function. As well as all other commands it accepts multiple args, but 
-            those will be ignored because useless (it will run as a void function).
-
-        - add(char **args): it adds a new account to files. It accepts account_name,
-            user_or_mail and password as args.
-        
-        - remove(char **args): it removes an account from files. It accepts
-            account_name (which is unique) as single arg.
-
-        - modify(char **args): it modifyies user_or_mail or/and password of an account. 
-            Accepted args are not yet decided 'cause this function is a bit messy. 
-            Maybe it will consist in some -something -> -p for pass and -u for user.
-
-        - get(char **args): it saves the specified account in the user's clipboard,
-            so that the password never gets visible (inputs will have echo disabled).
-            It accepts account_name as single arg.
-
-    3. Storage method
-
-        - account_name
-        - user_or_mail
-        - password 
-
-        all of these may be put in two files, one for keeping accounts' and users'
-        names, the other for keeping passwords (/etc/passwd and /etc/shadow style). 
-        This because if the user calls show() with all data saved in the same file, 
-        it will be decrypted all account_name, user_or_name and password, putting 
-        the latter at risk uselessly 'cause it will not be used to produce the output.
-*/
-
 /*----------CONSTANTS-DEFINITION-START----------*/
 
 #define PSM_TOK_BUFSIZE 64
 #define PSM_TOK_DELIM " \t\r\n\a"
+#define SEPARATE_LINE_CHAR 0xD8        // this byte separates lines in the file
+#define SEPARATE_KEYS_CHAR 0xF0        // this byte separates account_name and mail_or_user in a line
+
+#define PASS_LENGTH 65
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
@@ -92,7 +35,12 @@ int psm_exit(char **args);
 
 char **psm_split_line(char *line);
 
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
+/*------------GLOBAL-VARIABLES-START------------*/
+
+int skey_one = 0;
+int skey_two = 1;
+
+/*-------------GLOBAL-VARIABLES-END-------------*/
 
 int main(int argc, char const *argv[])
 {
@@ -150,25 +98,59 @@ int psm_num_commands() {
 
 int psm_show(char **args)
 {
-    printf("show\n");
+    char *file_path = "./config_files/accounts.list";
+    unsigned char *file_content;
 
-    // time_line:
-    // 1. decript the accounts
-    //    file in an array
-    // 2. list'em all with
-    //    hidden passwords
+    if (args[1]) {
+        printf("\"show\" does not accept arguments\n");
+        return -1;
+    }
+
+    // the file remains encrypted, while the decrypted content gets stored in a buffer (i.e. file_content).
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_one]))) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    printf("%s\n", file_content);
+
+    // 0xD8 216 11011000 -> to separate lines
+    // 0xF0 240 11110000 -> to separate account and mail
+    // accounts file pattern -> account_name_1\0xF0mail_or_username_1\0xD8account_name_2\0xF0mail_or_username_2...
+
+    // here I need to split the file content in lines and then to separat'em in two tokens: account and mail. Then I print 'em.
 }
 
 int psm_add(char **args)
 {
-    printf("add\n");
+    // add accepts only 2 args, so if the 2nd arg doesn't exist or if the 3rd arg do exist, the program throws an error.
+    if (!args[2] || args[3]) {
+        printf("\"add\" needs to know an account name and the mail used to login (accepts only two arguments)\n");
+    }
 
-    // time_line:
-    // 1. validate user input
-    // 2. decrypt the accounts
-    //    file
-    // 3. add input to the file
-    // 4. recrypt the file
+    // FIX: declaration here
+    size_t acct_size = strlen(args[1]) + 1;
+    size_t user_size = strlen(args[2]) + 1;
+    size_t pass_size = PASS_LENGTH;
+
+    unsigned char *acct_name = (unsigned char *) sodium_malloc(acct_size);
+    unsigned char *user_mail = (unsigned char *) sodium_malloc(user_size);
+    unsigned char *pass_word = (unsigned char *) sodium_malloc(pass_size);
+
+    acct_name = args[1];
+    user_mail = args[2];
+
+    printf("choose a password for this account: ");
+
+    if (!(pass_word = read_line_s())) {
+        perror("psm: I/O error");
+        return -1;
+    }
+
+    append_account(acct_name, user_mail);
+    append_pass(pass_word);
+
+    return 0;
 }
 
 int psm_modify(char **args)
