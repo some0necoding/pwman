@@ -44,10 +44,12 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail);
 int append_pass(unsigned char *pass);
 unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
 
+/*-----------FUNCTIONS-DEFINITION-END-----------*/
+
 /*------------GLOBAL-VARIABLES-START------------*/
 
-int skey_one = 0;
-int skey_two = 1;
+int skey_acct = 0;
+int skey_pass = 1;
 
 /*-------------GLOBAL-VARIABLES-END-------------*/
 
@@ -60,6 +62,7 @@ int main(int argc, char const *argv[])
     return EXIT_SUCCESS;
 }
 
+// this function initializes sodium library (doc.libsodium.org)
 void crypto_alg_init(void) {
     if (sodium_init() == -1 ) {
         perror("psm: error during cryptographic algorithm's initialization\n");
@@ -68,6 +71,7 @@ void crypto_alg_init(void) {
     }
 }
 
+// this function starts the shell after authenticating the user
 void psm_start(void) 
 {
     int exit_code = 0;
@@ -83,6 +87,7 @@ void psm_start(void)
     }
 }
 
+// array of command names
 char *command_names[] = {
     "show",
     "add",
@@ -92,6 +97,7 @@ char *command_names[] = {
     "exit"
 };
 
+// array of command functions
 int (*command_addr[]) (char **) = {
     &psm_show,
     &psm_add,
@@ -101,44 +107,52 @@ int (*command_addr[]) (char **) = {
     &psm_exit
 };
 
+// this function returns the number of commands in command_names array
 int psm_num_commands(void) 
 {
     return sizeof(command_names) / sizeof(char *);
 }
 
+// this function shows for every account th account name, the mail and the password
+// marked as hidden. The content processing follows the storage pattern.
+// - Arguments: it does not accept arguments.
 int psm_show(char **args)
 {
-    char *file_path = ACCT_FILE_PATH;
+    char *file_path = ACCT_FILE_PATH;                           // accounts.list file path.
     
-    unsigned char *file_content;
-    unsigned char **content_lines;
-    unsigned char *content_line;
-    unsigned char **tokens;
-    unsigned char *acct_name;
-    unsigned char *user_mail;
+    unsigned char *file_content;                                // decrypted content of accounts.list file as a single string.
+    unsigned char **content_lines;                              // array containing the file content splitted in lines. Every line contains an account.
+    unsigned char *content_line;                                // a single line of the file content (i.e. a single account).
+    unsigned char **tokens;                                     // array containing the account name and the mail of the account, stored in a single line.
+    unsigned char *acct_name;                                   // account name.
+    unsigned char *user_mail;                                   // username or mail.
 
-    unsigned char *sprt_line_str = SEPARATE_LINE_STR;
-    unsigned char *sprt_tkns_str = SEPARATE_TKNS_STR;
+    unsigned char *sprt_line_str = SEPARATE_LINE_STR;           // 0xD8 byte, that separates lines.
+    unsigned char *sprt_tkns_str = SEPARATE_TKNS_STR;           // 0xF0 byte, that separates tokens (account name and user/mail).
 
     int pos = 0;
 
+    // some kinda input verification.
     if (args[1]) {
         printf("\"show\" does not accept arguments\n");
         return -1;
     }
 
     // the file remains encrypted, while the decrypted content gets stored in a buffer (i.e. file_content).
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_one]))) {
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
         perror("psm: cryptography error");
         return -1;
     }  
 
+    // the file content gets splitted in lines and stored in content_lines, that is NULL terminated.
     if (!(content_lines = split_by_delim(file_content, sprt_line_str))) {
         return -1;
     }
 
+    // looping through the lines to print info about every account.
     while ((content_line = content_lines[pos]) != NULL) {
 
+        // the line gets splitted in tokens (account name and user/mail).
         if (!(tokens = split_by_delim(content_line, sprt_tkns_str))) {
             return -1;
         }
@@ -154,6 +168,10 @@ int psm_show(char **args)
     return 0;
 }
 
+// this function adds a new account to the "database". Account name and user/mail are appended
+// to accounts.list file, while the password is appended to passwords.list file. The storage
+// process follows the storage pattern.
+// - Arguments: account_name, user_or_mail.
 int psm_add(char **args)
 {
     int ret_code = -1;
@@ -173,6 +191,7 @@ int psm_add(char **args)
 
     printf("choose a password for this account: ");
 
+    // the password is requested after launching the command in order to acquire it safely (read_line_s() is used).
     if (!(pass_word = read_line_s())) {
         perror("psm: I/O error");
         goto ret;
@@ -180,8 +199,8 @@ int psm_add(char **args)
 
     printf("\n");
 
-    append_account(acct_name, user_mail);
-    append_pass(pass_word);
+    append_account(acct_name, user_mail);               // appending the account name and the user/mail to accounts.list file
+    append_pass(pass_word);                             // appending the password to passwords.list file
 
     ret_code = 0;
 
@@ -239,13 +258,40 @@ int psm_exit(char **args) {
     exit(EXIT_SUCCESS);
 }
 
+// this function is the basically the shell itself: it prints a prompt on the screen,
+// reads the user input, splits the input in tokens separated by spaces (command name + args) 
+// and executes commands using psm_launch().
+int psm_exec()
+{
+    char *line;
+    char **args;
+
+    while (1) 
+    {
+        printf("> ");                                   // printing the prompt.
+
+        line = read_line();                             // reading the user input.
+        args = psm_split_line(line);                    // splitting the input in tokens (command name + arg1 + arg2 + ...).
+
+        psm_launch(args);                               // launching the command passing its name along with its arguments.
+    }
+
+    free(line);
+    free(args);
+
+    return 1;
+}
+
+// launching the command passed as an array containing the command name and its arguments.
 int psm_launch(char **args) 
 {
+    // checking for empty commands
     if (args[0] == NULL) {
-        // An empty command was entered
         return 1;
     }
 
+    // if the first argument of the array equals to the name of a stored command, 
+    // the corresponding function is called and the arguments are passed along.
     for (int i = 0; i < psm_num_commands(); i++) {
         if (strcmp(args[0], command_names[i]) == 0) {
             return (*command_addr[i])(args);
@@ -253,29 +299,6 @@ int psm_launch(char **args)
     }
 
     printf("command not found\n");
-    return 1;
-}
-
-int psm_exec()
-{
-    char *line;
-    char **args;
-
-
-
-    while (1) 
-    {
-        printf("> ");
-
-        line = read_line();
-        args = psm_split_line(line);
-
-        psm_launch(args);
-    }
-
-    free(line);
-    free(args);
-
     return 1;
 }
 
@@ -340,7 +363,7 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
     unsigned char *totl_content;
 
     // decrypting the accounts.list file into a buffer
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_one]))) {
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
         perror("psm: cryptography error");
         return -1;
     }
@@ -358,7 +381,7 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
     strncat(totl_content, sprt_line_char, 1);                                           // appending 0xD8 (separation byte) after user_or_mail
 
     // encrypting the new buffer into the accounts.list file
-    if (encrypt_buffer(totl_content, subkeys[skey_one], file_path) != 0) {
+    if (encrypt_buffer(totl_content, subkeys[skey_acct], file_path) != 0) {
         perror("psm: cryptography error");
         sodium_free(totl_content);
         return -1;
@@ -385,7 +408,7 @@ int append_pass(unsigned char *pass)
     unsigned char *totl_content;
 
     // decrypting the passwords.list file into a buffer
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_two]))) {
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
         perror("psm: cryptography error");
         return -1;
     }
@@ -401,7 +424,7 @@ int append_pass(unsigned char *pass)
     strncat(totl_content, sprt_line_char, 1);                                           // appending 0xD8 (separation byte) after user_or_mail
 
     // encrypting the new buffer into the passwords.list file
-    if (encrypt_buffer(totl_content, subkeys[skey_two], file_path) != 0) {
+    if (encrypt_buffer(totl_content, subkeys[skey_pass], file_path) != 0) {
         perror("psm: cryptography error");
         sodium_free(totl_content);        
         return -1;
