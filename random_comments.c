@@ -150,3 +150,11 @@
     - verify that both files have the same number of lines
     - verify that indexes correspond or make it impossible to corrupt account-password relation
 */
+
+/*
+    account storage pattern:
+
+    - accounts  -> account_name_1\0xF0mail_or_user_1\0xD8account_name_2\0xF0mail_or_user_2\0xD8...
+    - passwords -> password_1\0xD8password_2\0xD8password_3\0xD8...
+
+*/

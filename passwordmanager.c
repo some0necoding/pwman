@@ -1,19 +1,22 @@
 #include "./headers/auth.h"
 #include "./headers/input_acquisition.h"
 #include "./headers/cryptography.h"
+#include "./headers/sodiumplusplus.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <stdio.h>
-#include <sodium.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
 #define PSM_TOK_BUFSIZE 64
 #define PSM_TOK_DELIM " \t\r\n\a"
-#define SEPARATE_LINE_CHAR 0xD8        // this byte separates lines in the file
-#define SEPARATE_KEYS_CHAR 0xF0        // this byte separates account_name and mail_or_user in a line
+#define SEPARATE_LINE_STR "\xD8"   // 0xD8 byte stored as a string to use with string.h functions (marks the end of a line in *.list files)
+#define SEPARATE_TKNS_STR "\xF0"   // 0xF0 byte stored as a string to use with string.h functions (separates two tokens on the same line in *.list files)
+
+#define ACCT_FILE_PATH "./config_files/accounts.list"
+#define PASS_FILE_PATH "./config_files/passwords.list"
 
 #define PASS_LENGTH 65
 
@@ -34,6 +37,12 @@ int psm_get(char **args);
 int psm_exit(char **args);
 
 char **psm_split_line(char *line);
+int psm_launch(char **args) ;
+int psm_num_commands(void);
+
+int append_account(unsigned char *acct_name, unsigned char *user_or_mail);
+int append_pass(unsigned char *pass);
+unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
 
 /*------------GLOBAL-VARIABLES-START------------*/
 
@@ -92,14 +101,26 @@ int (*command_addr[]) (char **) = {
     &psm_exit
 };
 
-int psm_num_commands() {
+int psm_num_commands(void) 
+{
     return sizeof(command_names) / sizeof(char *);
 }
 
 int psm_show(char **args)
 {
-    char *file_path = "./config_files/accounts.list";
+    char *file_path = ACCT_FILE_PATH;
+    
     unsigned char *file_content;
+    unsigned char **content_lines;
+    unsigned char *content_line;
+    unsigned char **tokens;
+    unsigned char *acct_name;
+    unsigned char *user_mail;
+
+    unsigned char *sprt_line_str = SEPARATE_LINE_STR;
+    unsigned char *sprt_tkns_str = SEPARATE_TKNS_STR;
+
+    int pos = 0;
 
     if (args[1]) {
         printf("\"show\" does not accept arguments\n");
@@ -110,32 +131,42 @@ int psm_show(char **args)
     if (!(file_content = decrypt_file(file_path, subkeys[skey_one]))) {
         perror("psm: cryptography error");
         return -1;
+    }  
+
+    if (!(content_lines = split_by_delim(file_content, sprt_line_str))) {
+        return -1;
     }
 
-    printf("%s\n", file_content);
+    while ((content_line = content_lines[pos]) != NULL) {
 
-    // 0xD8 216 11011000 -> to separate lines
-    // 0xF0 240 11110000 -> to separate account and mail
-    // accounts file pattern -> account_name_1\0xF0mail_or_username_1\0xD8account_name_2\0xF0mail_or_username_2...
+        if (!(tokens = split_by_delim(content_line, sprt_tkns_str))) {
+            return -1;
+        }
 
-    // here I need to split the file content in lines and then to separat'em in two tokens: account and mail. Then I print 'em.
+        acct_name = tokens[0];
+        user_mail = tokens[1];
+
+        printf("%1$d.\n\taccount: %2$s\n\tuser: %3$s\n\tpassword: hidden\n", pos+1, acct_name, user_mail);
+
+        pos++;
+    }
+
+    return 0;
 }
 
 int psm_add(char **args)
 {
+    int ret_code = -1;
+
+    unsigned char *acct_name;
+    unsigned char *user_mail;
+    unsigned char *pass_word;
+
     // add accepts only 2 args, so if the 2nd arg doesn't exist or if the 3rd arg do exist, the program throws an error.
     if (!args[2] || args[3]) {
         printf("\"add\" needs to know an account name and the mail used to login (accepts only two arguments)\n");
+        return -1;
     }
-
-    // FIX: declaration here
-    size_t acct_size = strlen(args[1]) + 1;
-    size_t user_size = strlen(args[2]) + 1;
-    size_t pass_size = PASS_LENGTH;
-
-    unsigned char *acct_name = (unsigned char *) sodium_malloc(acct_size);
-    unsigned char *user_mail = (unsigned char *) sodium_malloc(user_size);
-    unsigned char *pass_word = (unsigned char *) sodium_malloc(pass_size);
 
     acct_name = args[1];
     user_mail = args[2];
@@ -144,13 +175,23 @@ int psm_add(char **args)
 
     if (!(pass_word = read_line_s())) {
         perror("psm: I/O error");
-        return -1;
+        goto ret;
     }
+
+    printf("\n");
 
     append_account(acct_name, user_mail);
     append_pass(pass_word);
 
-    return 0;
+    ret_code = 0;
+
+    printf("account successfully stored!\n");
+
+ret:
+    //sodium_free(acct_name); need to change the allocation of args to sodium_malloc
+    //sodium_free(user_mail); need to change the allocation of args to sodium_malloc
+    sodium_free(pass_word);
+    return ret_code;
 }
 
 int psm_modify(char **args)
@@ -272,9 +313,141 @@ char **psm_split_line(char *line)
     return tokens;
 }
 
-
 void exit_prog(void)
 {
     char **empty_args;
     psm_exit(empty_args);
+}
+
+// here's some additional functions needed to run commands
+
+// this function appends a new account (account_name + user_or_mail) to accounts.list file.
+// At first it decrypts the file into a buffer, then it appends to this buffer account_name 
+// and user_or_mail separating them with 0xF0 byte and ending the line with 0xD8 byte. At
+// the end it encrypts the modifyied buffer into accounts.list.
+int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
+{
+    size_t file_cont_size;                              // size of the old buffer
+    size_t acct_name_size = strlen(acct_name);          // size of account_name
+    size_t user_mail_size = strlen(user_or_mail);       // size of user_or_mail
+    size_t totl_buff_size;                              // size of the new buffer
+
+    char *sprt_tkns_char = SEPARATE_TKNS_STR;           // 0xF0 byte stored as a string so that it can be used with string.h functions
+    char *sprt_line_char = SEPARATE_LINE_STR;           // 0xD8 byte stored as a string so that it can be used with string.h functions
+    char *file_path = ACCT_FILE_PATH;                   // accounts.list file path
+
+    unsigned char *file_content;
+    unsigned char *totl_content;
+
+    // decrypting the accounts.list file into a buffer
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_one]))) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    // based on the file_content size we can determine the total length of the modified buffer
+    file_cont_size = strlen(file_content);
+    totl_buff_size = file_cont_size + acct_name_size + 1 + user_mail_size + 1 + 1;      // original buffer + account_name + 0xF0 + user_or_mail + 0xD8 + \0
+
+    totl_content = (unsigned char *) sodium_malloc(totl_buff_size);                     // initialising the new buffer
+
+    strncpy(totl_content, file_content, file_cont_size + 1);                            // copying the old buffer into the new bigger buffer
+    strncat(totl_content, acct_name, acct_name_size);                                   // appending account_name to the new buffer
+    strncat(totl_content, sprt_tkns_char, 1);                                           // appending 0xF0 (separation byte) after account_name
+    strncat(totl_content, user_or_mail, user_mail_size);                                // appending user_or_mail to the new buffer
+    strncat(totl_content, sprt_line_char, 1);                                           // appending 0xD8 (separation byte) after user_or_mail
+
+    // encrypting the new buffer into the accounts.list file
+    if (encrypt_buffer(totl_content, subkeys[skey_one], file_path) != 0) {
+        perror("psm: cryptography error");
+        sodium_free(totl_content);
+        return -1;
+    }
+
+    sodium_free(totl_content);
+
+    return 0;
+}
+
+// this function appends a new password to passwords.list file. At first it decrypts 
+// the file into a buffer, then it appends to this buffer password ending the line 
+// with 0xD8 byte. At the end it encrypts the modifyied buffer into passwords.list.
+int append_pass(unsigned char *pass)
+{
+    size_t file_cont_size;                              // size of the old buffer
+    size_t pass_word_size = strlen(pass);               // size of pass
+    size_t totl_buff_size;                              // size of the new buffer
+
+    char *sprt_line_char = SEPARATE_LINE_STR;           // 0xD8 byte stored as a string so that it can be used with string.h functions
+    char *file_path = PASS_FILE_PATH;                   // passwords.list file path
+
+    unsigned char *file_content;
+    unsigned char *totl_content;
+
+    // decrypting the passwords.list file into a buffer
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_two]))) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    // based on the file_content size we can determine the total length of the modified buffer
+    file_cont_size = strlen(file_content);
+    totl_buff_size = file_cont_size + pass_word_size + 1 + 1;                           // original buffer + password + 0xD8 + \0
+
+    totl_content = (unsigned char *) sodium_malloc(totl_buff_size);                     // initialising the new buffer
+
+    strncpy(totl_content, file_content, file_cont_size + 1);                            // copying the old buffer into the new bigger buffer
+    strncat(totl_content, pass, pass_word_size);                                        // appending pass to the new buffer
+    strncat(totl_content, sprt_line_char, 1);                                           // appending 0xD8 (separation byte) after user_or_mail
+
+    // encrypting the new buffer into the passwords.list file
+    if (encrypt_buffer(totl_content, subkeys[skey_two], file_path) != 0) {
+        perror("psm: cryptography error");
+        sodium_free(totl_content);        
+        return -1;
+    }
+
+    sodium_free(totl_content);
+
+    return 0;
+}
+
+// this function splits a generic string in tokens using a delimiter string as reference.
+// all tokens are returned in an array.
+unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
+{
+    size_t bufsize = PSM_TOK_BUFSIZE;
+    size_t old_size;
+    
+    unsigned char **tokens = (unsigned char **) sodium_malloc(sizeof(unsigned char) * bufsize);
+    unsigned char *token;
+    
+    int pos = 0;
+
+    if (!tokens) {
+        perror("psm: allocation error\n");
+        return NULL;
+    }   
+
+    token = strtok(str, delim);
+
+    while (token != NULL) {
+        tokens[pos] = token;
+        pos++;
+        if (pos >= bufsize) {
+            old_size = bufsize;
+            bufsize += PSM_TOK_BUFSIZE;
+            tokens = (unsigned char **) sodium_realloc(tokens, old_size, bufsize);
+            if (!tokens) {
+                perror("psm: allocation error\n");
+                return NULL;
+            }
+        }
+
+        token = strtok(NULL, delim);
+    }
+
+    tokens[pos] = NULL;
+
+    return tokens;
 }
