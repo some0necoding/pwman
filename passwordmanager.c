@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <stdio.h>
+#include <logging.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
@@ -17,6 +18,7 @@
 
 #define ACCT_FILE_PATH "./config_files/accounts.list"
 #define PASS_FILE_PATH "./config_files/passwords.list"
+#define LOGS_FILE_PATH "./config_files/log.txt"
 
 #define PASS_LENGTH 65
 
@@ -35,6 +37,8 @@ int psm_modify(char **args);
 int psm_remove(char **args);
 int psm_get(char **args);
 int psm_exit(char **args);
+int test_show_password(char **args);
+int test_show_account(char **args);
 
 char **psm_split_line(char *line);
 int psm_launch(char **args) ;
@@ -43,6 +47,9 @@ int psm_num_commands(void);
 int append_account(unsigned char *acct_name, unsigned char *user_or_mail);
 int append_pass(unsigned char *pass);
 unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
+int remove_account(unsigned char *account_name, int *line_indx);
+int remove_password(int line_indx);
+int arrlen(void **arr);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -91,10 +98,12 @@ void psm_start(void)
 char *command_names[] = {
     "show",
     "add",
-    "modify",
+    "edit",
     "rm",
     "get",
-    "exit"
+    "exit",
+    "pass",
+    "acct"
 };
 
 // array of command functions
@@ -104,7 +113,9 @@ int (*command_addr[]) (char **) = {
     &psm_modify,
     &psm_remove,
     &psm_get,
-    &psm_exit
+    &psm_exit,
+    &test_show_password,
+    &test_show_account
 };
 
 // this function returns the number of commands in command_names array
@@ -127,9 +138,6 @@ int psm_show(char **args)
     unsigned char *acct_name;                                   // account name.
     unsigned char *user_mail;                                   // username or mail.
 
-    unsigned char *sprt_line_str = SEPARATE_LINE_STR;           // 0xD8 byte, that separates lines.
-    unsigned char *sprt_tkns_str = SEPARATE_TKNS_STR;           // 0xF0 byte, that separates tokens (account name and user/mail).
-
     int pos = 0;
 
     // some kinda input verification.
@@ -145,7 +153,7 @@ int psm_show(char **args)
     }  
 
     // the file content gets splitted in lines and stored in content_lines, that is NULL terminated.
-    if (!(content_lines = split_by_delim(file_content, sprt_line_str))) {
+    if (!(content_lines = split_by_delim(file_content, SEPARATE_LINE_STR))) {
         return -1;
     }
 
@@ -153,7 +161,7 @@ int psm_show(char **args)
     while ((content_line = content_lines[pos]) != NULL) {
 
         // the line gets splitted in tokens (account name and user/mail).
-        if (!(tokens = split_by_delim(content_line, sprt_tkns_str))) {
+        if (!(tokens = split_by_delim(content_line, SEPARATE_TKNS_STR))) {
             return -1;
         }
 
@@ -182,7 +190,7 @@ int psm_add(char **args)
 
     // add accepts only 2 args, so if the 2nd arg doesn't exist or if the 3rd arg do exist, the program throws an error.
     if (!args[2] || args[3]) {
-        printf("\"add\" needs to know an account name and the mail used to login (accepts only two arguments)\n");
+        printf("\"add\" needs to know an account name and the mail used to login (2 arguments needed)\n");
         return -1;
     }
 
@@ -230,7 +238,23 @@ int psm_modify(char **args)
 
 int psm_remove(char **args) 
 {
-    printf("remove\n");
+    int line_indx;
+
+    if (!args[1] || args[2]) {
+        printf("\"rm\" needs to know an account name (1 argument needed)\n");
+    }
+
+    if (remove_account(args[1], &line_indx) != 0) {
+        return -1;
+    }
+
+    printf("acct good\n");
+
+    remove_password(line_indx);
+
+    printf("pass good\n");
+
+    return 0;
 
     // time_line
     // 1. validate user input
@@ -253,6 +277,64 @@ int psm_get(char **args)
     //    or less) clear the 
     //    the clipboard
 }
+
+/*-------------TEST-------------*/
+
+int test_show_password(char **args) 
+{
+    unsigned char *file_content;
+
+    char *file_path = PASS_FILE_PATH;  
+    char ch;  
+
+    int pos = 0;
+
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
+        perror("test: cryptography error");
+        return -1;
+    }
+
+    while ((ch = file_content[pos++]) != '\0') {
+        if (ch > 126 || ch < 33) {
+            printf(" %d ", ch);
+        } else {
+            printf("%c", ch);
+        }
+    }
+
+    printf("\n");
+
+    return 0;
+}
+
+int test_show_account(char **args) 
+{
+    unsigned char *file_content;
+
+    char *file_path = ACCT_FILE_PATH;  
+    char ch;  
+
+    int pos = 0;
+
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
+        perror("test: cryptography error");
+        return -1;
+    }
+
+    while ((ch = file_content[pos++]) != '\0') {
+        if (ch > 126 || ch < 33) {
+            printf(" %d ", ch);
+        } else {
+            printf("%c", ch);
+        }
+    }
+
+    printf("\n");
+
+    return 0;
+}
+
+/*-------------TEST-------------*/
 
 int psm_exit(char **args) {
     exit(EXIT_SUCCESS);
@@ -370,15 +452,25 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
 
     // based on the file_content size we can determine the total length of the modified buffer
     file_cont_size = strlen(file_content);
-    totl_buff_size = file_cont_size + acct_name_size + 1 + user_mail_size + 1 + 1;      // original buffer + account_name + 0xF0 + user_or_mail + 0xD8 + \0
+    logger(LOGS_FILE_PATH, "NORMAL", "acct file content size: %d", file_cont_size);
 
-    totl_content = (unsigned char *) sodium_malloc(totl_buff_size);                     // initialising the new buffer
+    totl_buff_size = file_cont_size + acct_name_size + 1 + user_mail_size + 1;          // original buffer + account_name + 0xF0 + user_or_mail + 0xD8
+    logger(LOGS_FILE_PATH, "NORMAL", "acct total buffer size: %1$d = %2$d + %3$d + 1 + %4$d + 1\n", totl_buff_size, file_cont_size, 
+                                                                                                    acct_name_size, user_mail_size);
+    
+    totl_content = (unsigned char *) sodium_malloc(totl_buff_size + 1);                 // initialising the new buffer
+    totl_content[0] = '\0';
 
-    strncpy(totl_content, file_content, file_cont_size + 1);                            // copying the old buffer into the new bigger buffer
-    strncat(totl_content, acct_name, acct_name_size);                                   // appending account_name to the new buffer
-    strncat(totl_content, sprt_tkns_char, 1);                                           // appending 0xF0 (separation byte) after account_name
-    strncat(totl_content, user_or_mail, user_mail_size);                                // appending user_or_mail to the new buffer
-    strncat(totl_content, sprt_line_char, 1);                                           // appending 0xD8 (separation byte) after user_or_mail
+    strcat(totl_content, file_content);                                                 // copying the old buffer into the new bigger buffer
+    logger(LOGS_FILE_PATH, "NORMAL", "acct total content size: %s\n", totl_content);
+    strcat(totl_content, acct_name);                                                    // appending account_name to the new buffer
+    logger(LOGS_FILE_PATH, "NORMAL", "acct total content size: %s\n", totl_content);
+    strcat(totl_content, sprt_tkns_char);                                               // appending 0xF0 (separation byte) after account_name
+    logger(LOGS_FILE_PATH, "NORMAL", "acct total content size: %s\n", totl_content);
+    strcat(totl_content, user_or_mail);                                                 // appending user_or_mail to the new buffer
+    logger(LOGS_FILE_PATH, "NORMAL", "acct total content size: %s\n", totl_content);
+    strcat(totl_content, sprt_line_char);                                               // appending 0xD8 (separation byte) after user_or_mail
+    logger(LOGS_FILE_PATH, "NORMAL", "acct total content size: %s\n", totl_content);
 
     // encrypting the new buffer into the accounts.list file
     if (encrypt_buffer(totl_content, subkeys[skey_acct], file_path) != 0) {
@@ -415,13 +507,20 @@ int append_pass(unsigned char *pass)
 
     // based on the file_content size we can determine the total length of the modified buffer
     file_cont_size = strlen(file_content);
-    totl_buff_size = file_cont_size + pass_word_size + 1 + 1;                           // original buffer + password + 0xD8 + \0
+    logger(LOGS_FILE_PATH, "NORMAL", "pass file content size: %d\n", file_cont_size);
 
-    totl_content = (unsigned char *) sodium_malloc(totl_buff_size);                     // initialising the new buffer
+    totl_buff_size = file_cont_size + pass_word_size + 1;                               // original buffer + password + 0xD8
+    logger(LOGS_FILE_PATH, "NORMAL", "pass total buffer size: %1$d = %2$d + %3$d + 1\n", totl_buff_size, file_cont_size, pass_word_size);
 
-    strncpy(totl_content, file_content, file_cont_size + 1);                            // copying the old buffer into the new bigger buffer
-    strncat(totl_content, pass, pass_word_size);                                        // appending pass to the new buffer
-    strncat(totl_content, sprt_line_char, 1);                                           // appending 0xD8 (separation byte) after user_or_mail
+    totl_content = (unsigned char *) sodium_malloc(totl_buff_size + 1);                 // initialising the new buffer
+    totl_content[0] = '\0';
+
+    strcat(totl_content, file_content);                                                 // copying the old buffer into the new bigger buffer
+    logger(LOGS_FILE_PATH, "NORMAL", "pass total content size: %s\n", totl_content);
+    strcat(totl_content, pass);                                                         // appending pass to the new buffer
+    logger(LOGS_FILE_PATH, "NORMAL", "pass total content size: %s\n", totl_content);
+    strcat(totl_content, sprt_line_char);                                               // appending 0xD8 (separation byte) after user_or_mail
+    logger(LOGS_FILE_PATH, "NORMAL", "pass total content size: %s\n", totl_content);
 
     // encrypting the new buffer into the passwords.list file
     if (encrypt_buffer(totl_content, subkeys[skey_pass], file_path) != 0) {
@@ -473,4 +572,158 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
     tokens[pos] = NULL;
 
     return tokens;
+}
+
+int remove_account(unsigned char *account_name, int *line_indx)
+{
+    size_t _lines_qty;
+    size_t __line_len;
+    size_t __cont_len;
+    size_t n_cont_len;
+
+    unsigned char *_file_content;
+    unsigned char *_content_line;
+    unsigned char *new_file_cont;
+
+    unsigned char **content_lines;
+    unsigned char **__line_tokens;
+
+    char *file_path = ACCT_FILE_PATH;
+
+    int line_found = 0; // false
+    int pos = 0;
+
+    if (!(_file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    __cont_len = strlen(_file_content);
+    logger(LOGS_FILE_PATH, "NORMAL", "acct file content size: %d\n", __cont_len);
+
+    content_lines = split_by_delim(_file_content, SEPARATE_LINE_STR);
+    _lines_qty = arrlen((void **) content_lines);
+    logger(LOGS_FILE_PATH, "NORMAL", "acct file content lines: %d\n", _lines_qty);
+
+    while ((_content_line = content_lines[pos]) != NULL) {
+
+        __line_len = strlen(_content_line);  
+        logger(LOGS_FILE_PATH, "NORMAL", "acct line to remove size: %d\n", __line_len);
+        __line_tokens = split_by_delim(_content_line, SEPARATE_TKNS_STR);
+
+        if (strcmp(__line_tokens[0], account_name) == 0) {
+            *line_indx = pos;
+            logger(LOGS_FILE_PATH, "NORMAL", "acct line to remove pos: %d\n", pos);
+            line_found = 1; // true
+            break;
+        }
+
+        pos++;
+    }
+
+    if (line_found == 0) {
+        printf("account not found\n");
+        return -1;
+    }
+  
+    n_cont_len = __cont_len - (__line_len + 1);
+    logger(LOGS_FILE_PATH, "NORMAL", "acct new content size: %d = %d - (%d + 1)\n", n_cont_len, __cont_len, __line_len);
+    new_file_cont = (unsigned char *) sodium_malloc(n_cont_len + 1);
+    new_file_cont[0] = '\0';
+    logger(LOGS_FILE_PATH, "NORMAL", "acct new file content: %s\n", new_file_cont);
+
+    if (n_cont_len != 0) {    
+
+        for (int i=0; i<_lines_qty; i++) {
+            if (i != *line_indx) {
+                strcat(new_file_cont, content_lines[i]);
+                logger(LOGS_FILE_PATH, "NORMAL", "acct new file content: %s\n", new_file_cont);
+            }
+        }
+
+        new_file_cont[n_cont_len - 1] = '\xD8';
+        new_file_cont[n_cont_len] = '\0';
+    }
+
+    logger(LOGS_FILE_PATH, "NORMAL", "acct new file content: %s\n", new_file_cont);
+
+    if (encrypt_buffer(new_file_cont, subkeys[skey_acct], file_path) != 0) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    return 0;
+}
+
+int remove_password(int line_indx)
+{
+    size_t lines_qty;
+    size_t line_len;
+    size_t new_cont_len;
+    size_t cont_len;
+
+    unsigned char *file_content;
+    unsigned char **content_lines;
+    unsigned char *new_file_content;
+
+    char *file_path = PASS_FILE_PATH;
+
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    cont_len = strlen(file_content);
+    logger(LOGS_FILE_PATH, "NORMAL", "pass file content size: %d\n", cont_len);
+
+    content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+    lines_qty = arrlen((void **) content_lines);
+    logger(LOGS_FILE_PATH, "NORMAL", "pass file content lines: %d\n", lines_qty);
+
+    for (int i=0; i<lines_qty; i++) {
+        if (i == line_indx) {
+            line_len = strlen(content_lines[i]);
+            logger(LOGS_FILE_PATH, "NORMAL", "pass line to remove size: %d\npass line to remove pos: %d\n", line_len, line_indx);
+        }
+    }
+
+    new_cont_len = cont_len - (line_len + 1);
+    logger(LOGS_FILE_PATH, "NORMAL", "pass new content size: %d = %d - (%d + 1)\n", new_cont_len, cont_len, line_len);
+    new_file_content = (unsigned char *) sodium_malloc(new_cont_len + 1);
+    new_file_content[0] = '\0';
+    logger(LOGS_FILE_PATH, "NORMAL", "pass new file content: %s\n", new_file_content);
+
+    if (new_cont_len != 0) {
+
+        for (int i=0; i<lines_qty; i++) {
+            if (i != line_indx) {
+                strcat(new_file_content, content_lines[i]);
+                logger(LOGS_FILE_PATH, "NORMAL", "pass new file content: %s\n", new_file_content);
+            }
+        }
+
+        new_file_content[new_cont_len - 1] = '\xD8';
+        new_file_content[new_cont_len] = '\0';
+    }
+
+    logger(LOGS_FILE_PATH, "NORMAL", "pass new file content: %s\n", new_file_content);
+
+    if (encrypt_buffer(new_file_content, subkeys[skey_pass], file_path) != 0) {
+        perror("psm: cryptography error");
+        return -1;
+    }
+
+    return 0;
+}
+
+int arrlen(void **arr)
+{
+    int size = 0;
+    int pos = 0;
+
+    while (arr[pos++] != NULL) {
+        size++;
+    }
+
+    return size;
 }
