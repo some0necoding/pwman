@@ -1,0 +1,23 @@
+Tue Jan 11 18:30:29 2022 [NORMAL]: pass total content size: 3Ø
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: pass total content size: 3
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: pass total content size: 
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: pass total buffer size: 2 = 0 + 1 + 1
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: pass file content size: 0
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1ð2Ø
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1ð2
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1ð
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: acct total buffer size: 4 = 0 + 1 + 1 + 1 + 1
+
+Tue Jan 11 18:30:29 2022 [NORMAL]: acct file content size: 0
