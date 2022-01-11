@@ -20,12 +20,14 @@ void logger(const char *log_file_path, const char *tag, const char *f_message, .
 
     struct tm *local_time_struct = localtime(&local_time);                              // local time as struct tm (so that strftime() function can be used)
 
-    char *format_str = "%s [%s]: %s\n";
-    char *local_time_str = malloc(time_len + 1);                                        // local time as string
+    char *format_str = (char *) malloc(15);
+    char *local_time_str = (char *) malloc(time_len + 1);                               // local time as string
     char *final_buff = (char *) malloc(final_buff_len);
     char *message;                                                                      // message after being formatted
 
     FILE *log_file = fopen(log_file_path, "a");
+
+    strcpy(format_str, "%s [%s]: %s\n");
 
     va_start(f_args_list, f_message);
     message = format_message(f_message, f_args_list);
@@ -45,7 +47,7 @@ void logger(const char *log_file_path, const char *tag, const char *f_message, .
 char *format_message(const char *f_message, va_list f_args_list)
 {
     size_t final_buff_size = BUFF_SIZE;
-    char *final_buff = malloc(final_buff_size);
+    char *final_buff = (char *) malloc(final_buff_size);
     
     while (vsprintf(final_buff, f_message, f_args_list) < 0) {
         free(final_buff);
