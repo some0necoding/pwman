@@ -35,13 +35,13 @@ void logger(const char *log_file_path, const char *tag, const char *f_message, .
     strftime(local_time_str, time_len+1, "%c", local_time_struct);
 
     while (sprintf(final_buff, format_str, local_time_str, tag, message) < 0) {
-        free(final_buff);
         final_buff_len += BUFF_SIZE;
-        final_buff = (char *) malloc(final_buff_len);
+        final_buff = (char *) realloc(final_buff, final_buff_len);
     }
 
     final_buff_len = strlen(final_buff);
-    fwrite(final_buff, final_buff_len, 1, log_file);
+    fwrite(final_buff, 1, final_buff_len, log_file);
+    fclose(log_file);
 }
 
 char *format_message(const char *f_message, va_list f_args_list)
@@ -50,9 +50,8 @@ char *format_message(const char *f_message, va_list f_args_list)
     char *final_buff = (char *) malloc(final_buff_size);
     
     while (vsprintf(final_buff, f_message, f_args_list) < 0) {
-        free(final_buff);
         final_buff_size += BUFF_SIZE;
-        final_buff = (char *) malloc(final_buff_size);
+        final_buff = (char *) realloc(final_buff, final_buff_size);
     }
 
     return final_buff;
