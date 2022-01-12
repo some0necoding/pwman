@@ -1,23 +1,115 @@
-Tue Jan 11 18:30:29 2022 [NORMAL]: pass total content size: 3Ø
+Wed Jan 12 08:49:05 2022 [NORMAL]: acct file content size: 0
+Wed Jan 12 08:49:05 2022 [NORMAL]: acct total buffer size: 30 = 0 + 8 + 1 + 20 + 1
+Wed Jan 12 08:49:05 2022 [NORMAL]: acct total content size: 
+Wed Jan 12 08:49:05 2022 [NORMAL]: acct total content size: google_1
+Wed Jan 12 08:49:05 2022 [NORMAL]: acct total content size: google_1ï¿½
+Wed Jan 12 08:49:05 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.com
+Wed Jan 12 08:49:05 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.comï¿½
+Wed Jan 12 08:52:22 2022 [NORMAL]: acct file content size: 0
+Wed Jan 12 08:52:22 2022 [NORMAL]: acct total buffer size: 30 = 0 + 8 + 1 + 20 + 1
+Wed Jan 12 08:52:22 2022 [NORMAL]: acct total content size: 
+Wed Jan 12 08:52:22 2022 [NORMAL]: acct total content size: google_1
+Wed Jan 12 08:52:22 2022 [NORMAL]: acct total content size: google_1ï¿½
+Wed Jan 12 08:52:22 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.com
+Wed Jan 12 08:52:22 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.comï¿½
+Wed Jan 12 08:52:22 2022 [NORMAL]: pass file content size: 0
+Wed Jan 12 08:52:22 2022 [NORMAL]: pass total buffer size: 16 = 0 + 15 + 1
+Wed Jan 12 08:52:22 2022 [NORMAL]: pass total content size: 
+Wed Jan 12 08:52:22 2022 [NORMAL]: pass total content size: QiCD7SjsltBgzxZ
+Wed Jan 12 08:52:22 2022 [NORMAL]: pass total content size: QiCD7SjsltBgzxZï¿½
+Wed Jan 12 08:59:50 2022 [NORMAL]: acct file content size: 0
+Wed Jan 12 08:59:50 2022 [NORMAL]: acct total buffer size: 30 = 0 + 8 + 1 + 20 + 1
+Wed Jan 12 08:59:50 2022 [NORMAL]: acct total content size: 
+Wed Jan 12 08:59:50 2022 [NORMAL]: acct total content size: google_1
+Wed Jan 12 08:59:50 2022 [NORMAL]: acct total content size: google_1ï¿½
+Wed Jan 12 08:59:50 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.com
+Wed Jan 12 08:59:50 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.comï¿½
+Wed Jan 12 09:00:18 2022 [NORMAL]: acct file content size: 0
+Wed Jan 12 09:00:18 2022 [NORMAL]: acct total buffer size: 30 = 0 + 8 + 1 + 20 + 1
+Wed Jan 12 09:00:18 2022 [NORMAL]: acct total content size: 
+Wed Jan 12 09:00:18 2022 [NORMAL]: acct total content size: google_1
+Wed Jan 12 09:00:18 2022 [NORMAL]: acct total content size: google_1ï¿½
+Wed Jan 12 09:00:18 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.com
+Wed Jan 12 09:00:18 2022 [NORMAL]: acct total content size: google_1ï¿½mmontali03@gmail.comï¿½
+Wed Jan 12 09:00:18 2022 [NORMAL]: pass file content size: 0
+Wed Jan 12 09:00:18 2022 [NORMAL]: pass total buffer size: 16 = 0 + 15 + 1
+Wed Jan 12 09:00:18 2022 [NORMAL]: pass total content size: 
+Wed Jan 12 09:00:18 2022 [NORMAL]: pass total content size: QiCD7SjsltBgzxZ
+Wed Jan 12 09:00:18 2022 [NORMAL]: pass total content size: QiCD7SjsltBgzxZï¿½
+Wed Jan 12 09:04:25 2022 [NORMAL]: add account: file content size: 0
+Wed Jan 12 09:04:25 2022 [NORMAL]: add account: total buffer size: 30 = 0 + 8 + 1 + 20 + 1
+Wed Jan 12 09:04:25 2022 [NORMAL]: add account: total content size: 
+Wed Jan 12 09:04:25 2022 [NORMAL]: add account: total content size: google_1
+Wed Jan 12 09:04:25 2022 [NORMAL]: add account: total content size: google_1ï¿½
+Wed Jan 12 09:04:25 2022 [NORMAL]: add account: total content size: google_1ï¿½mmontali03@gmail.com
+Wed Jan 12 09:04:25 2022 [NORMAL]: add account: total content size: google_1ï¿½mmontali03@gmail.comï¿½
+Wed Jan 12 09:04:25 2022 [NORMAL]: add password: file content size: 0
+Wed Jan 12 09:04:25 2022 [NORMAL]: add password: total buffer size: 16 = 0 + 15 + 1
+Wed Jan 12 09:04:25 2022 [NORMAL]: add password: total content size: 
+Wed Jan 12 09:04:25 2022 [NORMAL]: add password: total content size: QiCD7SjsltBgzxZ
+Wed Jan 12 09:04:25 2022 [NORMAL]: add password: total content size: QiCD7SjsltBgzxZï¿½
+Wed Jan 12 09:16:55 2022 [NORMAL]: add account: file content size: 0
+Wed Jan 12 09:16:55 2022 [NORMAL]: add account: total buffer size: 30 = 0 + 8 + 1 + 20 + 1
+Wed Jan 12 09:16:55 2022 [NORMAL]: add account: total content size: 
+Wed Jan 12 09:16:55 2022 [NORMAL]: add account: total content size: google_1
+Wed Jan 12 09:16:55 2022 [NORMAL]: add account: total content size: google_1ð
+Wed Jan 12 09:16:55 2022 [NORMAL]: add account: total content size: google_1ðmmontali03@gmail.com
+Wed Jan 12 09:16:55 2022 [NORMAL]: add account: total content size: google_1ðmmontali03@gmail.comØ
+Wed Jan 12 09:16:55 2022 [NORMAL]: add password: file content size: 0
+Wed Jan 12 09:16:55 2022 [NORMAL]: add password: total buffer size: 16 = 0 + 15 + 1
+Wed Jan 12 09:16:55 2022 [NORMAL]: add password: total content size: 
+Wed Jan 12 09:16:55 2022 [NORMAL]: add password: total content size: QiCD7SsjltBgzxZ
+Wed Jan 12 09:16:55 2022 [NORMAL]: add password: total content size: QiCD7SsjltBgzxZØ
+Wed Jan 12 09:17:04 2022 [NORMAL]: acct file content size: 30
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: pass total content size: 3
+Wed Jan 12 09:17:04 2022 [NORMAL]: acct file content lines: 1
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: pass total content size: 
+Wed Jan 12 09:17:04 2022 [NORMAL]: acct line to remove size: 29
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: pass total buffer size: 2 = 0 + 1 + 1
+Wed Jan 12 09:17:04 2022 [NORMAL]: acct line to remove pos: 0
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: pass file content size: 0
+Wed Jan 12 09:17:04 2022 [NORMAL]: acct new content size: 0 = 30 - (29 + 1)
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1ð2Ø
+Wed Jan 12 09:17:04 2022 [NORMAL]: acct new file content: 
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1ð2
+Wed Jan 12 09:17:04 2022 [NORMAL]: acct new file content: 
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1ð
+Wed Jan 12 09:17:04 2022 [NORMAL]: pass file content size: 16
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 1
+Wed Jan 12 09:17:04 2022 [NORMAL]: pass file content lines: 1
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: acct total content size: 
+Wed Jan 12 09:17:04 2022 [NORMAL]: pass line to remove size: 15
+pass line to remove pos: 0
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: acct total buffer size: 4 = 0 + 1 + 1 + 1 + 1
+Wed Jan 12 09:17:04 2022 [NORMAL]: pass new content size: 0 = 16 - (15 + 1)
 
-Tue Jan 11 18:30:29 2022 [NORMAL]: acct file content size: 0
+Wed Jan 12 09:17:04 2022 [NORMAL]: pass new file content: 
+
+Wed Jan 12 09:17:04 2022 [NORMAL]: pass new file content: 
+
+Wed Jan 12 09:19:39 2022 [NORMAL]: add account: file content size: 0
+Wed Jan 12 09:19:39 2022 [NORMAL]: add account: total buffer size: 30 = 0 + 8 + 1 + 20 + 1
+Wed Jan 12 09:19:39 2022 [NORMAL]: add account: total content size: 
+Wed Jan 12 09:19:39 2022 [NORMAL]: add account: total content size: google_1
+Wed Jan 12 09:19:39 2022 [NORMAL]: add account: total content size: google_1ð
+Wed Jan 12 09:19:39 2022 [NORMAL]: add account: total content size: google_1ðmmontali03@gmail.com
+Wed Jan 12 09:19:39 2022 [NORMAL]: add account: total content size: google_1ðmmontali03@gmail.comØ
+Wed Jan 12 09:19:39 2022 [NORMAL]: add password: file content size: 0
+Wed Jan 12 09:19:39 2022 [NORMAL]: add password: total buffer size: 16 = 0 + 15 + 1
+Wed Jan 12 09:19:39 2022 [NORMAL]: add password: total content size: 
+Wed Jan 12 09:19:39 2022 [NORMAL]: add password: total content size: QiCD7SjsltBgzxZ
+Wed Jan 12 09:19:39 2022 [NORMAL]: add password: total content size: QiCD7SjsltBgzxZØ
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove account: file content size: 30
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove account: file content lines: 1
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove account: line to remove size: 29
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove account: line to remove pos: 0
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove account: new content size: 0 = 30 - (29 + 1)
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove account: new file content: 
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove account: new file content: 
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove password: file content size: 16
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove password: file content lines: 1
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove password: line to remove size: 15
+pass line to remove pos: 0
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove password: new content size: 0 = 16 - (15 + 1)
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove password: new file content: 
+Wed Jan 12 09:19:46 2022 [NORMAL]: remove password: new file content: 
