@@ -136,10 +136,18 @@ int signin()
     // here starts the part where two encryption keys that will be used to 
     // encrypt accounts and passwords are created out of the password.
 
-    if (!(mkey = generate_masterkey(pass, &salt))) {
+    if (!(mkey = generate_masterkey(pass, salt))) {
         perror("psm: cryptography error");
         goto ret;
     }
+
+    printf("salt: ");
+
+    for (int i=0; i<16; i++) {
+        printf(" %d ", salt[i]);
+    }
+
+    printf("\n");
 
     if (write_salt(salt, salt_file_path) != 0) {
         perror("psm: cryptography error");
