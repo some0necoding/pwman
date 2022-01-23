@@ -43,32 +43,36 @@ int encrypt_buffer(unsigned char *plain_buff, unsigned char *key, char *file_pat
     unsigned char *cypher_text;
     unsigned char *header = (unsigned char *) sodium_malloc(header_len);
     crypto_secretstream_xchacha20poly1305_state state;
+    int ret_code = -1;
 
     // check for good allocation
     if (!header) {
         perror("psm: allocation error");
-        return -1;
+        goto ret;
     }
 
     // initialize a state with a key and stores the output in the header
     if (crypto_secretstream_xchacha20poly1305_init_push(&state, header, key) != 0) {
         perror("psm: header init failed");
-        return -1;
+        goto ret;
     }
 
     // encrypt the buffer
     if (!(cypher_text = encrypt(&state, plain_buff, &cypher_text_len))) {
-        perror("psm: encryption failed");
-        return -1;
+        goto ret;
     }
     
     // write the encrypted buff into the file
     if (write_cypher_to_file(header, header_len, cypher_text, cypher_text_len, file_path) != 0) {
         perror("psm: I/O error");
-        return -1;
+        goto ret;
     }
 
-    return 0;
+    ret_code = 0;
+
+ret:
+    sodium_free(header);
+    return ret_code;
 }
 
 // To make the header more complete there's also an encryption function decrypted file -> encrypted file.
@@ -82,29 +86,29 @@ int encrypt_file(char *file_path, unsigned char *key)
     unsigned char *cypher_text;
     unsigned char *header = (unsigned char *) sodium_malloc(header_len);
     crypto_secretstream_xchacha20poly1305_state state;
+    int ret_code = -1;
 
     // check for good allocation
     if (!header) {
         perror("psm: allocation error");
-        return -1;
+        goto ret;
     }
 
     // initialize a state with a key and stores the output in the header
     if (crypto_secretstream_xchacha20poly1305_init_push(&state, header, key) != 0) {
         perror("psm: header init failed");
-        return -1;
+        goto ret;
     }
 
     // get the entire file content
     if (!(plain_text = fgetalls(file_path))) {
         perror("psm: I/O error");
-        return -1;
+        goto ret;
     }
 
     // encrypt the file content
     if (!(cypher_text = encrypt(&state, plain_text, &cypher_text_len))) {
-        perror("psm: encryption failed");
-        return -1;
+        goto ret;
     }
     
     // write the encrypted buff into the file
@@ -113,7 +117,11 @@ int encrypt_file(char *file_path, unsigned char *key)
         return -1;
     }
 
-    return 0;
+    ret_code = 0;
+
+ret:
+    sodium_free(header);
+    return ret_code;
 }
 
 // this function encrypts a buffer using the libsodium library, in order to understand well the code you should be aware of what's inside 
@@ -129,6 +137,7 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     unsigned char *cnk_buff = (unsigned char *) sodium_malloc(dec_cnk_size); // sub-buffer of the plaintext (doc.libsodium.org for more info).
     unsigned char *out_buff = (unsigned char *) sodium_malloc(enc_cnk_size); // this buffer contains the encrypted cnk_buff.
     unsigned char *ret_buff = (unsigned char *) sodium_malloc(enc_cnk_size); // buffer that contains all encrypted sub-buffers needed to cover the entire plaintext.
+    unsigned char *ret_arr = NULL;
 
     int big_buff_pos = 0;
     int cnk_buff_pos = 0;
@@ -136,6 +145,25 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     unsigned char c;
     unsigned long long out_len; // the length of an out_buff (doc.libsodium.org for more info).
+
+    /*-----TEST-----*/
+
+    char dec_ch;
+    size_t dec_len = strlen(buff);
+
+    printf("decrypted buff (%d chars)\n", dec_len);
+
+    for (int dec_p=0; dec_p<dec_len; dec_p++) {   
+        if (((dec_ch = buff[dec_p]) >= 48 && dec_ch <= 57) || (dec_ch >= 65 && dec_ch <= 90) || (dec_ch >= 97 && dec_ch <= 122)) { 
+            printf("%c", dec_ch);
+        } else {
+            printf(" %d ", dec_ch);
+        }
+    }
+    
+    printf("\n");
+
+    /*-----TEST-----*/
 
     while ((c = buff[big_buff_pos]) != '\0') {
         // if the cnk_buff is not full continue writing bytes into it.
@@ -149,10 +177,8 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
             // doc.libsodium.org for more info about this.
             if(crypto_secretstream_xchacha20poly1305_push(state, out_buff, &out_len, cnk_buff, cnk_buff_pos, NULL, 0, 0) != 0) {
-                perror("psm: corrupted chunk");
-                sodium_free(cnk_buff);
-                sodium_free(out_buff);
-                return NULL;
+                perror("psm: encryption: corrupted chunk");
+                goto ret;
             }
 
             // copying out_buff into ret_buff.
@@ -178,22 +204,49 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     }
 
     if (crypto_secretstream_xchacha20poly1305_push(state, out_buff, &out_len, cnk_buff, cnk_buff_pos, NULL, 0, crypto_secretstream_xchacha20poly1305_TAG_FINAL) != 0) {
-        perror("psm: corrupted chunk");
-        sodium_free(cnk_buff);
-        sodium_free(out_buff);
-        return NULL;
+        perror("psm: encryption: corrupted chunk");
+        goto ret;
     }
 
     memcpy((void *) ret_buff+ret_buff_pos, (void *) out_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
 
+    // assigning ret_buff size to a pointer so that it can be accessed outside this function
     *cypher_text_len = ret_buff_pos;
 
+    // null-terminating ret_buff
+    ret_buff[ret_buff_pos] = '\0';
+
+    // copying ret_buff into ret_arr
+    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos + 1);
+    strncpy(ret_arr, ret_buff, ret_buff_pos);
+    ret_arr[ret_buff_pos] = '\0';
+
+    /*-----TEST-----*/
+
+    char enc_ch;
+    size_t enc_len = strlen(ret_arr);
+
+    printf("encrypted buff (%d chars)\n", enc_len);
+
+    for (int enc_p=0; enc_p<enc_len; enc_p++) {
+        if (((enc_ch = ret_arr[enc_p]) >= 48 && enc_ch <= 57) || (enc_ch >= 65 && enc_ch <= 90) || (enc_ch >= 97 && enc_ch <= 122)) { 
+            printf("%c", enc_ch);
+        }  else {
+            printf(" %d ", enc_ch);
+        }
+    }
+    
+    printf("\n");
+
+    /*-----TEST-----*/
+
+ret:
     // always free memory, mostly if secured, cuz we don't wanna have buffers hanging around mlocked.
     sodium_free(cnk_buff);
     sodium_free(out_buff);
-
-    return ret_buff;
+    sodium_free(ret_buff);
+    return ret_arr;
 }
 
 // the function simply writes some bytes from a buffer to a stream (header + cyhertext -> encrypted file), 
@@ -243,11 +296,12 @@ unsigned char *decrypt_file(char *file_path, unsigned char *key)
 {
     size_t rlen;
     size_t header_len = crypto_secretstream_xchacha20poly1305_HEADERBYTES;
-    size_t cypher_text_len = 0;
+    size_t plain_text_len = 0;
 
     unsigned char *plain_text;
     unsigned char *cypher_text;
     unsigned char *header = (unsigned char *) sodium_malloc(header_len);
+    unsigned char *ret_buff = NULL;
     crypto_secretstream_xchacha20poly1305_state state;
 
     FILE *file = fopen(file_path, "rb");
@@ -259,31 +313,32 @@ unsigned char *decrypt_file(char *file_path, unsigned char *key)
 
     if ((rlen = fread(header, 1, header_len, file)) != header_len) {
         perror("psm: I/O error");
-        fclose(file);
-        return NULL;
+        goto ret;
     }
 
     if (crypto_secretstream_xchacha20poly1305_init_pull(&state, header, key) != 0) {
         perror("psm: incomplete header");
-        fclose(file);
-        return NULL;
+        goto ret;
     }
 
     if (!(cypher_text = fgetfroms(file_path, header_len))) {
         perror("psm: I/O error");
-        fclose(file);
-        return NULL;
+        goto ret;
     }
 
     if (!(plain_text = decrypt(&state, cypher_text))) {
-        perror("psm: decryption failed");
-        fclose(file);
-        return NULL;
+        goto ret;
     }
 
-    fclose(file);
+    plain_text_len = strlen(plain_text);
+    ret_buff = (unsigned char *) sodium_malloc(plain_text_len + 1);
+    strncpy(ret_buff, plain_text, plain_text_len);
+    ret_buff[plain_text_len] = '\0';
 
-    return plain_text;
+ret:
+    sodium_free(header);
+    fclose(file);
+    return ret_buff;
 }
 
 // this function decrypts a buffer using the libsodium library, in order to understand well the code you should be aware of what's inside 
@@ -299,6 +354,7 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     unsigned char *cnk_buff = (unsigned char *) sodium_malloc(enc_cnk_size); // sub-buffer of the cyphertext (doc.libsodium.org for more info).
     unsigned char *out_buff = (unsigned char *) sodium_malloc(dec_cnk_size); // this buffer contains the decrypted cnk_buff.
     unsigned char *ret_buff = (unsigned char *) sodium_malloc(dec_cnk_size); // buffer that contains all decrypted sub-buffers needed to cover the entire cyphertext.
+    unsigned char *ret_arr = NULL;
 
     unsigned char tag;
 
@@ -308,6 +364,25 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     unsigned char c;
     unsigned long long out_len; // the length of an out_buff (doc.libsodium.org for more info).
+
+    /*-----TEST-----*/
+
+    char enc_ch;
+    size_t enc_len = strlen(buff);
+
+    printf("encrypted buff (%d chars)\n", enc_len);
+
+    for (int enc_p=0; enc_p<enc_len; enc_p++) {
+        if (((enc_ch = buff[enc_p]) >= 48 && enc_ch <= 57) || (enc_ch >= 65 && enc_ch <= 90) || (enc_ch >= 97 && enc_ch <= 122)) { 
+            printf("%c", enc_ch);
+        }  else {
+            printf(" %d ", enc_ch);
+        }
+    }
+
+    printf("\n");
+    
+    /*-----TEST-----*/
 
     while ((c = buff[big_buff_pos]) != '\0') {
         // if the cnk_buff is not full continue writing bytes into it.
@@ -321,18 +396,14 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
             // doc.libsodium.org for more info about this.
             if(crypto_secretstream_xchacha20poly1305_pull(state, out_buff, &out_len, &tag, cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
-                perror("psm: corrupted chunk");
-                sodium_free(cnk_buff);
-                sodium_free(out_buff);
-                return NULL;
+                perror("psm: decryption: corrupted chunk");
+                goto ret;
             }
 
             // checking for premature end (end of file reached before the end of the stream)
             if(tag == crypto_secretstream_xchacha20poly1305_TAG_FINAL) {
-                perror("psm: EOF reached before the end of the stream");
-                sodium_free(cnk_buff);
-                sodium_free(out_buff);
-                return NULL;
+                perror("psm: decryption: EOF reached before the end of the stream");
+                goto ret;
             }
 
             // copying out_buff into ret_buff.
@@ -358,10 +429,8 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     }
 
     if (crypto_secretstream_xchacha20poly1305_pull(state, out_buff, &out_len, &tag, cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
-        perror("psm: corrupted chunk");
-        sodium_free(cnk_buff);
-        sodium_free(out_buff);
-        return NULL;
+        perror("psm: decryption: corrupted chunk");
+        goto ret;
     }
 
     memcpy((void *) ret_buff+ret_buff_pos, (void *) out_buff, (size_t) out_len);
@@ -374,13 +443,39 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
         ret_buff = (unsigned char *) sodium_realloc(ret_buff, old_buf_size, dec_cnk_size);
     }
 
+    // null-terminating ret_buff
     ret_buff[ret_buff_pos] = '\0';
 
+    // copying ret_buff into ret_arr
+    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos + 1);
+    strncpy(ret_arr, ret_buff, ret_buff_pos);
+    ret_arr[ret_buff_pos] = '\0';
+
+    /*-----TEST-----*/
+
+    char dec_ch;
+    size_t dec_len = strlen(ret_arr);
+
+    printf("decrypted buff (%d chars)\n", dec_len);
+
+    for (int dec_p=0; dec_p<dec_len; dec_p++) {
+        if (((dec_ch = ret_arr[dec_p]) >= 48 && dec_ch <= 57) || (dec_ch >= 65 && dec_ch <= 90) || (dec_ch >= 97 && dec_ch <= 122)) { 
+            printf("%c", dec_ch);
+        }  else {
+            printf(" %d ", dec_ch);
+        }
+    }
+
+    printf("\n");
+    
+    /*-----TEST-----*/
+
+ret:
     // always free memory, mostly if secured, cuz we don't wanna have buffers hanging around mlocked.
     sodium_free(cnk_buff);
     sodium_free(out_buff);
-
-    return ret_buff;
+    sodium_free(ret_buff);
+    return ret_arr;
 }
 
 /*----------------DECRYPTION-END----------------*/
@@ -463,13 +558,14 @@ unsigned char *generate_masterkey(char *password, unsigned char **salt)
 unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
 {
     uint64_t subkey_id = 1;
+    uint8_t *subkey;
 
     size_t subkey_len = crypto_kdf_BYTES_MAX;
     unsigned char **subkeys = (unsigned char **) sodium_malloc(sizeof(char) * subkey_len);
 
     for (int i=0; i<qty; i++) {
 
-        uint8_t *subkey = (uint8_t *) sodium_malloc(subkey_len);
+        subkey = (uint8_t *) sodium_malloc(subkey_len);
 
         // this derives a subkey from the masterkey (doc.libsodium.org)
         if (crypto_kdf_derive_from_key(subkey, subkey_len, subkey_id++, CONTEXT, masterkey) != 0) {
@@ -478,20 +574,10 @@ unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
             return NULL;
         }
 
-        /*--------------TEST-START----------------*/
-        
-        /*printf("subkey %d generated:", i+1);
-        for (int j=0; j<subkey_len; j++) {
-            printf(" %d", subkey[j]);
-        }
-        printf("\n");*/
-
-        /*---------------TEST-END-----------------*/
-
-        // adding the subkey to an array that will be returned
         subkeys[i] = subkey;
     }
 
+    sodium_free(subkey);
     return subkeys;
 }
 
