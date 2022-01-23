@@ -167,6 +167,8 @@ int signin()
 ret:
     sodium_free(pass);
     sodium_free(hash);
+    sodium_free(mkey);
+    sodium_free(salt);
     return ret_code;
 }
 
@@ -284,5 +286,7 @@ int login()
 ret:
     sodium_free(pass);
     sodium_free(hash);
+    sodium_free(mkey);
+    sodium_free(salt);
     return ret_code;
 }
