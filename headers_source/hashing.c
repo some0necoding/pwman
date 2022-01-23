@@ -37,8 +37,9 @@ int store_hash(char *hash, char *file_path)
 
     // writing hash value. hash values can be shorter than hash_len, so it's used > sign
     // to validate the writing (doc.libsodium.org for more info)
-    if ((wlen = fwrite(hash, 1, hash_len, file)) > hash_len) {
+    if ((wlen = fwrite(hash, 1, hash_len, file)) != hash_len) {
         perror("psm: I/O error");
+        fclose(file);
         return -1;
     }
 
@@ -64,6 +65,7 @@ char *get_hash(char *file_path)
     // to validate the reading (doc.libsodium.org for more info)
     if ((rlen = fread(hash, 1, hash_len, file)) > hash_len) {
         perror("psm: I/O error");
+        fclose(file);
         return NULL;
     }
 
