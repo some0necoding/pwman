@@ -13,7 +13,7 @@ int encrypt_file(char *file_path, unsigned char *key);
 unsigned char *decrypt_file(char *file_path, unsigned char *key);
 
 // generates a masterkey out of a password "password" using an auto-generated random salt that gets stored in "salt" pointer.
-unsigned char *generate_masterkey(char *password, unsigned char **salt);
+unsigned char *generate_masterkey(char *password, unsigned char *salt);
 
 // generates a masterkey out of a password "password" and a user-determined salt "salt" that must be of crypto_pwhash_SALTBYTES length.
 unsigned char *generate_masterkey_with_salt(char *password, unsigned char *salt);
