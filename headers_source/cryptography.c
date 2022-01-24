@@ -562,7 +562,11 @@ unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
     uint8_t *subkey;
 
     size_t subkey_len = crypto_kdf_BYTES_MAX;
-    unsigned char **subkeys = (unsigned char **) sodium_malloc(sizeof(char) * subkey_len);
+    unsigned char **subkeys = (unsigned char **) sodium_malloc(qty * subkey_len);
+
+    for (int i=0; i<qty; i++) {
+        subkeys[i] = (unsigned char *) sodium_malloc(subkey_len);
+    }
 
     for (int i=0; i<qty; i++) {
 
@@ -578,7 +582,6 @@ unsigned char **generate_subkeys(int qty, unsigned char *masterkey)
         subkeys[i] = subkey;
     }
 
-    sodium_free(subkey);
     return subkeys;
 }
 

@@ -141,14 +141,6 @@ int signin()
         goto ret;
     }
 
-    printf("salt: ");
-
-    for (int i=0; i<16; i++) {
-        printf(" %d ", salt[i]);
-    }
-
-    printf("\n");
-
     if (write_salt(salt, salt_file_path) != 0) {
         perror("psm: cryptography error");
         goto ret;
@@ -156,7 +148,11 @@ int signin()
 
     // subkeys is a global variable that gets externed in order to use it in 
     // passwordmanager.c file. It is an array containing the two encryption keys.
-    subkeys = (unsigned char **) sodium_malloc(sizeof(char) * skey_len);
+    subkeys = (unsigned char **) sodium_malloc(skey_qty * skey_len);
+
+    for (int i=0; i<skey_qty; i++) {
+        subkeys[i] = (unsigned char *) sodium_malloc(skey_len);
+    }
 
     if (!(subkeys = generate_subkeys(skey_qty, mkey))) {
         perror("psm: cryptography error");
