@@ -75,9 +75,9 @@ ret:
     return ret_code;
 }
 
-// To make the header more complete there's also an encryption function decrypted file -> encrypted file.
-// It can be useful in cases were the machine and storage are not easily vulnerable (i.e. servers, even
-// if idk who the hell uses C scripts inside a server).
+// To make the header file more complete there's also an encryption function decrypted file -> encrypted file.
+// It can be useful in cases were the machine and storage are not easily vulnerable (even if idk who the hell 
+// dares to be confident about this choice).
 int encrypt_file(char *file_path, unsigned char *key)
 {
     size_t cypher_text_len = 0;
@@ -110,7 +110,7 @@ int encrypt_file(char *file_path, unsigned char *key)
     if (!(cypher_text = encrypt(&state, plain_text, &cypher_text_len))) {
         goto ret;
     }
-    
+
     // write the encrypted buff into the file
     if (write_cypher_to_file(header, header_len, cypher_text, cypher_text_len, file_path) != 0) {
         perror("psm: I/O error");
@@ -148,12 +148,12 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     /*-----TEST-----*/
 
-    char dec_ch;
+    unsigned char dec_ch;
     size_t dec_len = strlen(buff);
 
     printf("decrypted buff (%d chars)\n", dec_len);
 
-    for (int dec_p=0; dec_p<dec_len; dec_p++) {   
+    for (int dec_p=0; dec_p<dec_len; dec_p++) {
         if (((dec_ch = buff[dec_p]) >= 48 && dec_ch <= 57) || (dec_ch >= 65 && dec_ch <= 90) || (dec_ch >= 97 && dec_ch <= 122)) { 
             printf("%c", dec_ch);
         } else {
@@ -208,33 +208,40 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
         goto ret;
     }
 
+    /*-----TEST-----*/
+
+    printf("out len: %d\n", out_len);
+
+    printf("out buff: ");
+
+    for (int i=0; i<out_len; i++) {
+        printf(" %d ", out_buff[i]);
+    }
+
+    printf("\n");
+
+    /*-----TEST-----*/
+
     memcpy((void *) ret_buff+ret_buff_pos, (void *) out_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
 
     // assigning ret_buff size to a pointer so that it can be accessed outside this function
     *cypher_text_len = ret_buff_pos;
 
-    // null-terminating ret_buff
-    ret_buff[ret_buff_pos] = '\0';
-
     // copying ret_buff into ret_arr
-    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos + 1);
+    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos);
     strncpy(ret_arr, ret_buff, ret_buff_pos);
-    ret_arr[ret_buff_pos] = '\0';
 
     /*-----TEST-----*/
 
-    char enc_ch;
+    unsigned char enc_ch;
     size_t enc_len = strlen(ret_arr);
 
     printf("encrypted buff (%d chars)\n", enc_len);
 
     for (int enc_p=0; enc_p<enc_len; enc_p++) {
-        if (((enc_ch = ret_arr[enc_p]) >= 48 && enc_ch <= 57) || (enc_ch >= 65 && enc_ch <= 90) || (enc_ch >= 97 && enc_ch <= 122)) { 
-            printf("%c", enc_ch);
-        }  else {
-            printf(" %d ", enc_ch);
-        }
+        enc_ch = ret_arr[enc_p];
+        printf(" %d ", enc_ch);
     }
     
     printf("\n");
@@ -367,17 +374,14 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     /*-----TEST-----*/
 
-    char enc_ch;
+    unsigned char enc_ch;
     size_t enc_len = strlen(buff);
 
     printf("encrypted buff (%d chars)\n", enc_len);
 
     for (int enc_p=0; enc_p<enc_len; enc_p++) {
-        if (((enc_ch = buff[enc_p]) >= 48 && enc_ch <= 57) || (enc_ch >= 65 && enc_ch <= 90) || (enc_ch >= 97 && enc_ch <= 122)) { 
-            printf("%c", enc_ch);
-        }  else {
-            printf(" %d ", enc_ch);
-        }
+        enc_ch = buff[enc_p];
+        printf(" %d ", enc_ch);
     }
 
     printf("\n");
@@ -443,17 +447,13 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
         ret_buff = (unsigned char *) sodium_realloc(ret_buff, old_buf_size, dec_cnk_size);
     }
 
-    // null-terminating ret_buff
-    ret_buff[ret_buff_pos] = '\0';
-
     // copying ret_buff into ret_arr
-    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos + 1);
+    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos);
     strncpy(ret_arr, ret_buff, ret_buff_pos);
-    ret_arr[ret_buff_pos] = '\0';
 
     /*-----TEST-----*/
 
-    char dec_ch;
+    unsigned char dec_ch;
     size_t dec_len = strlen(ret_arr);
 
     printf("decrypted buff (%d chars)\n", dec_len);
