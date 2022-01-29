@@ -61,6 +61,11 @@ int encrypt_buffer(unsigned char *plain_buff, unsigned char *key, char *file_pat
     if (!(cypher_text = encrypt(&state, plain_buff, &cypher_text_len))) {
         goto ret;
     }
+
+    // 1. int *cypher_text_len_arr = malloc(sizeof(int) * 2);
+    // 2. cypher_text_len_arr[0] = cypher_text_len;
+    // 3. cypher_text_len_arr[1] = NULL;
+    // 4. write_cypher_to_file(cypher_test_len_arr, (sizeof(int) * 2), header, header_len, cypher_text, cypher_text_len, file_path)
     
     // write the encrypted buff into the file
     if (write_cypher_to_file(header, header_len, cypher_text, cypher_text_len, file_path) != 0) {
@@ -110,6 +115,11 @@ int encrypt_file(char *file_path, unsigned char *key)
     if (!(cypher_text = encrypt(&state, plain_text, &cypher_text_len))) {
         goto ret;
     }
+
+    // 1. int *cypher_text_len_arr = malloc(sizeof(int) * 2);
+    // 2. cypher_text_len_arr[0] = cypher_text_len;
+    // 3. cypher_text_len_arr[1] = NULL;
+    // 4. write_cypher_to_file(cypher_test_len_arr, (sizeof(int) * 2), header, header_len, cypher_text, cypher_text_len, file_path)
 
     // write the encrypted buff into the file
     if (write_cypher_to_file(header, header_len, cypher_text, cypher_text_len, file_path) != 0) {
@@ -318,6 +328,10 @@ unsigned char *decrypt_file(char *file_path, unsigned char *key)
         return NULL;
     }
 
+    // 1. int *cypher_text_len_arr = read_cypher_text_len(file);
+    // 2. int cypher_text_len = cypher_text_len_arr[0];
+    // 3. header = fread_from_tos(file_path, cypher_text_len_arr_size, header_len);
+
     if ((rlen = fread(header, 1, header_len, file)) != header_len) {
         perror("psm: I/O error");
         goto ret;
@@ -328,11 +342,13 @@ unsigned char *decrypt_file(char *file_path, unsigned char *key)
         goto ret;
     }
 
+    // 5. cypher_text = fgetfroms(file_path, cypher_text_len_arr_size + header_len);
     if (!(cypher_text = fgetfroms(file_path, header_len))) {
         perror("psm: I/O error");
         goto ret;
     }
 
+    // 6. plain_text = decrypt(&state, cypher_text, cypher_text_len);
     if (!(plain_text = decrypt(&state, cypher_text))) {
         goto ret;
     }
