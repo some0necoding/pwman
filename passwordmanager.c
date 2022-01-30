@@ -49,6 +49,8 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail);
 int append_pass(unsigned char *pass);
 unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
 int remove_account(unsigned char *account_name, int *line_indx);
+int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match, size_t *line_len);
+unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx);
 int remove_password(int line_indx);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
@@ -271,14 +273,8 @@ int psm_remove(char **args)
         perror("password removal failed");
         return -1;
     }
-    return 0;
 
-    // time_line
-    // 1. validate user input
-    // 2. decrypt accounts file
-    // 3. if it exists, remove 
-    //    the account
-    // 4. recrypt the file
+    return 0;
 } 
 
 int psm_get(char **args)
@@ -539,10 +535,12 @@ int append_pass(unsigned char *pass)
 unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
 {
     size_t bufsize = PSM_TOK_BUFSIZE;
+    size_t str_len;
     size_t old_size;
     
-    unsigned char **tokens = (unsigned char **) sodium_malloc(sizeof(unsigned char) * bufsize);
+    unsigned char **tokens = (unsigned char **) sodium_malloc(bufsize);
     unsigned char *token;
+    unsigned char *str_copy;
     
     int pos = 0;
 
@@ -551,7 +549,13 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
         return NULL;
     }   
 
-    token = strtok(str, delim);
+    // creating a copy of the original buffer in order to prevent it beeing corrupted by strtok
+    str_len = strlen(str);
+    str_copy = (unsigned char *) sodium_malloc(str_len + 1);
+    strncpy(str_copy, str, str_len);
+    str_copy[str_len] = '\0';
+
+    token = strtok(str_copy, delim);
 
     while (token != NULL) {
         tokens[pos] = token;
@@ -576,17 +580,13 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
 
 int remove_account(unsigned char *account_name, int *line_indx)
 {
-    size_t lines_qty;
     size_t line_len;
     size_t cont_len;
     size_t new_cont_len;
 
     unsigned char *file_content;
-    unsigned char *content_line;
     unsigned char *new_file_cont;
-
     unsigned char **content_lines;
-    unsigned char **line_tokens;
 
     char *file_path = ACCT_FILE_PATH;
 
@@ -602,42 +602,14 @@ int remove_account(unsigned char *account_name, int *line_indx)
     cont_len = strlen(file_content);
 
     content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
-    lines_qty = arrlen((void **) content_lines);
 
-    while ((content_line = content_lines[pos]) != NULL) {
-
-        line_len = strlen(content_line);  
-        line_tokens = split_by_delim(content_line, SEPARATE_TKNS_STR);
-
-        if (strcmp(line_tokens[0], account_name) == 0) {
-            *line_indx = pos;
-            line_found = 1; // true
-            break;
-        }
-
-        pos++;
-    }
-
-    if (line_found == 0) {
+    if ((*line_indx = find_line_indx_to_remove(content_lines, account_name, &line_len)) < 0) {
         printf("account not found\n");
         goto ret;
     }
   
     new_cont_len = cont_len - (line_len + 1);
-    new_file_cont = (unsigned char *) sodium_malloc(new_cont_len + 1);
-    new_file_cont[0] = '\0';
-
-    if (new_cont_len != 0) {    
-
-        for (int i=0; i<lines_qty; i++) {
-            if (i != *line_indx) {
-                strcat(new_file_cont, content_lines[i]);
-            }
-        }
-
-        new_file_cont[new_cont_len - 1] = '\xD8';
-        new_file_cont[new_cont_len] = '\0';
-    }
+    new_file_cont = rebuild_buff_from_lines(content_lines, new_cont_len, *line_indx);
 
     if (encrypt_buffer(new_file_cont, subkeys[skey_acct], file_path) != 0) {
         perror("psm: cryptography error");
@@ -648,9 +620,55 @@ int remove_account(unsigned char *account_name, int *line_indx)
 
 ret:
     sodium_free(content_lines);
-    sodium_free(line_tokens);
     sodium_free(new_file_cont);
     return ret_code;
+}
+
+int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match, size_t *line_len) 
+{
+    size_t single_line_len;
+
+    unsigned char *line;
+    unsigned char **line_tokens;
+
+    int pos = 0;
+
+    while ((line = lines[pos]) != NULL) {
+
+        single_line_len = strlen(line);  
+        line_tokens = split_by_delim(line, SEPARATE_TKNS_STR);
+
+        if (strcmp(line_tokens[0], str_to_match) == 0) {
+            *line_len = single_line_len;
+            return pos;
+        }
+
+        pos++;
+    }
+
+    return -1;
+}
+
+unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx) 
+{
+    size_t lines_amount = arrlen((void **) lines);
+
+    unsigned char *new_buff = (unsigned char *) sodium_malloc(buff_len + 1);
+    new_buff[0] = '\0';
+
+    if (buff_len != 0) {    
+
+        for (int i=0; i<lines_amount; i++) {
+            if (i != line_to_rm_indx) {
+                strcat(new_buff, lines[i]);
+                strcat(new_buff, SEPARATE_LINE_STR);
+            }
+        }
+
+        new_buff[buff_len] = '\0';
+    }
+
+    return new_buff;
 }
 
 int remove_password(int line_indx)
