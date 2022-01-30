@@ -155,7 +155,7 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     /*-----TEST-----*/
 
-    unsigned char dec_ch;
+    /*unsigned char dec_ch;
     size_t dec_len = strlen(buff);
 
     printf("decrypted buff (%d chars)\n", dec_len);
@@ -168,7 +168,7 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
         }
     }
     
-    printf("\n");
+    printf("\n");*/
 
     /*-----TEST-----*/
 
@@ -423,7 +423,7 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     /*-----TEST-----*/
 
-    unsigned char dec_ch;
+    /*unsigned char dec_ch;
     size_t dec_len = ret_buff_pos;
 
     printf("decrypted buff (%d chars)\n", dec_len);
@@ -436,7 +436,7 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
         }
     }
 
-    printf("\n");
+    printf("\n");*/
     
     /*-----TEST-----*/
 
