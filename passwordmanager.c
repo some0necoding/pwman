@@ -273,8 +273,6 @@ int psm_remove(char **args)
         return 0;
     }
 
-    printf("code: %d\n", code);
-
     if (remove_password(line_indx) != 0) {
         perror("password removal failed");
         return -1;
