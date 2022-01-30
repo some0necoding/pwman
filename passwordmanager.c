@@ -259,14 +259,18 @@ int psm_modify(char **args)
 int psm_remove(char **args) 
 {
     int line_indx;
+    int code;
 
     if (!args[1] || args[2]) {
         printf("\"rm\" needs to know an account name (1 argument needed)\n");
     }
 
-    if (remove_account(args[1], &line_indx) != 0) {
+    if (code = remove_account(args[1], &line_indx) != 0) {
         perror("account removal failed");
         return -1;
+    } else if (code == 1) {
+        printf("account not found\n");
+        return 0;
     }
 
     if (remove_password(line_indx) != 0) {
@@ -607,7 +611,8 @@ int remove_account(unsigned char *account_name, int *line_indx)
 
     // finding the index of the line that needs to be removed. the length of this line is stored in line_len.
     if ((*line_indx = find_line_indx_to_remove(content_lines, account_name, &line_len)) < 0) {
-        printf("account not found\n");
+        // account not found
+        ret_code = 1;
         goto ret;
     }
 
@@ -628,7 +633,6 @@ int remove_account(unsigned char *account_name, int *line_indx)
 
 ret:
     sodium_free(content_lines);
-    sodium_free(new_file_cont);
     return ret_code;
 }
 
