@@ -576,17 +576,17 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
 
 int remove_account(unsigned char *account_name, int *line_indx)
 {
-    size_t _lines_qty;
-    size_t __line_len;
-    size_t __cont_len;
-    size_t n_cont_len;
+    size_t lines_qty;
+    size_t line_len;
+    size_t cont_len;
+    size_t new_cont_len;
 
-    unsigned char *_file_content;
-    unsigned char *_content_line;
+    unsigned char *file_content;
+    unsigned char *content_line;
     unsigned char *new_file_cont;
 
     unsigned char **content_lines;
-    unsigned char **__line_tokens;
+    unsigned char **line_tokens;
 
     char *file_path = ACCT_FILE_PATH;
 
@@ -594,22 +594,22 @@ int remove_account(unsigned char *account_name, int *line_indx)
     int line_found = 0; // false
     int pos = 0;
 
-    if (!(_file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
         perror("psm: cryptography error");
         goto ret;
     }
 
-    __cont_len = strlen(_file_content);
+    cont_len = strlen(file_content);
 
-    content_lines = split_by_delim(_file_content, SEPARATE_LINE_STR);
-    _lines_qty = arrlen((void **) content_lines);
+    content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+    lines_qty = arrlen((void **) content_lines);
 
-    while ((_content_line = content_lines[pos]) != NULL) {
+    while ((content_line = content_lines[pos]) != NULL) {
 
-        __line_len = strlen(_content_line);  
-        __line_tokens = split_by_delim(_content_line, SEPARATE_TKNS_STR);
+        line_len = strlen(content_line);  
+        line_tokens = split_by_delim(content_line, SEPARATE_TKNS_STR);
 
-        if (strcmp(__line_tokens[0], account_name) == 0) {
+        if (strcmp(line_tokens[0], account_name) == 0) {
             *line_indx = pos;
             line_found = 1; // true
             break;
@@ -623,20 +623,20 @@ int remove_account(unsigned char *account_name, int *line_indx)
         goto ret;
     }
   
-    n_cont_len = __cont_len - (__line_len + 1);
-    new_file_cont = (unsigned char *) sodium_malloc(n_cont_len + 1);
+    new_cont_len = cont_len - (line_len + 1);
+    new_file_cont = (unsigned char *) sodium_malloc(new_cont_len + 1);
     new_file_cont[0] = '\0';
 
-    if (n_cont_len != 0) {    
+    if (new_cont_len != 0) {    
 
-        for (int i=0; i<_lines_qty; i++) {
+        for (int i=0; i<lines_qty; i++) {
             if (i != *line_indx) {
                 strcat(new_file_cont, content_lines[i]);
             }
         }
 
-        new_file_cont[n_cont_len - 1] = '\xD8';
-        new_file_cont[n_cont_len] = '\0';
+        new_file_cont[new_cont_len - 1] = '\xD8';
+        new_file_cont[new_cont_len] = '\0';
     }
 
     if (encrypt_buffer(new_file_cont, subkeys[skey_acct], file_path) != 0) {
@@ -648,7 +648,7 @@ int remove_account(unsigned char *account_name, int *line_indx)
 
 ret:
     sodium_free(content_lines);
-    sodium_free(__line_tokens);
+    sodium_free(line_tokens);
     sodium_free(new_file_cont);
     return ret_code;
 }
