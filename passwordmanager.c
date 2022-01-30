@@ -578,39 +578,47 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
     return tokens;
 }
 
+// this function removes an account from accounts.list file.
 int remove_account(unsigned char *account_name, int *line_indx)
 {
-    size_t line_len;
-    size_t cont_len;
-    size_t new_cont_len;
+    size_t line_len;                                                // deleted line's length
+    size_t cont_len;                                                // file content's length
+    size_t new_cont_len;                                            // resulting length after deleting the line
 
     unsigned char *file_content;
     unsigned char *new_file_cont;
-    unsigned char **content_lines;
+    unsigned char **content_lines;                                  // file content splitted into individual lines
 
     char *file_path = ACCT_FILE_PATH;
 
     int ret_code = -1;
-    int line_found = 0; // false
-    int pos = 0;
 
+    // decrypting the file content
     if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
         perror("psm: cryptography error");
         goto ret;
     }
 
+    // obtaining file content's length
     cont_len = strlen(file_content);
 
+    // splitting file content into individual lines
     content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
 
+    // finding the index of the line that needs to be removed. the length of this line is stored in line_len.
     if ((*line_indx = find_line_indx_to_remove(content_lines, account_name, &line_len)) < 0) {
         printf("account not found\n");
         goto ret;
     }
-  
-    new_cont_len = cont_len - (line_len + 1);
-    new_file_cont = rebuild_buff_from_lines(content_lines, new_cont_len, *line_indx);
 
+    // creating a new buffer that will contain the
+    // original content without the deleted line
+    new_cont_len = cont_len - (line_len + 1);                       // file_content - (deleted_line_len + end_of_line_byte)
+    new_file_cont = rebuild_buff_from_lines(content_lines, 
+                                            new_cont_len, 
+                                            *line_indx);
+
+    // encrypting the new buffer into accounts.list
     if (encrypt_buffer(new_file_cont, subkeys[skey_acct], file_path) != 0) {
         perror("psm: cryptography error");
         goto ret;
@@ -624,12 +632,15 @@ ret:
     return ret_code;
 }
 
+// this function returns the index of the deleted line, so that it can be passed to remove_pass
+// function. the line's length, needed to compute the length of the new buffer,  will be stored 
+// at line_len address
 int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match, size_t *line_len) 
 {
     size_t single_line_len;
 
     unsigned char *line;
-    unsigned char **line_tokens;
+    unsigned char **line_tokens;                                    // account_name and mail_or_user                                
 
     int pos = 0;
 
@@ -638,6 +649,7 @@ int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match,
         single_line_len = strlen(line);  
         line_tokens = split_by_delim(line, SEPARATE_TKNS_STR);
 
+        // if the account_name matches the one provided by the user, line's index and length get returned.
         if (strcmp(line_tokens[0], str_to_match) == 0) {
             *line_len = single_line_len;
             return pos;
@@ -646,36 +658,46 @@ int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match,
         pos++;
     }
 
+    // if the program runs up to here, it means that no match was found.
     return -1;
 }
 
+// this function removes a password from passwords.list file
 int remove_password(int line_indx)
 {
-    size_t line_len;
-    size_t new_cont_len;
-    size_t cont_len;
+    size_t line_len;                                                // deleted line's length
+    size_t cont_len;                                                // file content's length
+    size_t new_cont_len;                                            // resulting length after deleting the line
 
     unsigned char *file_content;
-    unsigned char **content_lines;
     unsigned char *new_file_content;
+    unsigned char **content_lines;                                  // file content splitted into individual lines
 
     int ret_code = -1;
 
     char *file_path = PASS_FILE_PATH;
 
+    // decrypting the file content
     if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
         perror("psm: cryptography error");
         goto ret;
     }
 
+    // obtaining file content's length
     cont_len = strlen(file_content);
 
+    // splitting file content into individual lines
     content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
     
+    // creating a new buffer that will contain the 
+    // original content without the deleted line
     line_len = strlen(content_lines[line_indx]);
-    new_cont_len = cont_len - (line_len + 1);
-    new_file_content = rebuild_buff_from_lines(content_lines, new_cont_len, line_indx);
+    new_cont_len = cont_len - (line_len + 1);                       // file_content - (deleted_line_len + end_of_line_byte)
+    new_file_content = rebuild_buff_from_lines(content_lines, 
+                                               new_cont_len, 
+                                               line_indx);
 
+    // encrypting the new buffer into passwords.list
     if (encrypt_buffer(new_file_content, subkeys[skey_pass], file_path) != 0) {
         perror("psm: cryptography error");
         goto ret;
@@ -688,6 +710,8 @@ ret:
     return ret_code;
 }
 
+// this function concatenates all lines contained in lines buffer except for the one that needs
+// to be deleted. it separates them by using 0xD8 byte.
 unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx) 
 {
     size_t lines_amount = arrlen((void **) lines);
@@ -698,6 +722,7 @@ unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, i
     if (buff_len != 0) {    
 
         for (int i=0; i<lines_amount; i++) {
+            // it concatenates all lines that do not match the index to be removed
             if (i != line_to_rm_indx) {
                 strcat(new_buff, lines[i]);
                 strcat(new_buff, SEPARATE_LINE_STR);
