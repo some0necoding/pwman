@@ -50,8 +50,8 @@ int append_pass(unsigned char *pass);
 unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
 int remove_account(unsigned char *account_name, int *line_indx);
 int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match, size_t *line_len);
-unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx);
 int remove_password(int line_indx);
+unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -649,31 +649,8 @@ int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match,
     return -1;
 }
 
-unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx) 
-{
-    size_t lines_amount = arrlen((void **) lines);
-
-    unsigned char *new_buff = (unsigned char *) sodium_malloc(buff_len + 1);
-    new_buff[0] = '\0';
-
-    if (buff_len != 0) {    
-
-        for (int i=0; i<lines_amount; i++) {
-            if (i != line_to_rm_indx) {
-                strcat(new_buff, lines[i]);
-                strcat(new_buff, SEPARATE_LINE_STR);
-            }
-        }
-
-        new_buff[buff_len] = '\0';
-    }
-
-    return new_buff;
-}
-
 int remove_password(int line_indx)
 {
-    size_t lines_qty;
     size_t line_len;
     size_t new_cont_len;
     size_t cont_len;
@@ -694,30 +671,10 @@ int remove_password(int line_indx)
     cont_len = strlen(file_content);
 
     content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
-    lines_qty = arrlen((void **) content_lines);
-
-    for (int i=0; i<lines_qty; i++) {
-        if (i == line_indx) {
-            line_len = strlen(content_lines[i]);
-        }
-    }
-
+    
+    line_len = strlen(content_lines[line_indx]);
     new_cont_len = cont_len - (line_len + 1);
-    new_file_content = (unsigned char *) sodium_malloc(new_cont_len + 1);
-    new_file_content[0] = '\0';
-
-    if (new_cont_len != 0) {
-
-        for (int i=0; i<lines_qty; i++) {
-            if (i != line_indx) {
-                strcat(new_file_content, content_lines[i]);
-            }
-        }
-
-        new_file_content[new_cont_len - 1] = '\xD8';
-        new_file_content[new_cont_len] = '\0';
-    }
-
+    new_file_content = rebuild_buff_from_lines(content_lines, new_cont_len, line_indx);
 
     if (encrypt_buffer(new_file_content, subkeys[skey_pass], file_path) != 0) {
         perror("psm: cryptography error");
@@ -728,6 +685,27 @@ int remove_password(int line_indx)
 
 ret:
     sodium_free(content_lines);
-    sodium_free(new_file_content);
     return ret_code;
+}
+
+unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx) 
+{
+    size_t lines_amount = arrlen((void **) lines);
+
+    unsigned char *new_buff = (unsigned char *) sodium_malloc(buff_len + 1);
+    new_buff[0] = '\0';
+
+    if (buff_len != 0) {    
+
+        for (int i=0; i<lines_amount; i++) {
+            if (i != line_to_rm_indx) {
+                strcat(new_buff, lines[i]);
+                strcat(new_buff, SEPARATE_LINE_STR);
+            }
+        }
+
+        new_buff[buff_len] = '\0';
+    }
+
+    return new_buff;
 }
