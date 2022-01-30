@@ -265,13 +265,15 @@ int psm_remove(char **args)
         printf("\"rm\" needs to know an account name (1 argument needed)\n");
     }
 
-    if (code = remove_account(args[1], &line_indx) != 0) {
+    if ((code = remove_account(args[1], &line_indx)) < 0) {
         perror("account removal failed");
         return -1;
     } else if (code == 1) {
         printf("account not found\n");
         return 0;
     }
+
+    printf("code: %d\n", code);
 
     if (remove_password(line_indx) != 0) {
         perror("password removal failed");
