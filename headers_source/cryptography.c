@@ -9,6 +9,7 @@
 
 #define CHUNK_SIZE 4096
 #define CONTEXT "decrypt_"
+#define HEADER_LENGTH crypto_secretstream_xchacha20poly1305_HEADERBYTES
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
@@ -17,8 +18,8 @@
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t *cypher_text_len);
-unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff);
-int write_cypher_to_file(unsigned char *header, size_t header_len, unsigned char *cypher_text, size_t cypher_text_len, char *file_path);
+unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t cypher_text_len);
+int write_cypher_to_file(unsigned char *header, unsigned char *cypher_text, size_t cypher_text_len, char *file_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -38,12 +39,15 @@ int write_cypher_to_file(unsigned char *header, size_t header_len, unsigned char
 // instead memory is easily cleanable.
 int encrypt_buffer(unsigned char *plain_buff, unsigned char *key, char *file_path)
 {
+    size_t header_len = HEADER_LENGTH;
     size_t cypher_text_len = 0;
-    size_t header_len = crypto_secretstream_xchacha20poly1305_HEADERBYTES;
+
     unsigned char *cypher_text;
     unsigned char *header = (unsigned char *) sodium_malloc(header_len);
-    crypto_secretstream_xchacha20poly1305_state state;
+
     int ret_code = -1;
+    
+    crypto_secretstream_xchacha20poly1305_state state;
 
     // check for good allocation
     if (!header) {
@@ -61,14 +65,9 @@ int encrypt_buffer(unsigned char *plain_buff, unsigned char *key, char *file_pat
     if (!(cypher_text = encrypt(&state, plain_buff, &cypher_text_len))) {
         goto ret;
     }
-
-    // 1. int *cypher_text_len_arr = malloc(sizeof(int) * 2);
-    // 2. cypher_text_len_arr[0] = cypher_text_len;
-    // 3. cypher_text_len_arr[1] = NULL;
-    // 4. write_cypher_to_file(cypher_test_len_arr, (sizeof(int) * 2), header, header_len, cypher_text, cypher_text_len, file_path)
     
     // write the encrypted buff into the file
-    if (write_cypher_to_file(header, header_len, cypher_text, cypher_text_len, file_path) != 0) {
+    if (write_cypher_to_file(header, cypher_text, cypher_text_len, file_path) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -85,13 +84,16 @@ ret:
 // dares to be confident about this choice).
 int encrypt_file(char *file_path, unsigned char *key)
 {
+    size_t header_len = HEADER_LENGTH;
     size_t cypher_text_len = 0;
-    size_t header_len = crypto_secretstream_xchacha20poly1305_HEADERBYTES;
+
     unsigned char *plain_text;
     unsigned char *cypher_text;
     unsigned char *header = (unsigned char *) sodium_malloc(header_len);
-    crypto_secretstream_xchacha20poly1305_state state;
+    
     int ret_code = -1;
+    
+    crypto_secretstream_xchacha20poly1305_state state;
 
     // check for good allocation
     if (!header) {
@@ -116,13 +118,8 @@ int encrypt_file(char *file_path, unsigned char *key)
         goto ret;
     }
 
-    // 1. int *cypher_text_len_arr = malloc(sizeof(int) * 2);
-    // 2. cypher_text_len_arr[0] = cypher_text_len;
-    // 3. cypher_text_len_arr[1] = NULL;
-    // 4. write_cypher_to_file(cypher_test_len_arr, (sizeof(int) * 2), header, header_len, cypher_text, cypher_text_len, file_path)
-
     // write the encrypted buff into the file
-    if (write_cypher_to_file(header, header_len, cypher_text, cypher_text_len, file_path) != 0) {
+    if (write_cypher_to_file(header, cypher_text, cypher_text_len, file_path) != 0) {
         perror("psm: I/O error");
         return -1;
     }
@@ -218,20 +215,6 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
         goto ret;
     }
 
-    /*-----TEST-----*/
-
-    printf("out len: %d\n", out_len);
-
-    printf("out buff: ");
-
-    for (int i=0; i<out_len; i++) {
-        printf(" %d ", out_buff[i]);
-    }
-
-    printf("\n");
-
-    /*-----TEST-----*/
-
     memcpy((void *) ret_buff+ret_buff_pos, (void *) out_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
 
@@ -240,23 +223,7 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
 
     // copying ret_buff into ret_arr
     ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos);
-    strncpy(ret_arr, ret_buff, ret_buff_pos);
-
-    /*-----TEST-----*/
-
-    unsigned char enc_ch;
-    size_t enc_len = strlen(ret_arr);
-
-    printf("encrypted buff (%d chars)\n", enc_len);
-
-    for (int enc_p=0; enc_p<enc_len; enc_p++) {
-        enc_ch = ret_arr[enc_p];
-        printf(" %d ", enc_ch);
-    }
-    
-    printf("\n");
-
-    /*-----TEST-----*/
+    memcpy(ret_arr, ret_buff, ret_buff_pos);
 
 ret:
     // always free memory, mostly if secured, cuz we don't wanna have buffers hanging around mlocked.
@@ -266,11 +233,16 @@ ret:
     return ret_arr;
 }
 
-// the function simply writes some bytes from a buffer to a stream (header + cyhertext -> encrypted file), 
-// but with some error checking (always do error checking).
-int write_cypher_to_file(unsigned char *header, size_t header_len, unsigned char *cypher_text, size_t cypher_text_len, char *file_path)
+// the function simply writes some bytes from a buffer to a stream 
+// (cyphertext_len + header + cyhertext -> encrypted file).
+int write_cypher_to_file(unsigned char *header, unsigned char *cypher_text, size_t cypher_text_len, char *file_path)
 {
     size_t rlen;
+    size_t size_t_len = sizeof(size_t);
+    size_t header_len = HEADER_LENGTH;
+
+    int ret_code = -1;
+
     FILE *file = fopen(file_path, "w");
 
     if (!file) {
@@ -278,21 +250,26 @@ int write_cypher_to_file(unsigned char *header, size_t header_len, unsigned char
         return -1;
     }
 
+    if ((rlen = fwrite(&cypher_text_len, size_t_len, 1, file)) != 1) {
+        perror("psm: I/O error");
+        goto ret;
+    }
+
     if ((rlen = fwrite(header, 1, header_len, file)) != header_len) {
-        perror("psm: I/O error0");
-        fclose(file);
-        return -1;
+        perror("psm: I/O error");
+        goto ret;
     }
 
     if ((rlen = fwrite(cypher_text, 1, cypher_text_len, file)) != cypher_text_len) {
         perror("psm: I/O error1");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
-    fclose(file);
+    ret_code = 0;
 
-    return 0;
+ret:
+    fclose(file);
+    return ret_code;
 }
 
 /*----------------ENCRYPTION-END----------------*/
@@ -312,28 +289,35 @@ int write_cypher_to_file(unsigned char *header, size_t header_len, unsigned char
 unsigned char *decrypt_file(char *file_path, unsigned char *key)
 {
     size_t rlen;
-    size_t header_len = crypto_secretstream_xchacha20poly1305_HEADERBYTES;
+    size_t size_t_len = sizeof(size_t);
+    size_t header_len = HEADER_LENGTH;
     size_t plain_text_len = 0;
+    size_t cypher_text_len = 0;
 
     unsigned char *plain_text;
     unsigned char *cypher_text;
     unsigned char *header = (unsigned char *) sodium_malloc(header_len);
     unsigned char *ret_buff = NULL;
+
     crypto_secretstream_xchacha20poly1305_state state;
 
     FILE *file = fopen(file_path, "rb");
 
     if (!file) {
         perror("psm: I/O error");
+        sodium_free(header);
         return NULL;
     }
 
-    // 1. int *cypher_text_len_arr = read_cypher_text_len(file);
-    // 2. int cypher_text_len = cypher_text_len_arr[0];
-    // 3. header = fread_from_tos(file_path, cypher_text_len_arr_size, header_len);
-
-    if ((rlen = fread(header, 1, header_len, file)) != header_len) {
+    if ((rlen = fread(&cypher_text_len, size_t_len, 1, file)) != 1) {
         perror("psm: I/O error");
+        sodium_free(header);
+        goto ret;
+    }
+
+    if (!(header = fgetfromtos(file_path, size_t_len, header_len + size_t_len))) {
+        perror("psm: I/O error");
+        sodium_free(header);
         goto ret;
     }
 
@@ -342,14 +326,12 @@ unsigned char *decrypt_file(char *file_path, unsigned char *key)
         goto ret;
     }
 
-    // 5. cypher_text = fgetfroms(file_path, cypher_text_len_arr_size + header_len);
-    if (!(cypher_text = fgetfroms(file_path, header_len))) {
+    if (!(cypher_text = fgetfromtos(file_path, header_len + size_t_len, cypher_text_len + header_len + size_t_len))) {
         perror("psm: I/O error");
         goto ret;
     }
 
-    // 6. plain_text = decrypt(&state, cypher_text, cypher_text_len);
-    if (!(plain_text = decrypt(&state, cypher_text))) {
+    if (!(plain_text = decrypt(&state, cypher_text, cypher_text_len))) {
         goto ret;
     }
 
@@ -359,7 +341,6 @@ unsigned char *decrypt_file(char *file_path, unsigned char *key)
     ret_buff[plain_text_len] = '\0';
 
 ret:
-    sodium_free(header);
     fclose(file);
     return ret_buff;
 }
@@ -368,7 +349,7 @@ ret:
 // its documentation (doc.libsodium.org). 
 // Basically this function will split up the buffer into smaller buffers of CHUNK_SIZE size, it will then decrypt them one by one 
 // and lastly it will store them in a bigger buffer called ret_buff that will be returned.
-unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff)
+unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t buff_len)
 {
     size_t old_buf_size;
     size_t dec_cnk_size = CHUNK_SIZE;
@@ -385,29 +366,12 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     int cnk_buff_pos = 0;
     int ret_buff_pos = 0;
 
-    unsigned char c;
     unsigned long long out_len; // the length of an out_buff (doc.libsodium.org for more info).
 
-    /*-----TEST-----*/
-
-    unsigned char enc_ch;
-    size_t enc_len = strlen(buff);
-
-    printf("encrypted buff (%d chars)\n", enc_len);
-
-    for (int enc_p=0; enc_p<enc_len; enc_p++) {
-        enc_ch = buff[enc_p];
-        printf(" %d ", enc_ch);
-    }
-
-    printf("\n");
-    
-    /*-----TEST-----*/
-
-    while ((c = buff[big_buff_pos]) != '\0') {
+    while (big_buff_pos < buff_len) {
         // if the cnk_buff is not full continue writing bytes into it.
         if (cnk_buff_pos < enc_cnk_size) {
-            cnk_buff[cnk_buff_pos] = c;
+            cnk_buff[cnk_buff_pos] = buff[big_buff_pos];
             cnk_buff_pos++;
             big_buff_pos++;
         }
@@ -441,10 +405,6 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
             // cursor position gets zeroed so that cnk_buff can be refilled from 0 to CHUNK_SIZE again (the buffer is basically emptied,
             // letting new data overwrite the old one).
             cnk_buff_pos = 0;
-            // the byte that was hanging around since cnk_buff was full is pushed in the "emptied" cnk_buff.
-            cnk_buff[cnk_buff_pos] = c;
-            cnk_buff_pos++;
-            big_buff_pos++;
         }
     }
 
@@ -456,21 +416,15 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     memcpy((void *) ret_buff+ret_buff_pos, (void *) out_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
 
-    // if ret_buff is full it gets stretched by 1 cuz we need to add a '\0' at the end
-    if (ret_buff_pos >= dec_cnk_size) {
-        old_buf_size = dec_cnk_size;
-        dec_cnk_size += 1;
-        ret_buff = (unsigned char *) sodium_realloc(ret_buff, old_buf_size, dec_cnk_size);
-    }
-
     // copying ret_buff into ret_arr
-    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos);
-    strncpy(ret_arr, ret_buff, ret_buff_pos);
+    ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos + 1);
+    memcpy(ret_arr, ret_buff, ret_buff_pos);
+    ret_arr[ret_buff_pos] = '\0';
 
     /*-----TEST-----*/
 
     unsigned char dec_ch;
-    size_t dec_len = strlen(ret_arr);
+    size_t dec_len = ret_buff_pos;
 
     printf("decrypted buff (%d chars)\n", dec_len);
 
