@@ -1,7 +1,6 @@
 #include "../headers/array_handling.h"
 
-#include "../headers/stdioplusplus.h"
-#include "../headers/sodiumplusplus.h"
+#include <stdio.h>
 
 int arrlen(void **arr)
 {
