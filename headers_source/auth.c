@@ -11,11 +11,8 @@
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
-#define HASH_FILE_SIZE crypto_pwhash_STRBYTES       // i.e 128 bytes
 #define HASH_FILE_PATH "./config_files/login.hash"
-#define SALT_FILE_PATH "./config_files/crypto.salt"
-#define ACCT_FILE_PATH "./config_files/accounts.list"
-#define PASS_FILE_PATH "./config_files/passwords.list"
+#define HASH_FILE_SIZE crypto_pwhash_STRBYTES       // i.e 128 bytes
 
 #define PASS_LENGTH 65                              // 64 bytes + '\0'
 #define HASH_LENGTH crypto_box_SEEDBYTES
@@ -26,12 +23,6 @@
 #define UPPER "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
-
-/*------GLOBAL-VARIABLES-DEFINITION-START-------*/
-
-unsigned char **subkeys;
-
-/*-------GLOBAL-VARIABLES-DEFINITION-END--------*/
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
@@ -77,23 +68,11 @@ int signin()
     size_t buff_len = PASS_LENGTH;
     size_t hash_len = HASH_LENGTH;
     size_t pass_len = 0;
-    size_t mkey_len = crypto_kdf_KEYBYTES;
-    size_t skey_len = crypto_kdf_BYTES_MAX;
-    size_t salt_len = crypto_pwhash_SALTBYTES;
 
-    char *pass = (char *) sodium_malloc(buff_len);
-    char *hash = (char *) sodium_malloc(hash_len);
-    char *hash_file_path = HASH_FILE_PATH;
-    char *salt_file_path = SALT_FILE_PATH;
-    char *acct_file_path = ACCT_FILE_PATH;
-    char *pass_file_path = PASS_FILE_PATH;
+    char *pass = (unsigned char *) sodium_malloc(buff_len);
+    char *hash = (unsigned char *) sodium_malloc(hash_len);
+    char *file_path = HASH_FILE_PATH;
 
-    unsigned char *mkey = (unsigned char *) sodium_malloc(mkey_len);
-    unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
-
-    int skey_qty = 2;
-    int skey_one = 0;
-    int skey_two = 1;
     int ret_code = -1;
 
     if (!pass || !hash) {
@@ -101,7 +80,6 @@ int signin()
         return -1;
     }
 
-    // getting the input
     printf("choose a password: ");
 
     if (!(pass = read_line_s())) {
@@ -111,68 +89,34 @@ int signin()
     
     printf("\n");
 
-    // verifing the input
     if (auth_pass(pass) == -1) {
         ret_code = 0;
         goto ret;
     }
 
-    // here starts the part where hash gets created and stored
-
-    ret_code = -1;
-
     pass_len = strlen(pass);
 
     if (!(hash = pass_hash(pass, pass_len))) {
         perror("psm: cryptography error");
+        ret_code = -1;
         goto ret;
     }
 
-    if (store_hash(hash, hash_file_path) != 0) {
+    if (store_hash(hash, file_path) != 0) {
         perror("psm: I/O error");
+        ret_code = -1;
         goto ret;
     }
 
-    // here starts the part where two encryption keys that will be used to 
-    // encrypt accounts and passwords are created out of the password.
+    // here I need to generate a masterkey
 
-    if (!(mkey = generate_masterkey(pass, salt))) {
-        perror("psm: cryptography error");
-        goto ret;
-    }
-
-    if (write_salt(salt, salt_file_path) != 0) {
-        perror("psm: cryptography error");
-        goto ret;
-    }
-
-    // subkeys is a global variable that gets externed in order to use it in 
-    // passwordmanager.c file. It is an array containing the two encryption keys.
-    subkeys = (unsigned char **) sodium_malloc(skey_qty * skey_len);
-
-    for (int i=0; i<skey_qty; i++) {
-        subkeys[i] = (unsigned char *) sodium_malloc(skey_len);
-    }
-
-    if (!(subkeys = generate_subkeys(skey_qty, mkey))) {
-        perror("psm: cryptography error");
-        goto ret;
-    }
-
-    if ((encrypt_file(acct_file_path, subkeys[skey_one]) != 0) | 
-        (encrypt_file(pass_file_path, subkeys[skey_two]) != 0)) 
-    {
-        perror("psm: cryptography error");
-        goto ret;
-    }
+    // here I need to generate two subkeys from the masterkey
     
     ret_code = 1;
 
 ret:
     sodium_free(pass);
     sodium_free(hash);
-    sodium_free(mkey);
-    sodium_free(salt);
     return ret_code;
 }
 
@@ -222,19 +166,11 @@ int login()
     size_t buff_len = PASS_LENGTH;
     size_t hash_len = HASH_LENGTH;
     size_t pass_len = 0;
-    size_t mkey_len = crypto_kdf_KEYBYTES;
-    size_t skey_len = crypto_kdf_BYTES_MAX;
-    size_t salt_len = crypto_pwhash_SALTBYTES;
 
     char *pass = (char *) sodium_malloc(buff_len);
     char *hash = (char *) sodium_malloc(hash_len);
-    char *hash_file_path = HASH_FILE_PATH;
-    char *salt_file_path = SALT_FILE_PATH;
+    char *file_path = HASH_FILE_PATH;
 
-    unsigned char *mkey = (unsigned char *) sodium_malloc(mkey_len);
-    unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
-
-    int skey_qty = 2;
     int ret_code = -1;
     
     if (!pass || !hash) {
@@ -242,7 +178,6 @@ int login()
         return -1;
     }
 
-    // getting the input
     printf("insert password: ");
 
     if (!(pass = read_line_s())) {
@@ -252,10 +187,9 @@ int login()
 
     printf("\n");
 
-    // here starts the part were the hash gets generated and stored
     pass_len = strlen(pass);
 
-    if (!(hash = get_hash(hash_file_path))) {
+    if (!(hash = get_hash(file_path))) {
         perror("psm: I/O error");
         goto ret;
     } 
@@ -266,31 +200,10 @@ int login()
         goto ret;
     }
 
-    // here starts the part where encryption keys are generated
-
-    ret_code = -1;
-
-    if (get_salt(salt, salt_file_path) != 0) {
-        perror("psm: cryptography error");
-        goto ret;
-    }
-
-    if (!(mkey = generate_masterkey_with_salt(pass, salt))) {
-        perror("psm: cryptography error");
-        goto ret;
-    }
-
-    if (!(subkeys = generate_subkeys(skey_qty, mkey))) {
-        perror("psm: cryptography error");
-        goto ret;
-    }
-
     ret_code = 1;
 
 ret:
     sodium_free(pass);
     sodium_free(hash);
-    sodium_free(mkey);
-    sodium_free(salt);
     return ret_code;
 }
