@@ -153,25 +153,6 @@ unsigned char *encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     unsigned char c;
     unsigned long long out_len; // the length of an out_buff (doc.libsodium.org for more info).
 
-    /*-----TEST-----*/
-
-    /*unsigned char dec_ch;
-    size_t dec_len = strlen(buff);
-
-    printf("decrypted buff (%d chars)\n", dec_len);
-
-    for (int dec_p=0; dec_p<dec_len; dec_p++) {
-        if (((dec_ch = buff[dec_p]) >= 48 && dec_ch <= 57) || (dec_ch >= 65 && dec_ch <= 90) || (dec_ch >= 97 && dec_ch <= 122)) { 
-            printf("%c", dec_ch);
-        } else {
-            printf(" %d ", dec_ch);
-        }
-    }
-    
-    printf("\n");*/
-
-    /*-----TEST-----*/
-
     while ((c = buff[big_buff_pos]) != '\0') {
         // if the cnk_buff is not full continue writing bytes into it.
         if (cnk_buff_pos < CHUNK_SIZE) {
@@ -420,25 +401,6 @@ unsigned char *decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsig
     ret_arr = (unsigned char *) sodium_malloc(ret_buff_pos + 1);
     memcpy(ret_arr, ret_buff, ret_buff_pos);
     ret_arr[ret_buff_pos] = '\0';
-
-    /*-----TEST-----*/
-
-    /*unsigned char dec_ch;
-    size_t dec_len = ret_buff_pos;
-
-    printf("decrypted buff (%d chars)\n", dec_len);
-
-    for (int dec_p=0; dec_p<dec_len; dec_p++) {
-        if (((dec_ch = ret_arr[dec_p]) >= 48 && dec_ch <= 57) || (dec_ch >= 65 && dec_ch <= 90) || (dec_ch >= 97 && dec_ch <= 122)) { 
-            printf("%c", dec_ch);
-        }  else {
-            printf(" %d ", dec_ch);
-        }
-    }
-
-    printf("\n");*/
-    
-    /*-----TEST-----*/
 
 ret:
     // always free memory, mostly if secured, cuz we don't wanna have buffers hanging around mlocked.
