@@ -283,9 +283,12 @@ int psm_remove(char **args)
 
 int psm_get(char **args)
 {
-    printf("get\n");
+    if (!args[1] || args[2]) {
+        printf("\"get\" needs to know an account name (1 argument needed)\n");
+    }
 
-    // 1. validate used input
+    // find account
+
     // 2. decrypt accounts file
     // 3. if it exists, copy the
     //    pass in the clipboard
