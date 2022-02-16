@@ -4,6 +4,7 @@
 #include "./headers/sodiumplusplus.h"
 #include "./headers/logging.h"
 #include "./headers/array_handling.h"
+#include "./headers/clipboard_managment.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -49,9 +50,10 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail);
 int append_pass(unsigned char *pass);
 unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
 int remove_account(unsigned char *account_name, int *line_indx);
-int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match, size_t *line_len);
+int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *line_len);
 int remove_password(int line_indx);
 unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx);
+unsigned char *get_pass(int line_indx);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -283,19 +285,55 @@ int psm_remove(char **args)
 
 int psm_get(char **args)
 {
+    size_t line_len;
+
+    int code;
+    int line_indx;
+
+    unsigned char *file_content;
+    unsigned char **lines;
+    unsigned char *pass;
+
+    char *file_path = ACCT_FILE_PATH;
+
     if (!args[1] || args[2]) {
         printf("\"get\" needs to know an account name (1 argument needed)\n");
     }
 
-    // find account
+    // decrypting accounts.list
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
+        return -1;
+    }
 
-    // 2. decrypt accounts file
-    // 3. if it exists, copy the
-    //    pass in the clipboard
-    // 4. recrypt the file
-    // 5. after a while (1 min
-    //    or less) clear the 
-    //    the clipboard
+    // splitting file content in lines
+    lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+
+    // finding account index
+    if ((line_indx = find_line_indx(lines, args[1], &line_len)) < 0) {
+        printf("account not found\n");
+        return 0;
+    }
+
+    // get password at right index
+    if (!(pass = get_pass(line_indx))) {
+        perror("psm: I/O error");
+        return -1;
+    }
+
+    /*
+        // start a new thread
+
+        // copy pass in clipboard
+        save_in_clipboard(pass);
+
+        // wait 1 minute
+
+        // clear the clipboard
+
+        // kill the thread
+    */
+
+    return 0;
 }
 
 /*-------------TEST-------------*/
@@ -613,7 +651,7 @@ int remove_account(unsigned char *account_name, int *line_indx)
     content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
 
     // finding the index of the line that needs to be removed. the length of this line is stored in line_len.
-    if ((*line_indx = find_line_indx_to_remove(content_lines, account_name, &line_len)) < 0) {
+    if ((*line_indx = find_line_indx(content_lines, account_name, &line_len)) < 0) {
         // account not found
         ret_code = 1;
         goto ret;
@@ -639,10 +677,9 @@ ret:
     return ret_code;
 }
 
-// this function returns the index of the deleted line, so that it can be passed to remove_pass
-// function. the line's length, needed to compute the length of the new buffer,  will be stored 
-// at line_len address
-int find_line_indx_to_remove(unsigned char **lines, unsigned char *str_to_match, size_t *line_len) 
+// this function returns the index of a line. the line's length will be stored 
+// at line_len address.
+int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *line_len) 
 {
     size_t single_line_len;
 
@@ -740,4 +777,39 @@ unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, i
     }
 
     return new_buff;
+}
+
+// this function retrieves the password located at line_indx
+// index from passwords.file
+unsigned char *get_pass(int line_indx)
+{
+    size_t pass_len;
+
+    unsigned char *pass;
+    unsigned char *file_content;
+    unsigned char **lines;
+
+    char *file_path = PASS_FILE_PATH;
+
+    // decrypting passwords.list file
+    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
+        return NULL;
+    }
+
+    // splitting file_content in lines
+    lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+
+    // if line_indx > number of lines return -1
+    if (line_indx > arrlen((void **) lines)) {
+        perror("psm: get_pass: invalid index");
+        return NULL;
+    }
+
+    // retrieving line at index line_indx
+    pass_len = strlen(lines[line_indx]);
+    pass = (unsigned char *) sodium_malloc(pass_len + 1);
+    memcpy(pass, lines[line_indx], pass_len);
+    pass[pass_len] = '\0';
+
+    return pass;
 }
