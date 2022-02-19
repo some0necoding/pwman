@@ -1,7 +1,8 @@
 # password_manager
 some password manager written in c just for learning purposes.
 
-To make an executable you have to compile passwordmanager.c along with headers_source/*
+To make an executable you have to compile:
+    gcc -o {output_file_name} passwordmanager.c headers_source/* -lsodium -lX11 -lpthread
 
 knowledge:
  - c programming skills
