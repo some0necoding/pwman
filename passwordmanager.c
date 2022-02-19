@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <stdio.h>
+#include <pthread.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
@@ -287,6 +288,8 @@ int psm_get(char **args)
 {
     size_t line_len;
 
+    pthread_t thread_id;
+
     int code;
     int line_indx;
 
@@ -320,18 +323,8 @@ int psm_get(char **args)
         return -1;
     }
 
-    /*
-        // start a new thread
-
-        // copy pass in clipboard
-        save_in_clipboard(pass);
-
-        // wait 1 minute
-
-        // clear the clipboard
-
-        // kill the thread
-    */
+    //start a new thread handling password copying in clipboard
+    pthread_create(&thread_id, NULL, (void *) save_in_clipboard, pass);
 
     return 0;
 }
