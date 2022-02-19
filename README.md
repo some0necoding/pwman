@@ -2,7 +2,7 @@
 some password manager written in c just for learning purposes.
 
 To make an executable you have to run:
-    make
+make
 
 knowledge:
  - c programming skills
