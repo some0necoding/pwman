@@ -85,27 +85,3 @@ int XCopy(Atom selection, unsigned char *text, size_t size)
     
     return 0;
 }
-
-/*
-int copy_in_clipboard_2(unsigned char *text)
-{
-	size_t text_len = strlen(text);
-
-	display = XOpenDisplay(0);
-	int N = DefaultScreen(display);
-
-	window = XCreateSimpleWindow(display, RootWindow(display, N), 0, 0, 1, 1, 0, BlackPixel(display, N), WhitePixel(display, N));	
-	
-	targets_atom = XInternAtom(display, "TARGETS", 0);
-	text_atom = XInternAtom(display, "TEXT", 0);
-	UTF8 = XInternAtom(display, "UTF8_STRING", 1);
-	
-	if (UTF8 == None) {
-		UTF8 = XA_STRING;
-	}
-
-	Atom selection = XInternAtom(display, "CLIPBOARD", 0);
-	
-	XCopy(selection, text, text_len);
-}
-*/
