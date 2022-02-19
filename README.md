@@ -1,8 +1,7 @@
 # password_manager
 some password manager written in c just for learning purposes.
 
-To make an executable you have to run:
-make
+To make an executable you have to run: make
 
 knowledge:
  - c programming skills
