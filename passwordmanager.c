@@ -66,11 +66,16 @@ int skey_pass = 1;
 
 int main(int argc, char const *argv[])
 {
+    if (argc > 1) {
+        printf("this command does not accept arguments\n");
+        return 1;
+    }
+
     crypto_alg_init();
 
     psm_start();
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 // this function initializes sodium library (doc.libsodium.org)
