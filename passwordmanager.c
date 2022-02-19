@@ -2,7 +2,6 @@
 #include "./headers/input_acquisition.h"
 #include "./headers/cryptography.h"
 #include "./headers/sodiumplusplus.h"
-#include "./headers/logging.h"
 #include "./headers/array_handling.h"
 #include "./headers/clipboard_managment.h"
 
