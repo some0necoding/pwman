@@ -25,6 +25,7 @@ help:
 
 install:
 # creating empty config/db files (this set of commands can be coded way better than this)
+	@echo "Creating needed files..."
 	@sudo mkdir config_files
 	@sudo touch config_files/accounts.list
 	@sudo touch config_files/passwords.list
@@ -32,7 +33,9 @@ install:
 	@sudo touch config_files/login.hash
 	@sudo chmod a=rwx config_files/*
 # compiling source code and saving the bin executable in /usr/local/bin to make it runnable from terminal
+	@echo "Compiling..."
 	@sudo $(CC) -o /usr/local/bin/$(EXEC_NAME) $(MAIN_SRC) $(HEAD_SRC) $(FLAG_1) $(FLAG_2) $(FLAG_3)
+	@echo "Done"
 
 clean:
 	@echo "Cleaning up..."
