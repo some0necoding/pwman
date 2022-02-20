@@ -333,64 +333,6 @@ int psm_get(char **args)
     return 0;
 }
 
-/*-------------TEST-------------*/
-
-int test_show_password(char **args) 
-{
-    unsigned char *file_content;
-
-    char *file_path = PASS_FILE_PATH;  
-    char ch;  
-
-    int pos = 0;
-
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
-        perror("test: cryptography error");
-        return -1;
-    }
-
-    while ((ch = file_content[pos++]) != '\0') {
-        if (ch > 126 || ch < 33) {
-            printf(" %d ", ch);
-        } else {
-            printf("%c", ch);
-        }
-    }
-
-    printf("\n");
-
-    return 0;
-}
-
-int test_show_account(char **args) 
-{
-    unsigned char *file_content;
-
-    char *file_path = ACCT_FILE_PATH;  
-    char ch;  
-
-    int pos = 0;
-
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
-        perror("test: cryptography error");
-        return -1;
-    }
-
-    while ((ch = file_content[pos++]) != '\0') {
-        if (ch > 126 || ch < 33) {
-            printf(" %d ", ch);
-        } else {
-            printf("%c", ch);
-        }
-    }
-
-    printf("\n");
-
-    return 0;
-}
-
-/*-------------TEST-------------*/
-
 int psm_exit(char **args) {
     exit(EXIT_SUCCESS);
 }
