@@ -24,7 +24,7 @@ help:
 	@echo "  run \"make clean\" to remove passman"
 
 install:
-# creating empty config/db files 
+# creating empty config/db files (this set of commands can be coded way better than this)
 	@sudo touch config_files/accounts.list
 	@sudo touch config_files/passwords.list
 	@sudo touch config_files/crypto.salt
@@ -36,7 +36,7 @@ clean:
 	@echo "Cleaning up..."
 # deleting bin executable from /usr/local/bin
 	@sudo rm -f /usr/local/bin/$(EXEC_NAME)
-# deleting config/db files used
+# deleting config/db files used (this set of commands can be coded way better than this)
 	@sudo rm -f config_files/accounts.list
 	@sudo rm -f config_files/passwords.list
 	@sudo rm -f config_files/crypto.salt
