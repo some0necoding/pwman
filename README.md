@@ -2,6 +2,7 @@
 some password manager written in c just for learning purposes.
 
 Installation:
+
     task:                           command:
     to install passman              make install
     to run passman                  passman
