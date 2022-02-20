@@ -3,7 +3,7 @@
 # make install			# installs passman in /usr/local/bin/
 # make clean			# removes passman from /usr/local/bin
 
-.PHONY = all help compile clean
+.PHONY = all help install clean
 
 CC = gcc
 
