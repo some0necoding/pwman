@@ -1,7 +1,11 @@
 # password_manager
 some password manager written in c just for learning purposes.
 
-To make an executable you have to run: make
+Installation:
+
+    to install passman              make install
+    to run passman                  passman
+    to uninstall passman            make clean
 
 knowledge:
  - c programming skills
