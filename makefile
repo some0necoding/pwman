@@ -30,7 +30,7 @@ install:
 	@sudo touch config_files/passwords.list
 	@sudo touch config_files/crypto.salt
 	@sudo touch config_files/login.hash
-	@sudo chmod ug=rwx config_files/*
+	@sudo chmod a=rwx config_files/*
 # compiling source code and saving the bin executable in /usr/local/bin to make it runnable from terminal
 	@sudo $(CC) -o /usr/local/bin/$(EXEC_NAME) $(MAIN_SRC) $(HEAD_SRC) $(FLAG_1) $(FLAG_2) $(FLAG_3)
 
