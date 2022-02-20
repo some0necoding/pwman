@@ -13,6 +13,3 @@ knowledge:
 day one of development (first commit): 4th november 2021
 
 lines of code: 2150 (on 20th february 2022 - 09:21)
-
-fixes:
- - add a "help" command
