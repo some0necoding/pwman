@@ -108,9 +108,7 @@ char *command_names[] = {
     "edit",
     "rm",
     "get",
-    "exit",
-    "pass",
-    "acct"
+    "exit"
 };
 
 // array of command functions
