@@ -4,9 +4,9 @@ some password manager written in c just for learning purposes.
 Installation:
 
     task:                           command:
-    to install passman              make install
-    to run passman                  passman
-    to uninstall passman            make clean
+    install passman                 make install
+    run passman                     passman
+    uninstall passman               make clean
 
 knowledge:
  - c programming skills
