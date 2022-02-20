@@ -96,6 +96,7 @@ void psm_start(void)
     start_txt = "\nWELCOME TO PASSMAN!\n"
                 "\n"
                 "    digit \"help\" for help"
+                "    digit \"exit\" to exit passman"
                 "\n";
 
     if (auth() == 0) {
