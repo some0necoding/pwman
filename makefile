@@ -25,6 +25,7 @@ help:
 
 install:
 # creating empty config/db files (this set of commands can be coded way better than this)
+	@sudo mkdir config_files
 	@sudo touch config_files/accounts.list
 	@sudo touch config_files/passwords.list
 	@sudo touch config_files/crypto.salt
@@ -41,4 +42,5 @@ clean:
 	@sudo rm -f config_files/passwords.list
 	@sudo rm -f config_files/crypto.salt
 	@sudo rm -f config_files/login.hash
+	@sudo rmdir config_files
 	@echo "Done"
