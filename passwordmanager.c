@@ -39,8 +39,6 @@ int psm_modify(char **args);
 int psm_remove(char **args);
 int psm_get(char **args);
 int psm_exit(char **args);
-int test_show_password(char **args);
-int test_show_account(char **args);
 
 char **psm_split_line(char *line);
 int psm_launch(char **args) ;
@@ -122,9 +120,7 @@ int (*command_addr[]) (char **) = {
     &psm_modify,
     &psm_remove,
     &psm_get,
-    &psm_exit,
-    &test_show_password,
-    &test_show_account
+    &psm_exit
 };
 
 // this function returns the number of commands in command_names array
