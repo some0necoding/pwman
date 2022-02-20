@@ -91,7 +91,17 @@ void psm_start(void)
 {
     int exit_code = 0;
 
+    unsigned char *start_txt;
+
+    start_txt = "\nWELCOME TO PASSMAN!\n"
+                "\n"
+                "    digit \"help\" for help"
+                "\n";
+
     if (auth() == 0) {
+
+        printf("%s\n", start_txt);
+
         exit_code = psm_exec();
     } else {
         exit(EXIT_FAILURE);
