@@ -1,4 +1,6 @@
-# passman
+<p align="center">
+    # passman
+</p>
 some password manager written in c just for learning purposes.
 
 Installation:
