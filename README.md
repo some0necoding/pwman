@@ -1,5 +1,5 @@
 <p align="center">
-    # passman
+    <h1>passman<>/h1
 </p>
 some password manager written in c just for learning purposes.
 
