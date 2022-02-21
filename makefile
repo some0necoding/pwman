@@ -3,16 +3,18 @@
 # make install			# installs passman in /usr/local/bin/
 # make clean			# removes passman from /usr/local/bin
 
-.PHONY = all help install clean
+.PHONY = all help install create_bins delete_bins compile clean
 
 CC = gcc
 
-FLAG_1 = -lsodium
-FLAG_2 = -lX11
-FLAG_3 = -lpthread
+CFLAGS := -lsodium -lX11 -lpthread
 
-MAIN_SRC = passwordmanager.c
-HEAD_SRC = headers_source/*.c
+SRCS := $(wildcard *.c) $(wildcard headers_source/*.c)
+
+PATH = /usr/local/bin
+
+BIN_FOLDER = binaries
+BINS := accounts.list passwords.list crypto.salt login.hash
 
 EXEC_NAME = passman
 
@@ -24,27 +26,41 @@ help:
 	@echo "  run \"make clean\" to remove passman"
 
 install:
-# creating empty config/db files (this set of commands can be coded way better than this)
-	@echo "Creating needed files..."
-	@sudo mkdir config_files
-	@sudo touch config_files/accounts.list
-	@sudo touch config_files/passwords.list
-	@sudo touch config_files/crypto.salt
-	@sudo touch config_files/login.hash
-	@sudo chmod a=rwx config_files/*
+# installing libsodium
+	@sudo wget https://download.libsodium.org/libsodium/releases/LATEST.tar.gz
+	@sudo tar -xf LATEST.tar.gz
+	@sudo rm LATEST.tar.gz
+	@cd libsodium-stable
+	@./configure
+	@make && make check
+	@sudo make install
+	@cd ..
+	@sudo rm -rf libsodium-stable
+
+# creating empty bin files
+	@sudo mkdir $(BIN_FOLDER)
+	@create_bins
+	@sudo chmod a=rwx $(BIN_FOLDER)/*
+
 # compiling source code and saving the bin executable in /usr/local/bin to make it runnable from terminal
 	@echo "Compiling..."
-	@sudo $(CC) -o /usr/local/bin/$(EXEC_NAME) $(MAIN_SRC) $(HEAD_SRC) $(FLAG_1) $(FLAG_2) $(FLAG_3)
+	@sudo $(CC) -o $(PATH)/$(EXEC_NAME) $(SRCS) $(CFLAGS)
 	@echo "Done"
+
+create_bins: $(BINS)
+# creating empty bin files
+	@echo "Creating needed files..."
+	@sudo touch $(BIN_FOLDER)/$@
+
+delete_bins: $(BINS)
+# deleting bin files
+	@echo "Deleting bin files..."
+	@sudo rm -f $(BIN_FOLDER)/$@
 
 clean:
 	@echo "Cleaning up..."
 # deleting bin executable from /usr/local/bin
-	@sudo rm -f /usr/local/bin/$(EXEC_NAME)
-# deleting config/db files used (this set of commands can be coded way better than this)
-	@sudo rm -f config_files/accounts.list
-	@sudo rm -f config_files/passwords.list
-	@sudo rm -f config_files/crypto.salt
-	@sudo rm -f config_files/login.hash
-	@sudo rmdir config_files
+	@sudo rm -f $(PATH)/$(EXEC_NAME)
+	@delete_bins
+	@sudo rmdir $(BIN_FOLDER)
 	@echo "Done"
