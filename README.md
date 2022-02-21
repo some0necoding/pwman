@@ -14,6 +14,8 @@ knowledge:
  - cryptography and encryption for data storage
  - x window system for clipboard managment
  - advanced debugging: use of automation to generate specific testing environment 
+ - source code compiling and building: use of make utility
+ - advanced development: use of git and github
 
 day one of development (first commit): 4th november 2021
 
