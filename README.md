@@ -17,7 +17,7 @@ others remain safe.
 
 ## Technologies
 
-- encryption algorithm
+- XChaCha20Poly1305 (AEAD) algorithm
 
 ## Installation
 
