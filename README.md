@@ -8,8 +8,8 @@
 
 ## Basic Overview
 
-Passman is a security-focused password manager written in C I made to touch a bit of software security and
-learn more about it.
+Passman is a security-focused password manager written in C I made to get in touch with  a bit of
+software security and learn more about it.
 
 ## Technologies
 
