@@ -22,9 +22,9 @@ others remain safe.
 The algorithm used to support file cryptography in passman is XChaCha20Poly1305, an AEAD 
 (Authenticated Encryption with Additional Data) algorithm. AEAD algorithms aim to provide three 
 security and privacy goals:  
-    - confidentiality  
-    - integrity  
-    - authenticity    
+- confidentiality  
+- integrity  
+- authenticity    
 The algorithm is composed by two cryptographic primitives: XChaCha20 and Poly1305.  
 The first one is an based on Salsa20, a stream cypher that uses ARX (add-rotate-XOR) operations.
 Poly1305 is a cryptographic MAC (message authentication code) used to verify authenticity and
