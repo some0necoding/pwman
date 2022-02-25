@@ -80,8 +80,8 @@ ret:
 }
 
 // To make the header file more complete there's also an encryption function decrypted file -> encrypted file.
-// It can be useful in cases were the machine and storage are not easily vulnerable (even if idk who the hell 
-// dares to be confident about this choice).
+// It can be useful in cases were the machine and storage are not easily vulnerable (don't be confident about 
+// this choice).
 int encrypt_file(char *file_path, unsigned char *key)
 {
     size_t header_len = HEADER_LENGTH;
