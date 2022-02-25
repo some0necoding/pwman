@@ -19,9 +19,9 @@ others remain safe.
 
 #### Cryptography
 
-The algorithm used to support file cryptography in passman is XChaCha20Poly1305, an AEAD 
-(Authenticated Encryption with Additional Data) algorithm. AEAD algorithms aim to provide three 
-security and privacy goals:  
+The algorithm used to support file cryptography, user authentication and secure memory allocation
+in passman is XChaCha20Poly1305, an AEAD (Authenticated Encryption with Additional Data) algorithm.   
+AEAD algorithms aim to provide three security and privacy goals:  
 - confidentiality  
 - integrity  
 - authenticity    
