@@ -17,7 +17,7 @@ others remain safe.
 
 ## Technologies
 
-#### Cryptography
+### Cryptography
 
 The algorithm used to support file cryptography in passman is XChaCha20Poly1305, an AEAD 
 (Authenticated Encryption with Additional Data) algorithm.   
@@ -41,13 +41,13 @@ performance.
 Poly1305 is a cryptographic MAC (Message Authentication Code) used to verify authenticity and
 integrity of the message. 
 
-#### Storage
+### Storage
 
 ## Installation
 
-#### Needed Libs
+### Needed Libs
 
-#### Use of make utility
+### Use of make utility
 
 ```
 task:                           command:
