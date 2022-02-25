@@ -17,6 +17,14 @@ others remain safe.
 
 ## Technologies
 
+#### Cryptography
+
+The algorithm used to support file cryptography in passman is XChaCha20Poly1305, that is an AEAD
+(Authenticated Encryption with Additional Data) algorithm. AEAD algorithms are the best solution
+to provide confidentiality, integrity and authenticity about the encrypted message. 
+
+#### Storage
+
 - XChaCha20Poly1305 (AEAD) algorithm
 
 ## Installation
