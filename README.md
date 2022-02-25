@@ -41,9 +41,9 @@ performance.
 Poly1305 is a cryptographic MAC (Message Authentication Code) used to verify authenticity and data 
 integrity of a message.  
 It works similarly to a digital sign function, but using symmetric encryption: provided a key and an 
-input string, the function returns a unique hash value (*tag*) that gets appended at the end of the 
-cyphertext. To verify integrity and authenticity of the message, the appended tag and the one obtained
-by passing in the function the same key and the cyphertext must be the same.  
+input string (in this case the plaintext), the function returns a unique hash value (*tag*) that gets 
+appended at the end of the cyphertext. To verify integrity and authenticity of the message, the appended 
+tag must match the one obtained by passing in the function the same key and the decrypted plaintext.  
 
 ### Storage
 
