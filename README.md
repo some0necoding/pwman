@@ -26,9 +26,9 @@ AEAD encryption aims to provide three security and privacy goals:
 - integrity  
 - authenticity    
 
-The algorithm is composed by two cryptographic primitives: XChaCha20 and Poly1305.  
-The first one is an based on Salsa20, a stream cypher that uses ARX (add-rotate-XOR) operations.
-Poly1305 is a cryptographic MAC (message authentication code) used to verify authenticity and
+The algorithm is composed of two cryptographic primitives: XChaCha20 and Poly1305.  
+The first one is based on Salsa20, a symmetric stream cypher that uses ARX (add-rotate-XOR) operations.
+Poly1305 is a cryptographic MAC (Message Authentication Code) used to verify authenticity and
 integrity of the message. 
 
 #### Storage
