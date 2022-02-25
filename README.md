@@ -28,7 +28,7 @@ AEAD encryption aims to provide three security and privacy goals:
 
 The algorithm is composed of two cryptographic primitives: XChaCha20 and Poly1305.
 
-###### XChaCha20 - Confidentiality 
+#### XChaCha20 - Confidentiality 
 
 XChaCha20 is the most recent and secure evolution of ChaCha20, based on Salsa20, a symmetric stream 
 cypher that performs ARX (add-rotate-XOR) operations on the given stream using 256-bit key and 192-bit 
@@ -36,7 +36,7 @@ nonce.
 It is usually preferred over AES for CPUs where AES acceleration is not supported due to its better
 performance.
 
-###### Poly1305 - Integrity and Authenticity
+#### Poly1305 - Integrity and Authenticity
 
 Poly1305 is a cryptographic MAC (Message Authentication Code) used to verify authenticity and
 integrity of the message. 
