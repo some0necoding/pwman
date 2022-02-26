@@ -16,27 +16,16 @@ PATH = /usr/local/bin
 BIN_FOLDER = binaries
 BINS := accounts.list passwords.list crypto.salt login.hash
 
-EXEC_NAME = passman
+EXEC_NAME = pwman
 
 all: help
 
 help:
 	@echo "Usage:"
-	@echo "  run \"make install\" to install passman"
-	@echo "  run \"make clean\" to remove passman"
+	@echo "  run \"make install\" to install $(EXEC_NAME)"
+	@echo "  run \"make clean\" to remove $(EXEC_NAME)"
 
 install:
-# installing libsodium
-	@sudo wget https://download.libsodium.org/libsodium/releases/LATEST.tar.gz
-	@sudo tar -xf LATEST.tar.gz
-	@sudo rm LATEST.tar.gz
-	@cd libsodium-stable
-	@./configure
-	@make && make check
-	@sudo make install
-	@cd ..
-	@sudo rm -rf libsodium-stable
-
 # creating empty bin files
 	@sudo mkdir $(BIN_FOLDER)
 	@create_bins
