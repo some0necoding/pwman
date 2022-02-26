@@ -1,6 +1,6 @@
 <!-- maybe here should be put a logo -->
 
-<h1 align="center">passman</h1>
+<h1 align="center">pwman</h1>
 
 <!-- maybe here should be put a logo -->
 
