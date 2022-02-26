@@ -30,8 +30,11 @@ $ pwman                             // run pwman
 $ make clean                        // uninstall pwman
 ```
 
-<!--## Cryptography
+## Cryptography
 
+- XChaCha20Poly1305
+
+<!--
 The algorithm used to support file cryptography in pwman is XChaCha20Poly1305, an AEAD 
 (Authenticated Encryption with Additional Data) algorithm.   
 AEAD encryption aims to provide three security and privacy goals:  
