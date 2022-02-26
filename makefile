@@ -3,7 +3,7 @@
 # make install			# installs passman in /usr/local/bin/
 # make clean			# removes passman from /usr/local/bin
 
-.PHONY = all help install create_bins delete_bins compile clean
+.PHONY = all help install create_bins delete_bins clean
 
 CC = gcc
 
@@ -27,10 +27,9 @@ help:
 
 install:
 # creating empty bin files
-	pwd
-	sudo mkdir $(BIN_FOLDER)
-	create_bins
-	sudo chmod a=rwx $(BIN_FOLDER)/*
+	@sudo mkdir $(BIN_FOLDER)
+	@create_bins
+	@sudo chmod a=rwx $(BIN_FOLDER)/*
 
 # compiling source code and saving the bin executable in /usr/local/bin to make it runnable from terminal
 	@echo "Compiling..."
@@ -48,8 +47,8 @@ delete_bins: $(BINS)
 	@sudo rm -f $(BIN_FOLDER)/$@
 
 clean:
-	@echo "Cleaning up..."
 # deleting bin executable from /usr/local/bin
+	@echo "Cleaning up..."
 	@sudo rm -f $(PATH)/$(EXEC_NAME)
 	@delete_bins
 	@sudo rmdir $(BIN_FOLDER)
