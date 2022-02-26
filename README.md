@@ -59,6 +59,9 @@ put at risk all passwords, which remain encrypted.-->
 
 ### Needed Libs
 
+The only third party library needed to make Passman run is [libsodium](https://doc.libsodium.org/installation),
+which provides functions for file cryptography, user authentication and secure memory allocation.
+
 ### Use of make utility
 
 ```
