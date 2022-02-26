@@ -32,7 +32,7 @@ $ make clean                        // uninstall pwman
 
 ## Cryptography
 
-- XChaCha20Poly1305
+- XChaCha20Poly1305 (AEAD) algorithm
 
 <!--
 The algorithm used to support file cryptography in pwman is XChaCha20Poly1305, an AEAD 
