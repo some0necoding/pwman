@@ -14,7 +14,7 @@ SRCS := $(wildcard *.c) $(wildcard headers_source/*.c)
 PATH = /usr/local/bin
 
 BIN_FOLDER = binaries
-BINS := accounts.list passwords.list crypto.salt login.hash
+BIN_FILES := accounts.list passwords.list crypto.salt login.hash
 
 EXEC_NAME = pwman
 
@@ -27,21 +27,22 @@ help:
 
 install:
 # creating empty bin files
-	@sudo mkdir $(BIN_FOLDER)
+	pwd
+	sudo mkdir $(BIN_FOLDER)
 	@create_bins
 	@sudo chmod a=rwx $(BIN_FOLDER)/*
 
-# compiling source code and saving the bin executable in /usr/local/bin to make it runnable from terminal
+# compiling source code and saving the bin executable in /usr/local/bin to make it easily runnable from terminal
 	@echo "Compiling..."
 	@sudo $(CC) -o $(PATH)/$(EXEC_NAME) $(SRCS) $(CFLAGS)
 	@echo "Done"
 
-create_bins: $(BINS)
+create_bins: $(BIN_FILES)
 # creating empty bin files
 	@echo "Creating needed files..."
 	@sudo touch $(BIN_FOLDER)/$@
 
-delete_bins: $(BINS)
+delete_bins: $(BIN_FILES)
 # deleting bin files
 	@echo "Deleting bin files..."
 	@sudo rm -f $(BIN_FOLDER)/$@
