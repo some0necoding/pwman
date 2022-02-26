@@ -8,7 +8,7 @@
 
 ## Basic Overview
 
-Passman is a security-focused password manager written in C I made to get in touch with  a bit of
+Pwman is a security-focused password manager written in C I made to get in touch with  a bit of
 software security and learn more about this topic.  
 Its simpler purpose is to store user's accounts along with passwords in encrypted format, in order
 to improve user's security in the web. The use of a password manager makes it possible for the user
@@ -17,7 +17,7 @@ others remain safe.
 
 ## Cryptography
 
-The algorithm used to support file cryptography in passman is XChaCha20Poly1305, an AEAD 
+The algorithm used to support file cryptography in pwman is XChaCha20Poly1305, an AEAD 
 (Authenticated Encryption with Additional Data) algorithm.   
 AEAD encryption aims to provide three security and privacy goals:  
 - confidentiality  
@@ -47,18 +47,18 @@ tag must match the one obtained by passing in the function the same key and the 
 
 ### Needed Libs
 
-The only third party library needed to make Passman run is [libsodium](https://doc.libsodium.org/installation),
+The only third party library needed to make Pwman run is [libsodium](https://doc.libsodium.org/installation),
 which provides functions for file cryptography, user authentication and secure memory allocation.
 
 ### Installation using make
 
 ```
 task:                           command:
-install passman                 make install
-run passman                     passman
-uninstall passman               make clean
+install pwman                   make install
+run pwman                       pwman
+uninstall pwman                 make clean
 ```
 
 ## Lincense
 
-This project is licensed under the terms of the [**GPL**](https://github.com/some0necoding/passman/blob/main/LICENSE.md) license.
+This project is licensed under the terms of the [**GPL**](https://github.com/some0necoding/pwman/blob/main/LICENSE.md) license.
