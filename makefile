@@ -1,9 +1,9 @@
 # this file simply compiles all source code
 # Usage:
-# make install			# installs passman in /usr/local/bin/
-# make clean			# removes passman from /usr/local/bin
+# make install			# installs pwman in /usr/local/bin/
+# make clean			# removes pwman from /usr/local/bin
 
-.PHONY = all help install create_bins delete_bins clean
+.PHONY = all help install create_needed_files create_bin_dir create_bin_files compile clean remove_exec delete_bin_files delete_bin_dir
 
 CC = gcc
 
@@ -11,10 +11,12 @@ CFLAGS := -lsodium -lX11 -lpthread
 
 SRCS := $(wildcard *.c) $(wildcard headers_source/*.c)
 
-PATH = /usr/local/bin
+SYSTEM_PATH = /usr/local/bin
 
 BIN_FOLDER = binaries
-BIN_FILES := accounts.list passwords.list crypto.salt login.hash
+BIN_FILES = accounts.list passwords.list crypto.salt login.hash
+BIN_FILES_CREATE = $(BIN_FILES:%=%.create)
+BIN_FILES_DELETE = $(BIN_FILES:%=%.delete)
 
 EXEC_NAME = pwman
 
@@ -25,32 +27,39 @@ help:
 	@echo "  run \"make install\" to install $(EXEC_NAME)"
 	@echo "  run \"make clean\" to remove $(EXEC_NAME)"
 
-install:
-# creating empty bin files
-	pwd
-	sudo mkdir $(BIN_FOLDER)
-	@create_bins
+install: create_needed_files compile
+	@echo "Done"
+
+create_needed_files: create_bin_dir create_bin_files
+
+create_bin_dir:
+	@echo "Creating needed files..."
+	@sudo mkdir $(BIN_FOLDER)
+
+create_bin_files: $(BIN_FILES_CREATE)
 	@sudo chmod a=rwx $(BIN_FOLDER)/*
+	@echo "Needed files created"
+
+$(BIN_FILES_CREATE):
+	@sudo touch $(BIN_FOLDER)/$($@:%.create=%)
 
 # compiling source code and saving the bin executable in /usr/local/bin to make it easily runnable from terminal
+compile:
 	@echo "Compiling..."
-	@sudo $(CC) -o $(PATH)/$(EXEC_NAME) $(SRCS) $(CFLAGS)
+	@sudo $(CC) -o $(SYSTEM_PATH)/$(EXEC_NAME) $(SRCS) $(CFLAGS)
+
+# deleting bin executable from /usr/local/bin and deleting bin files
+clean: remove_exec delete_bin_files delete_bin_dir
 	@echo "Done"
 
-create_bins: $(BIN_FILES)
-# creating empty bin files
-	@echo "Creating needed files..."
-	@sudo touch $(BIN_FOLDER)/$@
-
-delete_bins: $(BIN_FILES)
-# deleting bin files
-	@echo "Deleting bin files..."
-	@sudo rm -f $(BIN_FOLDER)/$@
-
-clean:
-# deleting bin executable from /usr/local/bin
+remove_exec:
 	@echo "Cleaning up..."
-	@sudo rm -f $(PATH)/$(EXEC_NAME)
-	@delete_bins
+	@sudo rm $(SYSTEM_PATH)/$(EXEC_NAME)
+
+delete_bin_files: $(BIN_FILES)
+
+$(BIN_FILES_DELETE):
+	@sudo rm $(BIN_FOLDER)/$($@:%.delete=%)
+
+delete_bin_dir:
 	@sudo rmdir $(BIN_FOLDER)
-	@echo "Done"
