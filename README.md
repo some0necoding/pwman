@@ -25,9 +25,9 @@ which provides functions for file cryptography, user authentication and secure m
 ### Installation using make
 
 ```
-# make install                      // install pwman
+$ make install                      // install pwman
 $ pwman                             // run pwman
-# make clean                        // uninstall pwman
+$ make clean                        // uninstall pwman
 ```
 
 ## Cryptography
