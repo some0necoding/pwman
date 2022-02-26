@@ -50,7 +50,7 @@ tag must match the one obtained by passing in the function the same key and the 
 The only third party library needed to make Passman run is [libsodium](https://doc.libsodium.org/installation),
 which provides functions for file cryptography, user authentication and secure memory allocation.
 
-### Make
+### Installation using make
 
 ```
 task:                           command:
