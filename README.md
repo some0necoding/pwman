@@ -59,6 +59,4 @@ run passman                     passman
 uninstall passman               make clean
 ```
 
-## How to use passman
-
 ## Lincense
