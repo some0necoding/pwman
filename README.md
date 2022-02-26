@@ -15,6 +15,22 @@ to improve user's security in the web. The use of a password manager makes it po
 to adopt a different password for every account he has, so that if one account gets exploited the
 others remain safe.
 
+## Installation
+
+### Needed Libs
+
+The only third party library needed to make Pwman run is [libsodium](https://doc.libsodium.org/installation),
+which provides functions for file cryptography, user authentication and secure memory allocation.
+
+### Installation using make
+
+```
+task:                           command:
+install pwman                   make install
+run pwman                       pwman
+uninstall pwman                 make clean
+```
+
 ## Cryptography
 
 The algorithm used to support file cryptography in pwman is XChaCha20Poly1305, an AEAD 
@@ -43,21 +59,6 @@ an input string (in this case the plaintext), the function returns a unique hash
 appended at the end of the cyphertext. To verify integrity and authenticity of the message, the appended 
 tag must match the one obtained by passing in the function the same key and the decrypted cyphertext.  
 
-## Installation
-
-### Needed Libs
-
-The only third party library needed to make Pwman run is [libsodium](https://doc.libsodium.org/installation),
-which provides functions for file cryptography, user authentication and secure memory allocation.
-
-### Installation using make
-
-```
-task:                           command:
-install pwman                   make install
-run pwman                       pwman
-uninstall pwman                 make clean
-```
 
 ## Lincense
 
