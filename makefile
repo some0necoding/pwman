@@ -27,9 +27,10 @@ help:
 
 install:
 # creating empty bin files
-	@sudo mkdir $(BIN_FOLDER)
-	@create_bins
-	@sudo chmod a=rwx $(BIN_FOLDER)/*
+	pwd
+	sudo mkdir $(BIN_FOLDER)
+	create_bins
+	sudo chmod a=rwx $(BIN_FOLDER)/*
 
 # compiling source code and saving the bin executable in /usr/local/bin to make it runnable from terminal
 	@echo "Compiling..."
