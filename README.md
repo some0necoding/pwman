@@ -30,7 +30,7 @@ $ pwman                             // run pwman
 $ make clean                        // uninstall pwman
 ```
 
-## Cryptography
+<!--## Cryptography
 
 The algorithm used to support file cryptography in pwman is XChaCha20Poly1305, an AEAD 
 (Authenticated Encryption with Additional Data) algorithm.   
@@ -56,7 +56,7 @@ integrity of a message.
 It works similarly to a digital signature function, but using symmetric encryption: provided a key and 
 an input string (in this case the plaintext), the function returns a unique hash value (*tag*) that gets 
 appended at the end of the cyphertext. To verify integrity and authenticity of the message, the appended 
-tag must match the one obtained by passing in the function the same key and the decrypted cyphertext.  
+tag must match the one obtained by passing in the function the same key and the decrypted cyphertext. --> 
 
 
 ## Lincense
