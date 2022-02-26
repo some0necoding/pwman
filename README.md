@@ -47,6 +47,14 @@ tag must match the one obtained by passing in the function the same key and the 
 
 ### Storage
 
+For data storage Passman uses the simplest type of database: binary files. In these files are stored user's
+accounts. Every account is composed of three "attributes" (even if we're not talking of OOP): account name,
+email or username and password associated with the account. This data is stored separately in two files:
+one for account name and email, one for passwords.  
+The separation of data is meant to reduce the time during which passwords remain decrypted: if the user
+calls the command "show", Passman decrypts only the file that contains accounts' info to not put at risk
+all passwords, which remain encrypted.  
+
 ## Installation
 
 ### Needed Libs
