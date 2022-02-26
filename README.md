@@ -45,7 +45,7 @@ an input string (in this case the plaintext), the function returns a unique hash
 appended at the end of the cyphertext. To verify integrity and authenticity of the message, the appended 
 tag must match the one obtained by passing in the function the same key and the decrypted cyphertext.  
 
-### Storage
+<!--### Storage
 
 For data storage Passman uses the simplest type of database: binary files. In these files are stored user's
 accounts. Every account is composed of three "attributes": account name, email or username and password 
@@ -53,7 +53,7 @@ associated with the account. This data is stored separately in two files: one fo
 one for passwords.    
 The separation of data is meant to reduce the time during which passwords remain decrypted: 
 if the user calls the command "show", Passman decrypts only the file that contains accounts' info to not 
-put at risk all passwords, which remain encrypted.  
+put at risk all passwords, which remain encrypted.-->
 
 ## Installation
 
