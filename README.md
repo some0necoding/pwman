@@ -15,9 +15,7 @@ to improve user's security in the web. The use of a password manager makes it po
 to adopt a different password for every account he has, so that if one account gets exploited the
 others remain safe.
 
-## Technologies
-
-### Cryptography
+## Cryptography
 
 The algorithm used to support file cryptography in passman is XChaCha20Poly1305, an AEAD 
 (Authenticated Encryption with Additional Data) algorithm.   
@@ -44,16 +42,6 @@ It works similarly to a digital signature function, but using symmetric encrypti
 an input string (in this case the plaintext), the function returns a unique hash value (*tag*) that gets 
 appended at the end of the cyphertext. To verify integrity and authenticity of the message, the appended 
 tag must match the one obtained by passing in the function the same key and the decrypted cyphertext.  
-
-<!--### Storage
-
-For data storage Passman uses the simplest type of database: binary files. In these files are stored user's
-accounts. Every account is composed of three "attributes": account name, email or username and password 
-associated with the account. This data is stored separately in two files: one for account name and email, 
-one for passwords.    
-The separation of data is meant to reduce the time during which passwords remain decrypted: 
-if the user calls the command "show", Passman decrypts only the file that contains accounts' info to not 
-put at risk all passwords, which remain encrypted.-->
 
 ## Installation
 
