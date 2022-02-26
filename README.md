@@ -61,4 +61,5 @@ uninstall passman               make clean
 
 ## Lincense
 
-This project is licensed under the terms of the **GPL** license. 
+This project is licensed under the terms of the **GPL** license.
+Click [here](https://github.com/some0necoding/passman/blob/main/LICENSE.md) for the full license. 
