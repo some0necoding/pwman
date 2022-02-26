@@ -60,3 +60,5 @@ uninstall passman               make clean
 ```
 
 ## Lincense
+
+This project is licensed under the terms of the **GPL** license. 
