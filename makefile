@@ -7,7 +7,8 @@
 
 CC := gcc
 
-CFLAGS := -lsodium -lX11 -lpthread
+LIBS := sodium X11 pthread
+CFLAGS := $(LIBS:%=-l%)
 
 SRCS := $(wildcard *.c) $(wildcard headers_source/*.c)
 
