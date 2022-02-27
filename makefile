@@ -3,22 +3,20 @@
 # make install			# installs pwman in /usr/local/bin/
 # make clean			# removes pwman from /usr/local/bin
 
-.PHONY = all help install create_needed_files create_bin_dir create_bin_files compile clean remove_exec delete_bin_files delete_bin_dir
+.PHONY := all help install create_needed_files create_bin_dir create_bin_files compile clean remove_exec delete_bin_files delete_bin_dir
 
-CC = gcc
+CC := gcc
 
 CFLAGS := -lsodium -lX11 -lpthread
 
 SRCS := $(wildcard *.c) $(wildcard headers_source/*.c)
 
-SYSTEM_PATH = /usr/local/bin
+SYSTEM_PATH := /usr/local/bin
 
-BIN_FOLDER = binaries
-BIN_FILES = accounts.list passwords.list crypto.salt login.hash
-BIN_FILES_CREATE = $(BIN_FILES:%=%.create)
-BIN_FILES_DELETE = $(BIN_FILES:%=%.delete)
+BIN_FOLDER := binaries
+BIN_FILES := accounts.list passwords.list crypto.salt login.hash
 
-EXEC_NAME = pwman
+EXEC_NAME := pwman
 
 all: help
 
@@ -36,12 +34,12 @@ create_bin_dir:
 	@echo "Creating needed files..."
 	@sudo mkdir $(BIN_FOLDER)
 
-create_bin_files: $(BIN_FILES_CREATE)
+create_bin_files: $(BIN_FILES)
 	@sudo chmod a=rwx $(BIN_FOLDER)/*
 	@echo "Needed files created"
 
-$(BIN_FILES_CREATE):
-	@sudo touch $(BIN_FOLDER)/$($@:%.create=%)
+$(BIN_FILES):
+	@sudo touch $(BIN_FOLDER)/$@
 
 # compiling source code and saving the bin executable in /usr/local/bin to make it easily runnable from terminal
 compile:
@@ -56,10 +54,8 @@ remove_exec:
 	@echo "Cleaning up..."
 	@sudo rm $(SYSTEM_PATH)/$(EXEC_NAME)
 
-delete_bin_files: $(BIN_FILES)
-
-$(BIN_FILES_DELETE):
-	@sudo rm $(BIN_FOLDER)/$($@:%.delete=%)
+delete_bin_files:
+	@sudo rm $(BIN_FOLDER)/*
 
 delete_bin_dir:
 	@sudo rmdir $(BIN_FOLDER)
