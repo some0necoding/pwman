@@ -12,10 +12,10 @@
 /*----------CONSTANTS-DEFINITION-START----------*/
 
 #define HASH_FILE_SIZE crypto_pwhash_STRBYTES       // i.e 128 bytes
-#define HASH_FILE_PATH "./config_files/login.hash"
-#define SALT_FILE_PATH "./config_files/crypto.salt"
-#define ACCT_FILE_PATH "./config_files/accounts.list"
-#define PASS_FILE_PATH "./config_files/passwords.list"
+#define HASH_FILE_PATH "./binaries/login.hash"
+#define SALT_FILE_PATH "./binaries/crypto.salt"
+#define ACCT_FILE_PATH "./binaries/accounts.list"
+#define PASS_FILE_PATH "./binaries/passwords.list"
 
 #define PASS_LENGTH 65                              // 64 bytes + '\0'
 #define HASH_LENGTH crypto_box_SEEDBYTES
