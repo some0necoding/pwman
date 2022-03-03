@@ -2,7 +2,7 @@
     <img width="300" alt="PWM4N" src="https://github.com/some0necoding/pwman/blob/main/.github/pwman_logo_%232.svg">
 </h1>
 
-<h1 align="center">pwman</h1>
+<!--h1 align="center">pwman</h1-->
 
 <!-- links and badges here -->
 
