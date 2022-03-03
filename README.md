@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img width="300" alt="PWM4N" src="./.github/pwman_logo_\#2.svg">
+    <img width="300" alt="PWM4N" src="./.github/pwman_logo_#2.svg">
 </h1>
 
 <h1 align="center">pwman</h1>
