@@ -1,7 +1,7 @@
 #ifndef HASHING
 #define HASHING
 
-#include <string.h>
+#include <stddef.h>
 
 // hashes a password "pass" of "pass_len" length
 char *pass_hash(char *pass, size_t pass_len);
