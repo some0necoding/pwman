@@ -1,8 +1,6 @@
 #ifndef CRYPTOGRAPHY
 #define CRYPTOGRAPHY
 
-#include <string.h>
-
 // encrypts a buffer "plain_buff" using a key "key", then it stores the result in the file located at "file_path" path.
 int encrypt_buffer(unsigned char *plain_buff, unsigned char *key, char *file_path);
 
