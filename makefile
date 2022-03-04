@@ -14,7 +14,7 @@ SRCS := $(wildcard *.c) $(wildcard headers_source/*.c)
 
 SYSTEM_PATH := /usr/local/bin
 
-BIN_FOLDER := binaries
+BIN_FOLDER := /usr/share/binaries
 BIN_FILES := accounts.list passwords.list crypto.salt login.hash
 
 EXEC_NAME := pwman
