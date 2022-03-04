@@ -14,8 +14,8 @@ others remain safe.
 
 ## Features
 - AEAD encryption
-- plaintext handled only in RAM
-- secure input for passwords
+- Plaintext handled only in RAM
+- Secure input for passwords
 - CLI = faster
 
 ## Installation
