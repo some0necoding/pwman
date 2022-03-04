@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <sodium.h>
 
-// reallocs a buffer allocated with sodium
+// reallocs a buffer allocated with sodium_malloc
 void *sodium_realloc(void *ptr, size_t old_size, size_t new_size)
 {
     void *new_ptr;
@@ -21,9 +21,15 @@ void *sodium_realloc(void *ptr, size_t old_size, size_t new_size)
 
     // creates a larger pointer
     new_ptr = sodium_malloc(new_size);
+
+    // check for successfull allocation
+    if (!new_ptr) {
+        return NULL;
+    }
+
     // copies the old pointer's content in the new pointer
     memcpy(new_ptr, ptr, old_size);
-    // frees the old pointer in order to not leave a buffer hanging around mlocked
+    // frees the old pointer
     sodium_free(ptr);
     return new_ptr;
 }
