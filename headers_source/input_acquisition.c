@@ -12,59 +12,45 @@
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
-// this function securely reads all bytes from stdin using libsodium library (doc.libsodium.org).
-char *read_line_s(void) 
+// this function securely (i.e. disabling echo) reads all bytes from stdin and 
+// stores them into "buffer" (that needs to be allocated using sodium_malloc).
+int read_line_s(char *buffer, size_t bufsize) 
 {
-    size_t buf_size = LINE_BUFSIZE;
     size_t old_size;
-
-    char *buffer = (char *) sodium_malloc(sizeof(char) * buf_size);
 
     int pos = 0;
     char c = 0x00;
     struct termios old;
 
-    if (!buffer) {
-        perror("psm: allocation error\n");
-        return NULL;
-    }
-
-    // disabling echo for security purposes
-    old = disable_terminal_echo();
+    old = disable_terminal_echo();                              // disabling echo
 
     while ((c = getchar()) != EOF && c != '\n') {
         buffer[pos] = c;
         pos++;
+
         // if the buffer is not large enough, it gets stretched (sodium_realloc is a custom function)
-        if (pos > buf_size) {
-            old_size = buf_size;
-            buf_size += LINE_BUFSIZE;
-            buffer = (char *) sodium_realloc(buffer, old_size, buf_size);
+        if (pos > bufsize) {
+            old_size = bufsize;
+            bufsize += LINE_BUFSIZE;
+            buffer = (char *) sodium_realloc(buffer, old_size, bufsize);
+            if (!buffer) {
+                perror("psm: allocation error");
+                return -1;
+            }
         }
     }
 
     buffer[pos] = '\0';
-
-    // re-enabling echo
-    enable_terminal_echo(old);
-    
-    return buffer;
+    enable_terminal_echo(old);                                  // re-enabling echo
+    return 0;
 }
 
-// this function simply reads all bytes from stdin
-char *read_line(void) 
-{
-    size_t bufsize = LINE_BUFSIZE;
-
-    char *buffer = malloc(sizeof(char) * bufsize);
-    
+// this function simply reads all bytes from stdin and stores them into
+// "buffer" (that needs to be allocated using malloc).
+int read_line(char *buffer, size_t bufsize) 
+{    
     int pos = 0;
-    char c; 
-
-    if (!buffer) {
-        perror("psm: allocation error\n");
-        return NULL;
-    }
+    char c;
 
     while ((c = getchar()) != EOF && c != '\n')
     {
@@ -76,12 +62,12 @@ char *read_line(void)
             bufsize += LINE_BUFSIZE;
             buffer = realloc(buffer, bufsize);
             if (!buffer) {
-                perror("psm: allocation error\n");
-                return NULL;
+                perror("psm: allocation error");
+                return -1;
             }
         }
     }
 
     buffer[pos] = '\0';
-    return buffer;
+    return 0;
 }
