@@ -17,6 +17,8 @@
 #define ACCT_FILE_PATH "/usr/share/binaries/accounts.list"
 #define PASS_FILE_PATH "/usr/share/binaries/passwords.list"
 
+#define SKEY_QTY 2
+
 #define PASS_LENGTH 65                              // 64 bytes + '\0'
 #define HASH_LENGTH crypto_box_SEEDBYTES
 
@@ -37,6 +39,7 @@ unsigned char **subkeys;
 
 int signin(void);
 int login(void);
+void free_subkeys(void);
 int auth_pass(char *password);
 int if_char_occur_one(char *str, char *str_of_char);
 
@@ -91,20 +94,22 @@ int signin()
     unsigned char *mkey = (unsigned char *) sodium_malloc(mkey_len);
     unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
 
-    int skey_qty = 2;
+    int skey_qty = SKEY_QTY;
     int skey_one = 0;
     int skey_two = 1;
     int ret_code = -1;
 
-    if (!pass || !hash) {
+    if (!pass | !hash) {
         perror("psm: allocation error\n");
+        sodium_free(mkey);
+        sodium_free(salt);
         return -1;
     }
 
     // getting the input
     printf("choose a password: ");
 
-    if (!(pass = read_line_s())) {
+    if (read_line_s(pass, buff_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -118,8 +123,6 @@ int signin()
     }
 
     // here starts the part where hash gets created and stored
-
-    ret_code = -1;
 
     pass_len = strlen(pass);
 
@@ -150,12 +153,23 @@ int signin()
     // passwordmanager.c file. It is an array containing the two encryption keys.
     subkeys = (unsigned char **) sodium_malloc(skey_qty * skey_len);
 
+    if (!subkeys) {
+        perror("psm: allocation error");
+        goto ret;
+    }
+
     for (int i=0; i<skey_qty; i++) {
         subkeys[i] = (unsigned char *) sodium_malloc(skey_len);
+
+        if (!subkeys[i]) {
+            perror("psm: allocation error");
+            goto ret;
+        }
     }
 
     if (!(subkeys = generate_subkeys(skey_qty, mkey))) {
         perror("psm: cryptography error");
+        free_subkeys();
         goto ret;
     }
 
@@ -163,6 +177,7 @@ int signin()
         (encrypt_file(pass_file_path, subkeys[skey_two]) != 0)) 
     {
         perror("psm: cryptography error");
+        free_subkeys();
         goto ret;
     }
     
@@ -174,6 +189,15 @@ ret:
     sodium_free(mkey);
     sodium_free(salt);
     return ret_code;
+}
+
+void free_subkeys(void) 
+{
+    for (int i=0; i<SKEY_QTY; i++) {
+        sodium_free(subkeys[i]);
+    }
+
+    sodium_free(subkeys);
 }
 
 int auth_pass(char *password) 
@@ -234,18 +258,20 @@ int login()
     unsigned char *mkey = (unsigned char *) sodium_malloc(mkey_len);
     unsigned char *salt = (unsigned char *) sodium_malloc(salt_len);
 
-    int skey_qty = 2;
+    int skey_qty = SKEY_QTY;
     int ret_code = -1;
     
-    if (!pass || !hash) {
+    if (!pass | !hash) {
         perror("psm: allocation error\n");
+        sodium_free(mkey);
+        sodium_free(salt);
         return -1;
     }
 
     // getting the input
     printf("insert password: ");
 
-    if (!(pass = read_line_s())) {
+    if (read_line_s(pass, buff_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -267,8 +293,6 @@ int login()
     }
 
     // here starts the part where encryption keys are generated
-
-    ret_code = -1;
 
     if (get_salt(salt, salt_file_path) != 0) {
         perror("psm: cryptography error");

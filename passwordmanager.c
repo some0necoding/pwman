@@ -199,12 +199,18 @@ int psm_add(char **args)
 {
     int ret_code = -1;
 
+    size_t pass_word_len = 64;
     size_t acct_name_len;
     size_t user_mail_len;
 
     unsigned char *acct_name;
     unsigned char *user_mail;
-    unsigned char *pass_word;
+    unsigned char *pass_word = (unsigned char *) sodium_malloc(pass_word_len);
+
+    if (!pass_word) {
+        perror("psm: allocation error");
+        return -1;
+    }
 
     // add accepts only 2 args, so if the 2nd arg doesn't exist or if the 3rd arg do exist, the program throws an error.
     if (!args[2] || args[3]) {
@@ -218,13 +224,19 @@ int psm_add(char **args)
     acct_name = (unsigned char *) sodium_malloc(acct_name_len + 1);
     user_mail = (unsigned char *) sodium_malloc(user_mail_len + 1);
 
+    if (!acct_name | !user_mail) {
+        perror("psm: allocation error");
+        sodium_free(pass_word);
+        return -1;
+    }
+
     strcpy(acct_name, args[1]);
     strcpy(user_mail, args[2]);
 
     printf("choose a password for this account: ");
 
     // the password is requested after launching the command in order to acquire it safely (read_line_s() is used).
-    if (!(pass_word = read_line_s())) {
+    if (read_line_s(pass_word, pass_word_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -233,14 +245,14 @@ int psm_add(char **args)
 
     // appending the account name and the user/mail to accounts.list file
     if (append_account(acct_name, user_mail) != 0) {
-        perror("account storage failed");
-        return -1;
+        perror("psm: account storage failed");
+        goto ret;
     }
 
     // appending the password to passwords.list file
     if (append_pass(pass_word) != 0) {
-        perror("password storage failed");
-        return -1;
+        perror("psm: password storage failed");
+        goto ret;
     }
 
     ret_code = 0;
@@ -400,14 +412,25 @@ int psm_exit(char **args)
 // and executes commands using psm_launch().
 int psm_exec()
 {
-    char *line;
+    size_t line_size = 1024;
+
+    char *line = (char *) malloc(line_size);
     char **args;
+
+    if (!line) {
+        perror("psm: allocation error");
+        return 1;
+    }
 
     while (1) 
     {
         printf("> ");                                   // printing the prompt.
 
-        line = read_line();                             // reading the user input.
+        // reading the user input.
+        if (read_line(line, line_size) != 0) {
+            return 1;
+        }
+
         args = psm_split_line(line);                    // splitting the input in tokens (command name + arg1 + arg2 + ...).
 
         psm_launch(args);                               // launching the command passing its name along with its arguments.
