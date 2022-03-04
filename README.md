@@ -6,11 +6,16 @@
 
 ## Basic Overview
 
-Pwman (pronounced *pi-double-u-man*) is a security-focused password manager coded in C.
+Pwman (pronounced *pi-double-u-man*) is a security-focused command line password manager coded in C.
 Its simpler purpose is to store user's accounts along with passwords in encrypted format, in order
 to improve user's security in the web. The use of a password manager makes it possible for the user
 to adopt a different password for every account he has, so that if one account gets exploited the
 others remain safe.
+
+## Features
+- AEAD encryption
+- plaintext only in RAM
+- CLI = faster
 
 ## Installation
 
