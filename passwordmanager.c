@@ -18,8 +18,8 @@
 #define SEPARATE_LINE_STR "\xD8"   // 0xD8 byte stored as a string to use with string.h functions (marks the end of a line in *.list files)
 #define SEPARATE_TKNS_STR "\xF0"   // 0xF0 byte stored as a string to use with string.h functions (separates two tokens on the same line in *.list files)
 
-#define ACCT_FILE_PATH "./binaries/accounts.list"
-#define PASS_FILE_PATH "./binaries/passwords.list"
+#define ACCT_FILE_PATH "/usr/share/binaries/accounts.list"
+#define PASS_FILE_PATH "/usr/share/binaries/passwords.list"
 
 #define PASS_LENGTH 65
 
