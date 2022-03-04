@@ -61,7 +61,7 @@ int fgetalls(char *file_path, char *ret_buff, size_t ret_buff_size)
 
     // creating a buffer of the same size as the file (+ '\0') to hold its content
     if (ret_buff_size < (file_size + 1)) {
-        ret_buff = (unsigned char *) sodium_malloc(file_size + 1);
+        ret_buff = (unsigned char *) sodium_realloc(ret_buff, ret_buff_size, (file_size + 1));
 
         if (!ret_buff) {
             perror("psm: allocation error");
@@ -116,7 +116,7 @@ int fgetall(char *file_path, char *ret_buff, size_t ret_buff_size)
 
     // creating a buffer of the same size as the file (+ '\0') to hold its content
     if (ret_buff_size < (file_size + 1)) {
-        ret_buff = (unsigned char *) malloc(file_size + 1);
+        ret_buff = (unsigned char *) realloc(ret_buff, (file_size + 1));
 
         if (!ret_buff) {
             perror("psm: allocation error");
@@ -182,7 +182,7 @@ int fgetfroms(char *file_path, int start_pos, char *ret_buff, size_t ret_buff_si
     content_len = file_size - start_pos;
 
     if (ret_buff_size < content_len) {
-        ret_buff = (unsigned char *) malloc(content_len + 1);
+        ret_buff = (unsigned char *) realloc(ret_buff, (content_len + 1));
 
         if (!ret_buff) {
             perror("psm: allocation error");
@@ -247,7 +247,7 @@ int fgetfromtos(char *file_path, int start_pos, int end_pos, char *ret_buff, siz
     content_len = end_pos - start_pos;                                    // selected content + \0
     
     if (ret_buff_size < content_len) {
-        ret_buff = (unsigned char *) sodium_malloc(content_len + 1);
+        ret_buff = (unsigned char *) sodium_realloc(ret_buff, ret_buff_size, (content_len + 1));
 
         if (!ret_buff) {
             perror("psm: allocation error");
