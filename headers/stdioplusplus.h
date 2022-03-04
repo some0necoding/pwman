@@ -1,21 +1,25 @@
 #ifndef STDIO_PLUS_PLUS
 #define STDIO_PLUS_PLUS
 
-#include <stdio.h>
+#include <stddef.h>
 
 // returns the size of a null-terminated file.
 size_t fsize(char *file_path);
 
-// returns all bytes comprised between the beginning of the file and EOF in a secure way.
-unsigned char *fgetalls(char *file_path);
+// securely stores all bytes comprised between the beginning of the file and EOF into
+// "ret_buff" (that needs to be allocated using sodium_malloc).
+int fgetalls(char *file_path, char *ret_buff, size_t ret_buff_size);
 
-// the same as above but for not sensitive data.
-unsigned char *fgetall(char *file_path);
+// stores all bytes comprised between the beginning of the file and EOF in a secure way 
+// into "ret_buff".
+int fgetall(char *file_path, char *ret_buff, size_t ret_buff_size);
 
-// returns all bytes comprised between start_pos (inclusive) and EOF in a secure way.
-unsigned char *fgetfroms(char *file_path, int start_pos);
+// securely stores all bytes comprised between start_pos (inclusive) and EOF into 
+// "ret_buff" (that needs to be allocated using sodium_malloc).
+int fgetfroms(char *file_path, int start_pos, char *ret_buff, size_t ret_buff_size);
 
-// returns all bytes comprised between start_pos (inclusive) and end_pos (exclusive) in a secure way.
-unsigned char *fgetfromtos(char *file_path, int start_pos, int end_pos);
+// securely stores all bytes comprised between start_pos (inclusive) and end_pos (exclusive) 
+// into "ret_buff" (that needs to be allocated using sodium_malloc).
+int fgetfromtos(char *file_path, int start_pos, int end_pos, char *ret_buff, size_t ret_buff_size);
 
 #endif
