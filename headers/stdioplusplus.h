@@ -2,6 +2,7 @@
 #define STDIO_PLUS_PLUS
 
 #include <stddef.h>
+#include <stdio.h>
 
 // returns the size of a null-terminated file.
 size_t fsize(char *file_path);
