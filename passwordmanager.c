@@ -40,7 +40,7 @@ int psm_get(char **args);
 int psm_help(char **args);
 int psm_exit(char **args);
 
-char **psm_split_line(char *line);
+int psm_split_line(char *line, char **tokens, size_t tokens_size);
 int psm_launch(char **args) ;
 int psm_num_commands(void);
 
@@ -413,11 +413,12 @@ int psm_exit(char **args)
 int psm_exec()
 {
     size_t line_size = 1024;
+    size_t args_size = PSM_TOK_BUFSIZE;
 
     char *line = (char *) malloc(line_size);
-    char **args;
+    char **args = (char *) malloc(args_size);
 
-    if (!line) {
+    if (!line | !args) {
         perror("psm: allocation error");
         return 1;
     }
@@ -431,7 +432,10 @@ int psm_exec()
             return 1;
         }
 
-        args = psm_split_line(line);                    // splitting the input in tokens (command name + arg1 + arg2 + ...).
+        // splitting the input in tokens (command name + arg1 + arg2 + ...).
+        if (psm_split_line(line, args, args_size) != 0) {
+            return -1;
+        }
 
         psm_launch(args);                               // launching the command passing its name along with its arguments.
     }
@@ -462,29 +466,22 @@ int psm_launch(char **args)
     return 1;
 }
 
-char **psm_split_line(char *line)
+int psm_split_line(char *line, char **tokens, size_t tokens_size)
 {
-    int bufsize = PSM_TOK_BUFSIZE;
     int position = 0;
-    char **tokens = (char **) malloc(sizeof(char) * bufsize);
     char *token;
-
-    if (!tokens) {
-        perror("psm: allocation error\n");
-        exit(EXIT_FAILURE);
-    }
 
     token = strtok(line, PSM_TOK_DELIM);
 
     while (token != NULL) {
         tokens[position] = token;
         position++;
-        if (position >= bufsize) {
-            bufsize += PSM_TOK_BUFSIZE;
-            tokens = (char **) realloc(tokens, bufsize);
+        if (position >= tokens_size) {
+            tokens_size += PSM_TOK_BUFSIZE;
+            tokens = (char **) realloc(tokens, tokens_size);
             if (!tokens) {
                 perror("psm: allocation error\n");
-                exit(EXIT_FAILURE);
+                return -1;
             }
         }
 
@@ -492,8 +489,7 @@ char **psm_split_line(char *line)
     }
 
     tokens[position] = NULL;
-
-    return tokens;
+    return 0;
 }
 
 void exit_prog(void)
