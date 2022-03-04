@@ -416,7 +416,7 @@ int psm_exec()
     size_t args_size = PSM_TOK_BUFSIZE;
 
     char *line = (char *) malloc(line_size);
-    char **args = (char *) malloc(args_size);
+    char **args = (char **) malloc(args_size);
 
     if (!line | !args) {
         perror("psm: allocation error");
