@@ -570,8 +570,6 @@ int generate_subkeys(int qty, unsigned char *masterkey, unsigned char **subkeys,
     uint64_t subkey_id = 1;
     uint8_t *subkey;
 
-    unsigned char subkey;
-
     if (subkeys_size < (qty * subkey_len)) {
         subkeys = (unsigned char **) sodium_realloc(subkeys, subkeys_size, (qty * subkey_len));
 
