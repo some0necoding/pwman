@@ -18,6 +18,8 @@
 #define SEPARATE_LINE_STR "\xD8"   // 0xD8 byte stored as a string to use with string.h functions (marks the end of a line in *.list files)
 #define SEPARATE_TKNS_STR "\xF0"   // 0xF0 byte stored as a string to use with string.h functions (separates two tokens on the same line in *.list files)
 
+#define CHUNK_SIZE 512
+
 #define ACCT_FILE_PATH "/usr/share/binaries/accounts.list"
 #define PASS_FILE_PATH "/usr/share/binaries/passwords.list"
 
@@ -51,7 +53,7 @@ int remove_account(unsigned char *account_name, int *line_indx);
 int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *line_len);
 int remove_password(int line_indx);
 unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, int line_to_rm_indx);
-unsigned char *get_pass(int line_indx);
+int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -144,9 +146,11 @@ int psm_num_commands(void)
 // - Arguments: it does not accept arguments.
 int psm_show(char **args)
 {
+    size_t content_size = CHUNK_SIZE;
+
     char *file_path = ACCT_FILE_PATH;                           // accounts.list file path.
     
-    unsigned char *file_content;                                // decrypted content of accounts.list file as a single string.
+    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
     unsigned char **content_lines;                              // array containing the file content splitted in lines. Every line contains an account.
     unsigned char *content_line;                                // a single line of the file content (i.e. a single account).
     unsigned char **tokens;                                     // array containing the account name and the mail of the account, stored in a single line.
@@ -154,6 +158,7 @@ int psm_show(char **args)
     unsigned char *user_mail;                                   // username or mail.
 
     int pos = 0;
+    int ret_code = -1;
 
     // some kinda input verification.
     if (args[1]) {
@@ -161,15 +166,20 @@ int psm_show(char **args)
         return -1;
     }
 
-    // the file remains encrypted, while the decrypted content gets stored in a buffer (i.e. file_content).
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
-        perror("psm: cryptography error");
+    if (!content) {
+        perror("psm: allocation error");
         return -1;
+    }
+
+    // the file remains encrypted, while the decrypted content gets stored in a buffer (i.e. file_content).
+    if (decrypt_file(file_path, subkeys[skey_acct], content, content_size) != 0) {
+        perror("psm: cryptography error");
+        goto ret;
     }  
 
     // the file content gets splitted in lines and stored in content_lines, that is NULL terminated.
-    if (!(content_lines = split_by_delim(file_content, SEPARATE_LINE_STR))) {
-        return -1;
+    if (!(content_lines = split_by_delim(content, SEPARATE_LINE_STR))) {
+        goto ret;
     }
 
     // looping through the lines to print info about every account.
@@ -188,7 +198,11 @@ int psm_show(char **args)
         pos++;
     }
 
-    return 0;
+    ret_code = 0;
+
+ret:
+    sodium_free(content);
+    return ret_code;
 }
 
 // this function adds a new account to the "database". Account name and user/mail are appended
@@ -309,46 +323,61 @@ int psm_remove(char **args)
 int psm_get(char **args)
 {
     size_t line_len;
+    size_t content_size = CHUNK_SIZE;
+    size_t pass_size = PASS_LENGTH;
 
     pthread_t thread_id;
 
-    int code;
-    int line_indx;
-
-    unsigned char *file_content;
+    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
     unsigned char **lines;
-    unsigned char *pass;
+    unsigned char *pass = (unsigned char *) sodium_malloc(pass_size);
 
     char *file_path = ACCT_FILE_PATH;
+
+    int ret_code = -1;
+    int line_indx;
 
     if (!args[1] || args[2]) {
         printf("\"get\" needs to know an account name (1 argument needed)\n");
     }
 
-    // decrypting accounts.list
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
+    if (!content | !pass) {
+        perror("psm: allocation error");
+        content ? sodium_free(content) : 0;
+        pass ? sodium_free(content) : 0;
         return -1;
     }
 
+    // decrypting accounts.list
+    if (decrypt_file(file_path, subkeys[skey_acct], content, content_size) != 0) {
+        goto ret;
+    }
+
     // splitting file content in lines
-    lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+    lines = split_by_delim(content, SEPARATE_LINE_STR);
 
     // finding account index
     if ((line_indx = find_line_indx(lines, args[1], &line_len)) < 0) {
         printf("account not found\n");
-        return 0;
+        ret_code = 0;
+        goto ret;
     }
 
     // get password at right index
-    if (!(pass = get_pass(line_indx))) {
+    if (get_pass(line_indx, pass, pass_size) != 0) {
         perror("psm: I/O error");
-        return -1;
+        goto ret;
     }
 
     //start a new thread handling password copying in clipboard
     pthread_create(&thread_id, NULL, (void *) save_in_clipboard, pass);
 
-    return 0;
+    ret_code = 0;
+
+ret:
+    sodium_free(content);
+    sodium_free(pass);
+    return ret_code;
 }
 
 int psm_help(char **args)
@@ -506,7 +535,7 @@ void exit_prog(void)
 // the end it encrypts the modifyied buffer into accounts.list.
 int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
 {
-    size_t file_cont_size;                              // size of the old buffer
+    size_t content_size = CHUNK_SIZE;
     size_t acct_name_size = strlen(acct_name);          // size of account_name
     size_t user_mail_size = strlen(user_or_mail);       // size of user_or_mail
     size_t totl_buff_size;                              // size of the new buffer
@@ -515,23 +544,35 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
     char *sprt_line_char = SEPARATE_LINE_STR;           // 0xD8 byte stored as a string so that it can be used with string.h functions
     char *file_path = ACCT_FILE_PATH;                   // accounts.list file path
 
-    unsigned char *file_content;
-    unsigned char *totl_content;
+    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
+    unsigned char *totl_content;                        // this will get allocated later on
+
+    int ret_code = -1;
+
+    if (!content) {
+        perror("psm: allocation error");
+        return -1;
+    }
 
     // decrypting the accounts.list file into a buffer
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
+    if (decrypt_file(file_path, subkeys[skey_acct], content, content_size) != 0) {
+        sodium_free(content);
         return -1;
     }
 
     // based on the file_content size we can determine the total length of the modified buffer
-    file_cont_size = strlen(file_content);
-
-    totl_buff_size = file_cont_size + acct_name_size + 1 + user_mail_size + 1;          // original buffer + account_name + 0xF0 + user_or_mail + 0xD8
-    
+    content_size = strlen(content);
+    totl_buff_size = content_size + acct_name_size + 1 + user_mail_size + 1;            // original buffer + account_name + 0xF0 + user_or_mail + 0xD8
     totl_content = (unsigned char *) sodium_malloc(totl_buff_size + 1);                 // initialising the new buffer
+
+    if (!totl_content) {
+        perror("psm: allocation error");
+        goto ret;
+    }
+
     totl_content[0] = '\0';
 
-    strcat(totl_content, file_content);                                                 // copying the old buffer into the new bigger buffer
+    strcat(totl_content, content);                                                 // copying the old buffer into the new bigger buffer
     strcat(totl_content, acct_name);                                                    // appending account_name to the new buffer
     strcat(totl_content, sprt_tkns_char);                                               // appending 0xF0 (separation byte) after account_name
     strcat(totl_content, user_or_mail);                                                 // appending user_or_mail to the new buffer
@@ -539,13 +580,15 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
 
     // encrypting the new buffer into the accounts.list file
     if (encrypt_buffer(totl_content, subkeys[skey_acct], file_path) != 0) {
-        sodium_free(totl_content);
-        return -1;
+        goto ret;
     }
 
-    sodium_free(totl_content);
+    ret_code = 0;
 
-    return 0;
+ret:
+    sodium_free(content);
+    sodium_free(totl_content);
+    return ret_code;
 }
 
 // this function appends a new password to passwords.list file. At first it decrypts 
@@ -553,42 +596,57 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
 // with 0xD8 byte. At the end it encrypts the modifyied buffer into passwords.list.
 int append_pass(unsigned char *pass)
 {
-    size_t file_cont_size;                              // size of the old buffer
-    size_t pass_word_size = strlen(pass);               // size of pass
-    size_t totl_buff_size;                              // size of the new buffer
+    size_t content_size = CHUNK_SIZE;
+    size_t pass_word_size = strlen(pass);
+    size_t totl_buff_size;                                                              // size of the new buffer
 
-    char *sprt_line_char = SEPARATE_LINE_STR;           // 0xD8 byte stored as a string so that it can be used with string.h functions
-    char *file_path = PASS_FILE_PATH;                   // passwords.list file path
+    char *sprt_line_char = SEPARATE_LINE_STR;                                           // 0xD8 byte as a string so that it can be used with string.h functions
+    char *file_path = PASS_FILE_PATH;
 
-    unsigned char *file_content;
-    unsigned char *totl_content;
+    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
+    unsigned char *totl_content;                                                        // this will get allocated later on
+
+    int ret_code = -1;
+
+    if (!content) {
+        perror("psm: allocation error");
+        return -1;
+    }
 
     // decrypting the passwords.list file into a buffer
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
+    if (decrypt_file(file_path, subkeys[skey_pass], content, content_size)) {
+        sodium_free(content);
         return -1;
     }
 
     // based on the file_content size we can determine the total length of the modified buffer
-    file_cont_size = strlen(file_content);
-
-    totl_buff_size = file_cont_size + pass_word_size + 1;                               // original buffer + password + 0xD8
-
+    content_size = strlen(content);
+    totl_buff_size = content_size + pass_word_size + 1;                                 // original buffer + password + 0xD8
     totl_content = (unsigned char *) sodium_malloc(totl_buff_size + 1);                 // initialising the new buffer
+
+    if (!totl_content) {
+        perror("psm: allocation error");
+        sodium_free(content);
+        return -1;
+    }
+
     totl_content[0] = '\0';
 
-    strcat(totl_content, file_content);                                                 // copying the old buffer into the new bigger buffer
+    strcat(totl_content, content);                                                      // copying the old buffer into the new bigger buffer
     strcat(totl_content, pass);                                                         // appending pass to the new buffer
     strcat(totl_content, sprt_line_char);                                               // appending 0xD8 (separation byte) after user_or_mail
 
     // encrypting the new buffer into the passwords.list file
     if (encrypt_buffer(totl_content, subkeys[skey_pass], file_path) != 0) {
-        sodium_free(totl_content);        
-        return -1;
+        goto ret;
     }
 
-    sodium_free(totl_content);
+    ret_code = 0;
 
-    return 0;
+ret:
+    sodium_free(content);
+    sodium_free(totl_content);
+    return ret_code;
 }
 
 // this function splits a generic string in tokens using a delimiter string as reference.
@@ -642,11 +700,11 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
 // this function removes an account from accounts.list file.
 int remove_account(unsigned char *account_name, int *line_indx)
 {
+    size_t content_len = CHUNK_SIZE;
     size_t line_len;                                                // deleted line's length
-    size_t cont_len;                                                // file content's length
     size_t new_cont_len;                                            // resulting length after deleting the line
 
-    unsigned char *file_content;
+    unsigned char *content = (unsigned char *) sodium_malloc(content_len);
     unsigned char *new_file_cont;
     unsigned char **content_lines;                                  // file content splitted into individual lines
 
@@ -654,28 +712,33 @@ int remove_account(unsigned char *account_name, int *line_indx)
 
     int ret_code = -1;
 
+    if (!content) {
+        perror("psm: allocation error");
+        return -1;
+    }
+
     // decrypting the file content
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_acct]))) {
+    if (decrypt_file(file_path, subkeys[skey_acct], content, content_len) != 0) {
         perror("psm: cryptography error");
-        goto ret;
+        sodium_free(content);
+        return -1;
     }
 
     // obtaining file content's length
-    cont_len = strlen(file_content);
+    content_len = strlen(content);
 
     // splitting file content into individual lines
-    content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+    content_lines = split_by_delim(content, SEPARATE_LINE_STR);
 
     // finding the index of the line that needs to be removed. the length of this line is stored in line_len.
     if ((*line_indx = find_line_indx(content_lines, account_name, &line_len)) < 0) {
-        // account not found
-        ret_code = 1;
-        goto ret;
+        sodium_free(content);
+        return 1;   // account not found
     }
 
     // creating a new buffer that will contain the
     // original content without the deleted line
-    new_cont_len = cont_len - (line_len + 1);                       // file_content - (deleted_line_len + end_of_line_byte)
+    new_cont_len = content_len - (line_len + 1);                       // file_content - (deleted_line_len + end_of_line_byte)
     new_file_cont = rebuild_buff_from_lines(content_lines, 
                                             new_cont_len, 
                                             *line_indx);
@@ -689,6 +752,7 @@ int remove_account(unsigned char *account_name, int *line_indx)
     ret_code = 0;
 
 ret:
+    sodium_free(content);
     sodium_free(content_lines);
     return ret_code;
 }
@@ -726,33 +790,39 @@ int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *l
 int remove_password(int line_indx)
 {
     size_t line_len;                                                // deleted line's length
-    size_t cont_len;                                                // file content's length
+    size_t content_len = CHUNK_SIZE;                                                // file content's length
     size_t new_cont_len;                                            // resulting length after deleting the line
 
-    unsigned char *file_content;
+    unsigned char *content = (unsigned char *) sodium_malloc(content_len);
     unsigned char *new_file_content;
     unsigned char **content_lines;                                  // file content splitted into individual lines
 
+    char *file_path = PASS_FILE_PATH;
+    
     int ret_code = -1;
 
-    char *file_path = PASS_FILE_PATH;
+    if (!content) {
+        perror("psm: allocation error");
+        return -1;
+    }
 
     // decrypting the file content
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
+    if (decrypt_file(file_path, subkeys[skey_pass], content, content_len)) {
         perror("psm: cryptography error");
-        goto ret;
+        sodium_free(content);
+        return -1;
     }
 
     // obtaining file content's length
-    cont_len = strlen(file_content);
+    content_len = strlen(content);
 
     // splitting file content into individual lines
-    content_lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+    content_lines = split_by_delim(content, SEPARATE_LINE_STR);
     
     // creating a new buffer that will contain the 
     // original content without the deleted line
     line_len = strlen(content_lines[line_indx]);
-    new_cont_len = cont_len - (line_len + 1);                       // file_content - (deleted_line_len + end_of_line_byte)
+    new_cont_len = content_len - (line_len + 1);                       // file_content - (deleted_line_len + end_of_line_byte)
     new_file_content = rebuild_buff_from_lines(content_lines, 
                                                new_cont_len, 
                                                line_indx);
@@ -766,6 +836,7 @@ int remove_password(int line_indx)
     ret_code = 0;
 
 ret:
+    sodium_free(content);
     sodium_free(content_lines);
     return ret_code;
 }
@@ -797,35 +868,55 @@ unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, i
 
 // this function retrieves the password located at line_indx
 // index from passwords.file
-unsigned char *get_pass(int line_indx)
+int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size)
 {
     size_t pass_len;
+    size_t content_size = CHUNK_SIZE;
 
-    unsigned char *pass;
-    unsigned char *file_content;
+    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
     unsigned char **lines;
 
     char *file_path = PASS_FILE_PATH;
 
+    int ret_code = -1;
+
+    if (!content) {
+        perror("psm: allocation error");
+        return -1;
+    }
+
     // decrypting passwords.list file
-    if (!(file_content = decrypt_file(file_path, subkeys[skey_pass]))) {
-        return NULL;
+    if (decrypt_file(file_path, subkeys[skey_pass], content, content_size) != 0) {
+        goto ret;
     }
 
     // splitting file_content in lines
-    lines = split_by_delim(file_content, SEPARATE_LINE_STR);
+    lines = split_by_delim(content, SEPARATE_LINE_STR);
 
     // if line_indx > number of lines return -1
     if (line_indx > arrlen((void **) lines)) {
         perror("psm: get_pass: invalid index");
-        return NULL;
+        goto ret;
     }
 
     // retrieving line at index line_indx
     pass_len = strlen(lines[line_indx]);
-    pass = (unsigned char *) sodium_malloc(pass_len + 1);
-    memcpy(pass, lines[line_indx], pass_len);
-    pass[pass_len] = '\0';
+    
+    if (ret_buff_size < pass_len) {
+        ret_buff = (unsigned char *) sodium_realloc(ret_buff, ret_buff_size, (pass_len + 1));
 
-    return pass;
+        if (!ret_buff) {
+            perror("psm: allocation error");
+            goto ret;
+        }
+    }
+
+    memcpy(ret_buff, lines[line_indx], pass_len);
+    ret_buff[pass_len] = '\0';
+
+    ret_code = 0;
+
+ret:
+    sodium_free(content);
+    return ret_code;
 }
