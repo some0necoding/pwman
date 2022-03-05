@@ -33,3 +33,12 @@ void *sodium_realloc(void *ptr, size_t old_size, size_t new_size)
     sodium_free(ptr);
     return new_ptr;
 }
+
+void sodium_free_2d_arr(int size, unsigned char **arr)
+{
+    for (int i=0; i<size; i++) {
+        sodium_free(arr[i]);
+    }
+
+    sodium_free(arr);
+}
