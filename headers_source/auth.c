@@ -139,7 +139,7 @@ int signin()
     // here starts the part where two encryption keys that will be used to 
     // encrypt accounts and passwords are created out of the password.
 
-    if (!(mkey = generate_masterkey(pass, salt))) {
+    if (generate_masterkey(pass, salt, mkey, mkey_len) != 0) {
         perror("psm: cryptography error");
         goto ret;
     }
@@ -167,7 +167,7 @@ int signin()
         }
     }
 
-    if (!(subkeys = generate_subkeys(skey_qty, mkey))) {
+    if (generate_subkeys(skey_qty, mkey, subkeys, (skey_qty * skey_len), skey_len) != 0) {
         perror("psm: cryptography error");
         free_subkeys();
         goto ret;
@@ -299,12 +299,12 @@ int login()
         goto ret;
     }
 
-    if (!(mkey = generate_masterkey_with_salt(pass, salt))) {
+    if (generate_masterkey_with_salt(pass, salt, mkey, mkey_len) != 0) {
         perror("psm: cryptography error");
         goto ret;
     }
 
-    if (!(subkeys = generate_subkeys(skey_qty, mkey))) {
+    if (generate_subkeys(skey_qty, mkey, subkeys, (skey_qty * skey_len), skey_len) != 0) {
         perror("psm: cryptography error");
         goto ret;
     }
