@@ -161,7 +161,7 @@ int fgetfroms(char *file_path, int start_pos, char *ret_buff, size_t ret_buff_si
     // checking for good opening
     if (!file) {
         perror("psm: allocation error");
-        return NULL;
+        return -1;
     }
 
     // getting file size
