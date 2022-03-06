@@ -99,10 +99,13 @@ int signin()
     int skey_two = 1;
     int ret_code = -1;
 
-    if (!pass | !hash) {
+
+    if (!pass | !hash | !mkey | !salt) {
         perror("psm: allocation error\n");
-        sodium_free(mkey);
-        sodium_free(salt);
+        pass ? sodium_free(pass) : 0;
+        hash ? sodium_free(hash) : 0;
+        mkey ? sodium_free(mkey) : 0;
+        salt ? sodium_free(salt) : 0;
         return -1;
     }
 
@@ -151,7 +154,7 @@ int signin()
 
     // subkeys is a global variable that gets externed in order to use it in 
     // passwordmanager.c file. It is an array containing the two encryption keys.
-    subkeys = (unsigned char **) sodium_malloc(skey_qty * skey_len);
+    subkeys = (unsigned char **) sodium_malloc(sizeof(char *) * (skey_qty * skey_len));
 
     if (!subkeys) {
         perror("psm: allocation error");
@@ -167,7 +170,7 @@ int signin()
         }
     }
 
-    if (generate_subkeys(skey_qty, mkey, subkeys, (skey_qty * skey_len), skey_len) != 0) {
+    if (generate_subkeys(skey_qty, mkey, subkeys, (sizeof(char *) * (skey_qty * skey_len)), skey_len) != 0) {
         perror("psm: cryptography error");
         free_subkeys();
         goto ret;
@@ -180,7 +183,7 @@ int signin()
         free_subkeys();
         goto ret;
     }
-    
+
     ret_code = 1;
 
 ret:
