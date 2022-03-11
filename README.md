@@ -22,8 +22,9 @@ others remain safe.
 
 ### Needed Libs
 
-The only third party library needed to make Pwman run is [libsodium](https://doc.libsodium.org/installation),
+The only third party library needed to make Pwman run is [libsodium](https://libsodium.gitbook.io/doc/installation),
 which provides functions for file cryptography, user authentication and secure memory allocation.
+<!--old link: https://doc.libsodium.org/installation-->
 
 ### Installation using make
 
