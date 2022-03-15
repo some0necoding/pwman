@@ -19,7 +19,7 @@
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 int encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, unsigned char **ret_buff, size_t *ret_buff_size);
-int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t cypher_text_len, unsigned char *ret_buff, size_t ret_buff_size);
+int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t cypher_text_len, unsigned char **ret_buff, size_t ret_buff_size);
 int write_cypher_to_file(unsigned char *header, unsigned char *cypher_text, size_t cypher_text_len, char *file_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
@@ -355,7 +355,7 @@ int decrypt_file(char *file_path, unsigned char *key, unsigned char *plain_text,
         goto ret;
     }
 
-    if (decrypt(&state, cypher_text, cypher_text_len, plain_text, plain_text_size) != 0) {
+    if (decrypt(&state, cypher_text, cypher_text_len, &plain_text, plain_text_size) != 0) {
         goto ret;
     }
 
@@ -372,7 +372,7 @@ ret:
 // its documentation (doc.libsodium.org). 
 // Basically this function will split up the buffer into smaller buffers of CHUNK_SIZE size, it will then decrypt them one by one 
 // and lastly it will store them in a bigger buffer called ret_buff that will be returned.
-int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t buff_len, unsigned char *ret_buff, size_t ret_buff_size)
+int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t buff_len, unsigned char **ret_buff, size_t ret_buff_size)
 {
     size_t old_buf_size;
     size_t dec_cnk_size = CHUNK_SIZE;
@@ -399,9 +399,9 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
     }
 
     if (ret_buff_size < dec_cnk_size) {
-        ret_buff = (unsigned char *) sodium_realloc(ret_buff, ret_buff_size, dec_cnk_size);
+        *ret_buff = (unsigned char *) sodium_realloc(*ret_buff, ret_buff_size, dec_cnk_size);
 
-        if (!ret_buff) {
+        if (!*ret_buff) {
             perror("psm: allocation error");
             sodium_free(dec_cnk_buff);
             sodium_free(enc_cnk_buff);
@@ -432,7 +432,7 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
             }
 
             // copying out_buff into ret_buff.
-            memcpy(ret_buff+ret_buff_pos, enc_cnk_buff, (size_t) out_len);
+            memcpy(*ret_buff+ret_buff_pos, enc_cnk_buff, (size_t) out_len);
             // increasing the ret_buff's "cursor" (== index, it's an array) by the number of bytes contained in the sub-buffer just added.
             ret_buff_pos += (int) out_len;
 
@@ -440,9 +440,9 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
             if (ret_buff_pos >= dec_cnk_size) {
                 old_buf_size = dec_cnk_size;
                 dec_cnk_size += CHUNK_SIZE;
-                ret_buff = (unsigned char *) sodium_realloc(ret_buff, old_buf_size, dec_cnk_size);
+                *ret_buff = (unsigned char *) sodium_realloc(*ret_buff, old_buf_size, dec_cnk_size);
 
-                if (!ret_buff) {
+                if (!*ret_buff) {
                     perror("psm: allocation error");
                     goto ret;
                 }
@@ -459,7 +459,7 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
         goto ret;
     }
 
-    memcpy(ret_buff+ret_buff_pos, enc_cnk_buff, (size_t) out_len);
+    memcpy(*ret_buff+ret_buff_pos, enc_cnk_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
 
     // copying ret_buff into ret_arr
