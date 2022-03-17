@@ -112,7 +112,7 @@ int signin()
     // getting the input
     printf("choose a password: ");
 
-    if (read_line_s(pass, buff_len) != 0) {
+    if (read_line_s(&pass, buff_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -274,7 +274,7 @@ int login()
     // getting the input
     printf("insert password: ");
 
-    if (read_line_s(pass, buff_len) != 0) {
+    if (read_line_s(&pass, buff_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
