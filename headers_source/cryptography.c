@@ -462,6 +462,19 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
     memcpy(*ret_buff+ret_buff_pos, dec_cnk_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
 
+    if (ret_buff_pos >= dec_cnk_size) {
+        old_buf_size = dec_cnk_size;
+        dec_cnk_size += 1;
+        *ret_buff = (unsigned char *) sodium_realloc(*ret_buff, old_buf_size, dec_cnk_size);
+
+        if (!*ret_buff) {
+            perror("psm: allocation error\n");
+            goto ret;
+        }
+    }
+
+    *ret_buff[ret_buff_pos] = '\0';
+
     // copying ret_buff into ret_arr
     ret_code = 0;
 
