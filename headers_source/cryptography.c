@@ -462,6 +462,7 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
     memcpy(*ret_buff+ret_buff_pos, dec_cnk_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
 
+    // if the buffer is not large enough to get null-terminated, it gets stretched.
     if (ret_buff_pos >= dec_cnk_size) {
         old_buf_size = dec_cnk_size;
         dec_cnk_size += 1;
