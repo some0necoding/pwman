@@ -316,7 +316,7 @@ int fgetfromtos(char *file_path, int start_pos, int end_pos, unsigned char **ret
     // error checking
     if ((rlen != content_len) && (ferror(file) != 0)) {
         perror("psm: I/O error");
-       goto ret;
+        goto ret;
     }
 
     // null-terminating the buffer and closing the file
