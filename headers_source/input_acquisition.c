@@ -53,7 +53,7 @@ int read_line_s(char **buffer, size_t bufsize)
     tmp_buff[pos] = '\0';
 
     if (bufsize < (pos + 1)) {
-        *buffer = (char *) sodium_realloc(*buffer, bufsize, pos);
+        *buffer = (char *) sodium_realloc(*buffer, bufsize, (pos + 1));
 
         if (!*buffer) {
             perror("psm: allocation error\n");
