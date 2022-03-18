@@ -19,11 +19,13 @@ int read_line_s(char **buffer, size_t bufsize)
     size_t tmp_size = LINE_BUFSIZE;
     size_t old_size;
 
-    char *tmp_buff = (char *) sodium_malloc(tmp_size);
+    unsigned char *tmp_buff = (unsigned char *) sodium_malloc(tmp_size);
 
-    int pos = 0;
     char c = 0x00;
     struct termios old;
+
+    int pos = 0;
+    int ret_code = -1;
 
     if (!tmp_buff) {
         printf("psm: allocation error\n");
@@ -41,11 +43,10 @@ int read_line_s(char **buffer, size_t bufsize)
         if (pos > tmp_size) {
             old_size = tmp_size;
             tmp_size += LINE_BUFSIZE;
-            tmp_buff = (char *) sodium_realloc(tmp_buff, old_size, tmp_size);
+            tmp_buff = (unsigned char *) sodium_realloc(tmp_buff, old_size, tmp_size);
             if (!tmp_buff) {
                 perror("psm: allocation error");
-                enable_terminal_echo(old);
-                return -1;
+                goto ret;
             }
         }
     }
@@ -53,20 +54,22 @@ int read_line_s(char **buffer, size_t bufsize)
     tmp_buff[pos] = '\0';
 
     if (bufsize < (pos + 1)) {
-        *buffer = (char *) sodium_realloc(*buffer, bufsize, (pos + 1));
+        *buffer = (unsigned char *) sodium_realloc(*buffer, bufsize, (pos + 1));
 
         if (!*buffer) {
             perror("psm: allocation error\n");
-            enable_terminal_echo(old);
-            return -1;
+            goto ret;
         }
     }
 
     memcpy(*buffer, tmp_buff, (pos + 1));
 
+    ret_code = 0;
+
+ret: 
     sodium_free(tmp_buff);
     enable_terminal_echo(old);                                  // re-enabling echo
-    return 0;
+    return ret_code;
 }
 
 // this function simply reads all bytes from stdin and stores them into
@@ -77,8 +80,10 @@ int read_line(char **buffer, size_t bufsize)
 
     char *tmp_buff = (char *) malloc(tmp_size);
 
-    int pos = 0;
     char c;
+
+    int pos = 0;
+    int ret_code = -1;
 
     if (!tmp_buff) {
         printf("psm: allocation error\n");
@@ -96,7 +101,7 @@ int read_line(char **buffer, size_t bufsize)
             tmp_buff= (char *) realloc(tmp_buff, tmp_size);
             if (!tmp_buff) {
                 perror("psm: allocation error");
-                return -1;
+                goto ret;
             }
         }
     }
@@ -108,12 +113,15 @@ int read_line(char **buffer, size_t bufsize)
 
         if (!*buffer) {
             printf("psm: allocation error\n");
-            return -1;
+            goto ret;
         }
     }
 
     memcpy(*buffer, tmp_buff, (pos + 1));
 
+    ret_code = 0;
+
+ret:
     free(tmp_buff);
-    return 0;
+    return ret_code;
 }
