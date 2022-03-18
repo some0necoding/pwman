@@ -19,7 +19,7 @@
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 int encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, unsigned char **ret_buff, size_t *ret_buff_size);
-int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t cypher_text_len, unsigned char **ret_buff, size_t *ret_buff_size);
+int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t cypher_text_len, unsigned char **ret_buff, size_t ret_buff_size);
 int write_cypher_to_file(unsigned char *header, unsigned char *cypher_text, size_t cypher_text_len, char *file_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
@@ -296,7 +296,7 @@ ret:
 // decryption: encrypted file -> plain buffer).
 // A lot of forensic procedures exist to retrieve deleted or hidden files from disks, 
 // instead memory is easily cleanable.
-int decrypt_file(char *file_path, unsigned char *key, unsigned char **plain_text, size_t *plain_text_size)
+int decrypt_file(char *file_path, unsigned char *key, unsigned char **plain_text, size_t plain_text_size)
 {
     size_t rlen;
     size_t size_t_len = sizeof(size_t);
@@ -372,7 +372,7 @@ ret:
 // its documentation (doc.libsodium.org). 
 // Basically this function will split up the buffer into smaller buffers of CHUNK_SIZE size, it will then decrypt them one by one 
 // and lastly it will store them in a bigger buffer called ret_buff that will be returned.
-int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t buff_len, unsigned char **ret_buff, size_t *ret_buff_size)
+int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t buff_len, unsigned char **ret_buff, size_t ret_buff_size)
 {
     size_t old_buf_size;
     size_t dec_cnk_size = CHUNK_SIZE;
@@ -398,8 +398,8 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
         return -1;
     }
 
-    if (*ret_buff_size < dec_cnk_size) {
-        *ret_buff = (unsigned char *) sodium_realloc(*ret_buff, *ret_buff_size, dec_cnk_size);
+    if (ret_buff_size < dec_cnk_size) {
+        *ret_buff = (unsigned char *) sodium_realloc(*ret_buff, ret_buff_size, dec_cnk_size);
 
         if (!*ret_buff) {
             perror("psm: allocation error");
@@ -461,8 +461,6 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
 
     memcpy(*ret_buff+ret_buff_pos, dec_cnk_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
-
-    *ret_buff_size = ret_buff_pos;
 
     // copying ret_buff into ret_arr
     ret_code = 0;
