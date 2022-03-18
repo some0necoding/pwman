@@ -163,6 +163,7 @@ int psm_show(char **args)
     // some kinda input verification.
     if (args[1]) {
         printf("\"show\" does not accept arguments\n");
+        content ? sodium_free(content) : 0;
         return -1;
     }
 
@@ -172,10 +173,10 @@ int psm_show(char **args)
     }
 
     // the file remains encrypted, while the decrypted content gets stored in a buffer (i.e. file_content).
-    if (decrypt_file(file_path, subkeys[skey_acct], content, content_size) != 0) {
+    if (decrypt_file(file_path, subkeys[skey_acct], &content, content_size) != 0) {
         perror("psm: cryptography error");
         goto ret;
-    }  
+    }
 
     // the file content gets splitted in lines and stored in content_lines, that is NULL terminated.
     if (!(content_lines = split_by_delim(content, SEPARATE_LINE_STR))) {
@@ -187,7 +188,7 @@ int psm_show(char **args)
 
         // the line gets splitted in tokens (account name and user/mail).
         if (!(tokens = split_by_delim(content_line, SEPARATE_TKNS_STR))) {
-            return -1;
+            goto ret;
         }
 
         acct_name = tokens[0];
@@ -250,7 +251,7 @@ int psm_add(char **args)
     printf("choose a password for this account: ");
 
     // the password is requested after launching the command in order to acquire it safely (read_line_s() is used).
-    if (read_line_s(pass_word, pass_word_len) != 0) {
+    if (read_line_s((char **) &pass_word, pass_word_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -349,7 +350,7 @@ int psm_get(char **args)
     }
 
     // decrypting accounts.list
-    if (decrypt_file(file_path, subkeys[skey_acct], content, content_size) != 0) {
+    if (decrypt_file(file_path, subkeys[skey_acct], &content, content_size) != 0) {
         goto ret;
     }
 
@@ -457,7 +458,7 @@ int psm_exec()
         printf("> ");                                   // printing the prompt.
 
         // reading the user input.
-        if (read_line(line, line_size) != 0) {
+        if (read_line(&line, line_size) != 0) {
             return 1;
         }
 
@@ -555,7 +556,7 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
     }
 
     // decrypting the accounts.list file into a buffer
-    if (decrypt_file(file_path, subkeys[skey_acct], content, content_size) != 0) {
+    if (decrypt_file(file_path, subkeys[skey_acct], &content, content_size) != 0) {
         sodium_free(content);
         return -1;
     }
@@ -614,7 +615,7 @@ int append_pass(unsigned char *pass)
     }
 
     // decrypting the passwords.list file into a buffer
-    if (decrypt_file(file_path, subkeys[skey_pass], content, content_size)) {
+    if (decrypt_file(file_path, subkeys[skey_pass], &content, content_size)) {
         sodium_free(content);
         return -1;
     }
@@ -666,7 +667,7 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
     if (!tokens) {
         perror("psm: allocation error\n");
         return NULL;
-    }   
+    }
 
     // creating a copy of the original buffer in order to prevent it beeing corrupted by strtok
     str_len = strlen(str);
@@ -718,7 +719,7 @@ int remove_account(unsigned char *account_name, int *line_indx)
     }
 
     // decrypting the file content
-    if (decrypt_file(file_path, subkeys[skey_acct], content, content_len) != 0) {
+    if (decrypt_file(file_path, subkeys[skey_acct], &content, content_len) != 0) {
         perror("psm: cryptography error");
         sodium_free(content);
         return -1;
@@ -807,7 +808,7 @@ int remove_password(int line_indx)
     }
 
     // decrypting the file content
-    if (decrypt_file(file_path, subkeys[skey_pass], content, content_len)) {
+    if (decrypt_file(file_path, subkeys[skey_pass], &content, content_len)) {
         perror("psm: cryptography error");
         sodium_free(content);
         return -1;
@@ -886,7 +887,7 @@ int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size)
     }
 
     // decrypting passwords.list file
-    if (decrypt_file(file_path, subkeys[skey_pass], content, content_size) != 0) {
+    if (decrypt_file(file_path, subkeys[skey_pass], &content, content_size) != 0) {
         goto ret;
     }
 
