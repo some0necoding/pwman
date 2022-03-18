@@ -10,7 +10,7 @@ int encrypt_buffer(unsigned char *plain_buff, unsigned char *key, char *file_pat
 int encrypt_file(char *file_path, unsigned char *key);
 
 // decrypts a file stored at "file_path" using the key "key", then it stores the result in the same location as the input file.
-int decrypt_file(char *file_path, unsigned char *key, unsigned char *plain_text, size_t plain_text_size);
+int decrypt_file(char *file_path, unsigned char *key, unsigned char **plain_text, size_t *plain_text_size);
 
 // generates a masterkey out of a password "password" using an auto-generated random salt that gets stored in "salt" pointer.
 int generate_masterkey(char *password, unsigned char *salt, unsigned char *ret_mkey, size_t ret_mkey_size);

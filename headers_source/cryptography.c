@@ -19,7 +19,7 @@
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 int encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, unsigned char **ret_buff, size_t *ret_buff_size);
-int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t cypher_text_len, unsigned char **ret_buff, size_t ret_buff_size);
+int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t cypher_text_len, unsigned char **ret_buff, size_t *ret_buff_size);
 int write_cypher_to_file(unsigned char *header, unsigned char *cypher_text, size_t cypher_text_len, char *file_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
@@ -116,7 +116,7 @@ int encrypt_file(char *file_path, unsigned char *key)
     }
 
     // get the entire file content
-    if (fgetalls(file_path, plain_text, plain_text_len) != 0) {
+    if (fgetalls(file_path, &plain_text, plain_text_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -296,7 +296,7 @@ ret:
 // decryption: encrypted file -> plain buffer).
 // A lot of forensic procedures exist to retrieve deleted or hidden files from disks, 
 // instead memory is easily cleanable.
-int decrypt_file(char *file_path, unsigned char *key, unsigned char *plain_text, size_t plain_text_size)
+int decrypt_file(char *file_path, unsigned char *key, unsigned char **plain_text, size_t *plain_text_size)
 {
     size_t rlen;
     size_t size_t_len = sizeof(size_t);
@@ -340,7 +340,7 @@ int decrypt_file(char *file_path, unsigned char *key, unsigned char *plain_text,
         return -1;
     }
 
-    if (fgetfromtos(file_path, size_t_len, (header_len + size_t_len), header, header_len) != 0) {
+    if (fgetfromtos(file_path, size_t_len, (header_len + size_t_len), &header, header_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -350,12 +350,12 @@ int decrypt_file(char *file_path, unsigned char *key, unsigned char *plain_text,
         goto ret;
     }
 
-    if (fgetfromtos(file_path, (header_len + size_t_len), (cypher_text_len + header_len + size_t_len), cypher_text, cypher_text_len) != 0) {
+    if (fgetfromtos(file_path, (header_len + size_t_len), (cypher_text_len + header_len + size_t_len), &cypher_text, cypher_text_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
 
-    if (decrypt(&state, cypher_text, cypher_text_len, &plain_text, plain_text_size) != 0) {
+    if (decrypt(&state, cypher_text, cypher_text_len, plain_text, plain_text_size) != 0) {
         goto ret;
     }
 
@@ -372,14 +372,14 @@ ret:
 // its documentation (doc.libsodium.org). 
 // Basically this function will split up the buffer into smaller buffers of CHUNK_SIZE size, it will then decrypt them one by one 
 // and lastly it will store them in a bigger buffer called ret_buff that will be returned.
-int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t buff_len, unsigned char **ret_buff, size_t ret_buff_size)
+int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *buff, size_t buff_len, unsigned char **ret_buff, size_t *ret_buff_size)
 {
     size_t old_buf_size;
     size_t dec_cnk_size = CHUNK_SIZE;
     size_t enc_cnk_size = CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES; // doc.libsodium.org for more info about this.
 
-    unsigned char *dec_cnk_buff = (unsigned char *) sodium_malloc(enc_cnk_size); // sub-buffer of the cyphertext (doc.libsodium.org for more info).
-    unsigned char *enc_cnk_buff = (unsigned char *) sodium_malloc(dec_cnk_size); // this buffer contains the decrypted dec_cnk_buff.
+    unsigned char *enc_cnk_buff = (unsigned char *) sodium_malloc(enc_cnk_size); // sub-buffer of the cyphertext (doc.libsodium.org for more info).
+    unsigned char *dec_cnk_buff = (unsigned char *) sodium_malloc(dec_cnk_size); // this buffer contains the decrypted dec_cnk_buff.
 
     unsigned char tag;
 
@@ -398,8 +398,8 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
         return -1;
     }
 
-    if (ret_buff_size < dec_cnk_size) {
-        *ret_buff = (unsigned char *) sodium_realloc(*ret_buff, ret_buff_size, dec_cnk_size);
+    if (*ret_buff_size < dec_cnk_size) {
+        *ret_buff = (unsigned char *) sodium_realloc(*ret_buff, *ret_buff_size, dec_cnk_size);
 
         if (!*ret_buff) {
             perror("psm: allocation error");
@@ -412,7 +412,7 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
     while (big_buff_pos < buff_len) {
         // if the cnk_buff is not full continue writing bytes into it.
         if (cnk_buff_pos < enc_cnk_size) {
-            dec_cnk_buff[cnk_buff_pos] = buff[big_buff_pos];
+            enc_cnk_buff[cnk_buff_pos] = buff[big_buff_pos];
             cnk_buff_pos++;
             big_buff_pos++;
         }
@@ -420,7 +420,7 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
         else {
 
             // doc.libsodium.org for more info about this.
-            if(crypto_secretstream_xchacha20poly1305_pull(state, enc_cnk_buff, &out_len, &tag, dec_cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
+            if(crypto_secretstream_xchacha20poly1305_pull(state, dec_cnk_buff, &out_len, &tag, enc_cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
                 perror("psm: decryption: corrupted chunk");
                 goto ret;
             }
@@ -432,7 +432,7 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
             }
 
             // copying out_buff into ret_buff.
-            memcpy(*ret_buff+ret_buff_pos, enc_cnk_buff, (size_t) out_len);
+            memcpy(*ret_buff+ret_buff_pos, dec_cnk_buff, (size_t) out_len);
             // increasing the ret_buff's "cursor" (== index, it's an array) by the number of bytes contained in the sub-buffer just added.
             ret_buff_pos += (int) out_len;
 
@@ -454,13 +454,15 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
         }
     }
 
-    if (crypto_secretstream_xchacha20poly1305_pull(state, enc_cnk_buff, &out_len, &tag, dec_cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
+    if (crypto_secretstream_xchacha20poly1305_pull(state, dec_cnk_buff, &out_len, &tag, enc_cnk_buff, cnk_buff_pos, NULL, 0) != 0) {
         perror("psm: decryption: corrupted chunk");
         goto ret;
     }
 
-    memcpy(*ret_buff+ret_buff_pos, enc_cnk_buff, (size_t) out_len);
+    memcpy(*ret_buff+ret_buff_pos, dec_cnk_buff, (size_t) out_len);
     ret_buff_pos += (int) out_len;
+
+    *ret_buff_size = ret_buff_pos;
 
     // copying ret_buff into ret_arr
     ret_code = 0;
