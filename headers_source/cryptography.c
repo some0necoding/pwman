@@ -474,8 +474,9 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
         }
     }
 
-    *ret_buff[ret_buff_pos] = '\0';
-
+    // null-terminating buffer
+    memcpy(*ret_buff+ret_buff_pos, "\0", 1);
+    
     // copying ret_buff into ret_arr
     ret_code = 0;
 
