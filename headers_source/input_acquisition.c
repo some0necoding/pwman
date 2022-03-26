@@ -19,7 +19,7 @@ int read_line_s(char **buffer, size_t bufsize)
     size_t tmp_size = LINE_BUFSIZE;
     size_t old_size;
 
-    unsigned char *tmp_buff = (unsigned char *) sodium_malloc(tmp_size);
+    char *tmp_buff = (char *) sodium_malloc(tmp_size);
 
     char c = 0x00;
     struct termios old;
@@ -43,7 +43,7 @@ int read_line_s(char **buffer, size_t bufsize)
         if (pos > tmp_size) {
             old_size = tmp_size;
             tmp_size += LINE_BUFSIZE;
-            tmp_buff = (unsigned char *) sodium_realloc(tmp_buff, old_size, tmp_size);
+            tmp_buff = (char *) sodium_realloc(tmp_buff, old_size, tmp_size);
             if (!tmp_buff) {
                 perror("psm: allocation error");
                 goto ret;
@@ -54,7 +54,7 @@ int read_line_s(char **buffer, size_t bufsize)
     tmp_buff[pos] = '\0';
 
     if (bufsize < (pos + 1)) {
-        *buffer = (unsigned char *) sodium_realloc(*buffer, bufsize, (pos + 1));
+        *buffer = (char *) sodium_realloc(*buffer, bufsize, (pos + 1));
 
         if (!*buffer) {
             perror("psm: allocation error\n");
@@ -98,7 +98,7 @@ int read_line(char **buffer, size_t bufsize)
         // if the buffer is too short, it gets stretched
         if (pos >= tmp_size) {
             tmp_size += LINE_BUFSIZE;
-            tmp_buff= (char *) realloc(tmp_buff, tmp_size);
+            tmp_buff = (char *) realloc(tmp_buff, tmp_size);
             if (!tmp_buff) {
                 perror("psm: allocation error");
                 goto ret;
