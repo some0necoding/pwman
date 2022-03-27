@@ -59,7 +59,6 @@ int read_line(char **buffer, size_t bufsize)
     char c;
 
     int pos = 0;
-    int ret_code = -1;
 
     while ((c = getchar()) != EOF && c != '\n')
     {
@@ -72,15 +71,12 @@ int read_line(char **buffer, size_t bufsize)
             *buffer = (char *) realloc(*buffer, bufsize);
             if (!*buffer) {
                 perror("psm: allocation error");
-                goto ret;
+                return -1;
             }
         }
     }
 
     memcpy(*buffer+pos, "\0", 1);
 
-    ret_code = 0;
-
-ret:
-    return ret_code;
+    return 0;
 }
