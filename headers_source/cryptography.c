@@ -116,7 +116,7 @@ int encrypt_file(char *file_path, unsigned char *key)
     }
 
     // get the entire file content
-    if (fgetalls(file_path, &plain_text, plain_text_len) != 0) {
+    if (fgetalls(file_path, (char **) &plain_text, plain_text_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -340,7 +340,7 @@ int decrypt_file(char *file_path, unsigned char *key, unsigned char **plain_text
         return -1;
     }
 
-    if (fgetfromtos(file_path, size_t_len, (header_len + size_t_len), &header, header_len) != 0) {
+    if (fgetfromtos(file_path, size_t_len, (header_len + size_t_len), (char **) &header, header_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -350,7 +350,7 @@ int decrypt_file(char *file_path, unsigned char *key, unsigned char **plain_text
         goto ret;
     }
 
-    if (fgetfromtos(file_path, (header_len + size_t_len), (cypher_text_len + header_len + size_t_len), &cypher_text, cypher_text_len) != 0) {
+    if (fgetfromtos(file_path, (header_len + size_t_len), (cypher_text_len + header_len + size_t_len), (char **) &cypher_text, cypher_text_len) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
