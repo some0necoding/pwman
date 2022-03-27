@@ -56,8 +56,7 @@ int fgetalls(char *file_path, char **ret_buff, size_t ret_buff_size)
     // getting the file size
     if ((file_size = fsize(file_path)) == -1) {
         perror("error while seeking for file size");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
     tmp_size = file_size + 1;
@@ -112,8 +111,7 @@ int fgetall(char *file_path, char **ret_buff, size_t ret_buff_size)
     // getting the file size
     if ((file_size = fsize(file_path)) == -1) {
         perror("psm: error while seeking for file size");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
     tmp_size = file_size + 1;
@@ -170,15 +168,13 @@ int fgetfroms(char *file_path, int start_pos, char **ret_buff, size_t ret_buff_s
     // getting file size
     if ((file_size = fsize(file_path)) == -1) {
         perror("psm: error while seeking for file size");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
     // input checking
     if (start_pos > file_size | start_pos < 0) {
         perror("psm: invalid stream position");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
     // creating a buffer to hold content from start_pos to EOF
@@ -238,21 +234,18 @@ int fgetfromtos(char *file_path, int start_pos, int end_pos, char **ret_buff, si
     // checking for good opening
     if (!file) {
         perror("psm: allocation error");
-        fclose(file);
         return -1;
     }
 
     if ((file_size = fsize(file_path)) == -1) {
         perror("psm: error while seeking for file size");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
     // input checking
     if (start_pos < 0 | end_pos < 0 | end_pos < start_pos | end_pos > file_size | start_pos > file_size) {
         perror("psm: invalid stream position");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
     // creating a buffer to hold content from start_pos to end_pos
