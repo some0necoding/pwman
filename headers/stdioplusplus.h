@@ -9,7 +9,7 @@ size_t fsize(char *file_path);
 
 // securely stores all bytes comprised between the beginning of the file and EOF into
 // "ret_buff" (that needs to be allocated using sodium_malloc).
-int fgetalls(char *file_path, unsigned char **ret_buff, size_t ret_buff_size);
+int fgetalls(char *file_path, char **ret_buff, size_t ret_buff_size);
 
 // stores all bytes comprised between the beginning of the file and EOF in a secure way 
 // into "ret_buff".
@@ -17,10 +17,10 @@ int fgetall(char *file_path, char **ret_buff, size_t ret_buff_size);
 
 // securely stores all bytes comprised between start_pos (inclusive) and EOF into 
 // "ret_buff" (that needs to be allocated using sodium_malloc).
-int fgetfroms(char *file_path, int start_pos, unsigned char **ret_buff, size_t ret_buff_size);
+int fgetfroms(char *file_path, int start_pos, char **ret_buff, size_t ret_buff_size);
 
 // securely stores all bytes comprised between start_pos (inclusive) and end_pos (exclusive) 
 // into "ret_buff" (that needs to be allocated using sodium_malloc).
-int fgetfromtos(char *file_path, int start_pos, int end_pos, unsigned char **ret_buff, size_t ret_buff_size);
+int fgetfromtos(char *file_path, int start_pos, int end_pos, char **ret_buff, size_t ret_buff_size);
 
 #endif
