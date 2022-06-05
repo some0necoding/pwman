@@ -16,7 +16,7 @@ others remain safe.
 - AEAD encryption
 - Plaintext handled only in RAM
 - Secure input for passwords
-- CLI = faster
+- CLI == faster
 
 ## Installation
 
