@@ -175,9 +175,7 @@ int encrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
 
         if (!*ret_buff) {
             perror("psm: allocation error");
-            sodium_free(dec_cnk_buff);
-            sodium_free(enc_cnk_buff);
-            return -1;
+            goto ret;
         }
     }
 
@@ -316,8 +314,8 @@ int decrypt_file(char *file_path, unsigned char *key, unsigned char **plain_text
         perror("psm: I/O error");
         header ? sodium_free(header) : NULL;
         return -1;
-    }
-
+    } 
+    
     if (!header) {
         perror("psm: allocation error");
         fclose(file);
@@ -403,9 +401,7 @@ int decrypt(crypto_secretstream_xchacha20poly1305_state *state, unsigned char *b
 
         if (!*ret_buff) {
             perror("psm: allocation error");
-            sodium_free(dec_cnk_buff);
-            sodium_free(enc_cnk_buff);
-            return -1;
+            goto ret;
         }
     }
 
@@ -546,7 +542,7 @@ int generate_masterkey(char *password, unsigned char *salt, unsigned char *ret_m
 
         if (!ret_mkey) {
             perror("psm: allocation error");
-            return -1;
+            goto ret;
         }
     }
 
@@ -598,7 +594,7 @@ int generate_subkeys(int qty, unsigned char *masterkey, unsigned char **subkeys,
             if (!subkeys[i]) {
                 perror("psm: allocation error");
 
-                for (int j=0; j<qty; j++) {
+                for (int j=0; j<i; j++) {
                     (j != i) ? sodium_free(subkeys[j]) : 0;
                 }
 
