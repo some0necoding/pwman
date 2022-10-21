@@ -12,10 +12,16 @@ char *pass_hash(char *pass, size_t pass_len)
     size_t hash_len = crypto_pwhash_STRBYTES;          // hash buffer length (doc.libsodium.org)
     char *hash = (char *) sodium_malloc(hash_len);     // allocating hash buffer (doc.libsodium.org)
 
+    if (!hash) {
+        perror("psm: allocation error");
+        return NULL;
+    }
+
     // the actual hashing function (doc.libsodium.org). 
     // (I cast into unsigned long long only here because I refuse to use this data type when someone invented size_t for this purpose)
     if (crypto_pwhash_str(hash, pass, (unsigned long long) pass_len, crypto_pwhash_OPSLIMIT_SENSITIVE, crypto_pwhash_MEMLIMIT_SENSITIVE) != 0) {
         perror("psm: hash failed");
+        sodium_free(hash);
         return NULL;
     }
 
@@ -31,7 +37,7 @@ int store_hash(char *hash, char *file_path)
     FILE *file = fopen(file_path, "wb");
 
     if (!file) {
-        perror("psm: allocation error");
+        perror("psm: I/O error");
         return -1;
     }
 
@@ -57,7 +63,14 @@ char *get_hash(char *file_path)
     FILE *file = fopen(file_path, "rb");
 
     if (!file) {
+        perror("psm: I/O error");
+        hash ? sodium_free(hash): 0;
+        return NULL;
+    }
+
+    if (!hash) {
         perror("psm: allocation error");
+        file ? fclose(file): 0;
         return NULL;
     }
 
@@ -65,10 +78,12 @@ char *get_hash(char *file_path)
     // to validate the reading (doc.libsodium.org for more info)
     if ((rlen = fread(hash, 1, hash_len, file)) > hash_len) {
         perror("psm: I/O error");
-        fclose(file);
-        return NULL;
+        hash = NULL;
+        goto ret;
     }
 
+ret:
     fclose(file);
+    sodium_free(hash);
     return hash;
 }
