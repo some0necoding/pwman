@@ -230,6 +230,7 @@ int psm_add(char **args)
     // add accepts only 2 args, so if the 2nd arg doesn't exist or if the 3rd arg do exist, the program throws an error.
     if (!args[2] || args[3]) {
         printf("\"add\" needs to know an account name and the mail used to login (2 arguments needed)\n");
+        sodium_free(pass_word);
         return -1;
     }
 
@@ -242,6 +243,8 @@ int psm_add(char **args)
     if (!acct_name | !user_mail) {
         perror("psm: allocation error");
         sodium_free(pass_word);
+        acct_name ? sodium_free(acct_name) : 0;
+        user_mail ? sodium_free(user_mail) : 0;
         return -1;
     }
 
@@ -303,6 +306,7 @@ int psm_remove(char **args)
 
     if (!args[1] || args[2]) {
         printf("\"rm\" needs to know an account name (1 argument needed)\n");
+        return -1;
     }
 
     if ((code = remove_account(args[1], &line_indx)) < 0) {
@@ -310,7 +314,7 @@ int psm_remove(char **args)
         return -1;
     } else if (code == 1) {
         printf("account not found\n");
-        return 0;
+        return -1;
     }
 
     if (remove_password(line_indx) != 0) {
@@ -340,6 +344,7 @@ int psm_get(char **args)
 
     if (!args[1] || args[2]) {
         printf("\"get\" needs to know an account name (1 argument needed)\n");
+        return -1;
     }
 
     if (!content | !pass) {
@@ -360,7 +365,6 @@ int psm_get(char **args)
     // finding account index
     if ((line_indx = find_line_indx(lines, args[1], &line_len)) < 0) {
         printf("account not found\n");
-        ret_code = 0;
         goto ret;
     }
 
@@ -448,9 +452,13 @@ int psm_exec()
     char *line = (char *) malloc(line_size);
     char **args = (char **) malloc(args_size);
 
+    int ret_code = -1;
+
     if (!line | !args) {
         perror("psm: allocation error");
-        return 1;
+        line ? sodium_free(line) : 0;
+        args ? sodium_free(args) : 0;
+        return -1;
     }
 
     while (1) 
@@ -459,21 +467,23 @@ int psm_exec()
 
         // reading the user input.
         if (read_line(&line, line_size) != 0) {
-            return 1;
+            goto ret;
         }
 
         // splitting the input in tokens (command name + arg1 + arg2 + ...).
         if (psm_split_line(line, args, args_size) != 0) {
-            return -1;
+            goto ret;
         }
 
         psm_launch(args);                               // launching the command passing its name along with its arguments.
     }
 
+    ret_code = 0;
+
+ret:
     free(line);
     free(args);
-
-    return 1;
+    return ret_code;
 }
 
 // launching the command passed as an array containing the command name and its arguments.
@@ -481,7 +491,7 @@ int psm_launch(char **args)
 {
     // checking for empty commands
     if (args[0] == NULL) {
-        return 1;
+        return -1;
     }
 
     // if the first argument of the array equals to the name of a stored command, 
@@ -493,7 +503,7 @@ int psm_launch(char **args)
     }
 
     printf("command not found\n");
-    return 1;
+    return -1;
 }
 
 int psm_split_line(char *line, char **tokens, size_t tokens_size)
@@ -568,7 +578,8 @@ int append_account(unsigned char *acct_name, unsigned char *user_or_mail)
 
     if (!totl_content) {
         perror("psm: allocation error");
-        goto ret;
+        sodium_free(content);
+        return -1;
     }
 
     totl_content[0] = '\0';
@@ -686,6 +697,8 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
             tokens = (unsigned char **) sodium_realloc(tokens, old_size, bufsize);
             if (!tokens) {
                 perror("psm: allocation error\n");
+                sodium_free(str_copy);
+                sodium_free(tokens);
                 return NULL;
             }
         }
@@ -695,6 +708,7 @@ unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
 
     tokens[pos] = NULL;
 
+    sodium_free(str_copy);
     return tokens;
 }
 
@@ -730,6 +744,12 @@ int remove_account(unsigned char *account_name, int *line_indx)
 
     // splitting file content into individual lines
     content_lines = split_by_delim(content, SEPARATE_LINE_STR);
+
+    if (!content_lines) {
+        perror("psm: allocation error");
+        sodium_free(content);
+        return -1;
+    }
 
     // finding the index of the line that needs to be removed. the length of this line is stored in line_len.
     if ((*line_indx = find_line_indx(content_lines, account_name, &line_len)) < 0) {
@@ -774,9 +794,15 @@ int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *l
         single_line_len = strlen(line);  
         line_tokens = split_by_delim(line, SEPARATE_TKNS_STR);
 
+        if (!line_tokens) {
+            perror("psm: allocation error");
+            return -1;
+        }
+
         // if the account_name matches the one provided by the user, line's index and length get returned.
         if (strcmp(line_tokens[0], str_to_match) == 0) {
             *line_len = single_line_len;
+            sodium_free(line_tokens);
             return pos;
         }
 
@@ -784,6 +810,7 @@ int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *l
     }
 
     // if the program runs up to here, it means that no match was found.
+    sodium_free(line_tokens);
     return -1;
 }
 
@@ -819,6 +846,12 @@ int remove_password(int line_indx)
 
     // splitting file content into individual lines
     content_lines = split_by_delim(content, SEPARATE_LINE_STR);
+
+    if (!content_lines) {
+        perror("psm: allocation error");
+        sodium_free(content);
+        return -1;
+    }
     
     // creating a new buffer that will contain the 
     // original content without the deleted line
@@ -849,6 +882,12 @@ unsigned char *rebuild_buff_from_lines(unsigned char **lines, size_t buff_len, i
     size_t lines_amount = arrlen((void **) lines);
 
     unsigned char *new_buff = (unsigned char *) sodium_malloc(buff_len + 1);
+
+    if (!new_buff) {
+        perror("psm: allocation error");
+        return NULL;
+    }
+
     new_buff[0] = '\0';
 
     if (buff_len != 0) {    
@@ -894,6 +933,12 @@ int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size)
     // splitting file_content in lines
     lines = split_by_delim(content, SEPARATE_LINE_STR);
 
+    if (!lines) {
+        perror("psm: allocation error");
+        sodium_free(content);
+        return -1;
+    }
+
     // if line_indx > number of lines return -1
     if (line_indx > arrlen((void **) lines)) {
         perror("psm: get_pass: invalid index");
@@ -919,5 +964,6 @@ int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size)
 
 ret:
     sodium_free(content);
+    sodium_free(lines);
     return ret_code;
 }
