@@ -166,6 +166,11 @@ int signin()
 
         if (!subkeys[i]) {
             perror("psm: allocation error");
+
+            for (int j=0; j<i; j++) {
+                sodium_free(subkeys[j]);
+            }
+
             goto ret;
         }
     }
@@ -264,10 +269,12 @@ int login()
     int skey_qty = SKEY_QTY;
     int ret_code = -1;
     
-    if (!pass | !hash) {
+    if (!pass | !hash | !mkey | !salt) {
         perror("psm: allocation error\n");
-        sodium_free(mkey);
-        sodium_free(salt);
+        pass ? sodium_free(pass) : 0;
+        hash ? sodium_free(hash) : 0;
+        mkey ? sodium_free(mkey) : 0;
+        salt ? sodium_free(salt) : 0;
         return -1;
     }
 
