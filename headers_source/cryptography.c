@@ -634,7 +634,7 @@ int write_salt(unsigned char *salt, char *file_path)
     FILE *file = fopen(file_path, "w+"); // 'w' opening will automatically clear the file
 
     if (!file) {
-        perror("psm: allocation error");
+        perror("psm: I/O error");
         return -1;
     }
 
@@ -656,7 +656,7 @@ int get_salt(unsigned char *salt, char *file_path)
     FILE *file = fopen(file_path, "r+");
 
     if (!file) {
-        perror("psm: allocation error");
+        perror("psm: I/O error");
         return -1;
     }
 

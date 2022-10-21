@@ -70,7 +70,7 @@ char *get_hash(char *file_path)
 
     if (!hash) {
         perror("psm: allocation error");
-        file ? fclose(file): 0;
+        fclose(file);
         return NULL;
     }
 
