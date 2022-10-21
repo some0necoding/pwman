@@ -1,124 +1,127 @@
-#include "./utils/headers/auth.h"
 #include "./utils/headers/input_acquisition.h"
-#include "./utils/headers/cryptography.h"
-#include "./utils/headers/sodiumplusplus.h"
-#include "./utils/headers/array_handling.h"
-#include "./utils/headers/clipboard_managment.h"
+
+#include "./commands/headers/psm_show.h"
+#include "./commands/headers/psm_add.h"
+#include "./commands/headers/psm_rm.h"
+#include "./commands/headers/psm_get.h"
+#include "./commands/headers/psm_help.h"
+#include "./commands/headers/psm_exit.h"
 
 #include <string.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <stdio.h>
-#include <pthread.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
-#define PSM_TOK_BUFSIZE 64
-#define PSM_TOK_DELIM " \t\r\n\a"
-#define SEPARATE_LINE_STR "\xD8"   // 0xD8 byte stored as a string to use with string.h functions (marks the end of a line in *.list files)
-#define SEPARATE_TKNS_STR "\xF0"   // 0xF0 byte stored as a string to use with string.h functions (separates two tokens on the same line in *.list files)
-
 #define CHUNK_SIZE 512
+#define TOKEN_BUFSIZE 64
+#define TOKEN_DELIM " \t\r\n\a"
 
-#define ACCT_FILE_PATH "/usr/share/binaries/accounts.list"
-#define PASS_FILE_PATH "/usr/share/binaries/passwords.list"
+// these should be defined and exported (using a getter) in auth.c
+#define SKEY_ACCT 0
+#define SKEY_PASS 1
 
-#define PASS_LENGTH 65
+const char *HOME;
+const char *PWSTORE_PATH;
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
-void crypto_alg_init(void);
-void psm_start(void);
-int psm_exec(void);
-void exit_prog(void);
+char *determine_path();
+void print_welcome_message();
+void start(void);
+int loop(void);
+int execute(char **args) ;
 
-int psm_split_line(char *line, char **tokens, size_t tokens_size);
-int psm_launch(char **args) ;
-int psm_num_commands(void);
+int split_line(char *line, char **tokens, size_t tokens_size);
+int num_commands(void);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 /*------------GLOBAL-VARIABLES-START------------*/
 
-int skey_acct = 0;
-int skey_pass = 1;
+// array of command names
+char *command_names[] = {
+    "show",
+    "add",
+    "rm",
+    "get",
+    "help",
+    "exit"
+};
+
+// array of command functions
+int (*command_addr[]) (char **) = {
+    &psm_show,
+    &psm_add,
+    &psm_remove,
+    &psm_get,
+    &psm_help,
+    &psm_exit
+};
 
 /*-------------GLOBAL-VARIABLES-END-------------*/
 
 int main(int argc, char const *argv[])
 {
+    // checking for bad command line args at shell run
     if (argc > 1) {
         printf("this command does not accept arguments\n");
         return 1;
     }
 
-    crypto_alg_init();
+    // determining the path of .pwstore directory
+    PWSTORE_PATH = determine_path();
 
-    psm_start();
+    // starting the "shell"
+    start();
 
     return 0;
 }
 
-// this function initializes sodium library (doc.libsodium.org)
-void crypto_alg_init(void) {
-    if (sodium_init() == -1 ) {
-        perror("psm: error during cryptographic algorithm's initialization\n");
-        perror("psm: exiting...");
+char *determine_path() 
+{
+    // get user's home directory
+    if ((HOME = getenv("HOME")) == NULL) {
+        HOME = getpwuid(getuid())->pw_dir;
+    }
+
+    // return pwstore path
+    return strcat(HOME, "/.pwstore");
+}
+
+// this function starts the shell
+void start(void) 
+{
+    print_welcome_message();
+ 
+    // starting the shell loop
+    if (loop() != 0) {
         exit(EXIT_FAILURE);
     }
 }
 
-// this function starts the shell after authenticating the user
-void psm_start(void) 
+void print_welcome_message() 
 {
-    int exit_code = 0;
+    unsigned char *start_txt = "\nWELCOME TO PASSMAN!\n"
+                               "\n"
+                               "    digit \"help\" for help\n"
+                               "    digit \"exit\" to exit passman\n";
 
-    unsigned char *start_txt;
-
-    start_txt = "\nWELCOME TO PASSMAN!\n"
-                "\n"
-                "    digit \"help\" for help\n"
-                "    digit \"exit\" to exit passman\n";
-
-    if (auth() == 0) {
-
-        printf("%s\n", start_txt);
-
-        exit_code = psm_exec();
-    } else {
-        exit(EXIT_FAILURE);
-    }
-
-    if (exit_code == 1) {
-        exit_prog();
-    }
+    printf("%s\n", start_txt);
 }
 
-// array of command names
-char *command_names[] = {
-    // bring here all commands' names (ex. "show")
-};
-
-// array of command functions
-int (*command_addr[]) (char **) = {
-    // bring here all commands' functions (ex. &psm_show)
-};
-
-// this function returns the number of commands in command_names array
-int psm_num_commands(void) 
-{
-    return sizeof(command_names) / sizeof(char *);
-}
-
-// this function is the basically the shell itself: it prints a prompt on the screen,
-// reads the user input, splits the input in tokens separated by spaces (command name + args) 
-// and executes commands using psm_launch().
-int psm_exec()
+// this function is basically the shell itself: it prints a prompt on the screen, reads 
+// the user input, splits the input in tokens separated by spaces (command name + args) 
+// and executes commands using execute() function.
+int loop()
 {
     size_t line_size = 1024;
-    size_t args_size = PSM_TOK_BUFSIZE;
+    size_t args_size = TOKEN_BUFSIZE;
 
     char *line = (char *) malloc(line_size);
     char **args = (char **) malloc(args_size);
@@ -127,14 +130,15 @@ int psm_exec()
 
     if (!line | !args) {
         perror("psm: allocation error");
-        line ? sodium_free(line) : 0;
-        args ? sodium_free(args) : 0;
-        return -1;
+        line ? free(line) : 0;
+        args ? free(args) : 0;
+        return ret_code;
     }
 
     while (1) 
     {
-        printf("> ");                                   // printing the prompt.
+        // printing the prompt.
+        printf("> ");
 
         // reading the user input.
         if (read_line(&line, line_size) != 0) {
@@ -142,11 +146,12 @@ int psm_exec()
         }
 
         // splitting the input in tokens (command name + arg1 + arg2 + ...).
-        if (psm_split_line(line, args, args_size) != 0) {
+        if (split_line(line, args, args_size) != 0) {
             goto ret;
         }
 
-        psm_launch(args);                               // launching the command passing its name along with its arguments.
+        // launching the command passing its name along with its arguments.
+        execute(args);
     }
 
     ret_code = 0;
@@ -158,7 +163,7 @@ ret:
 }
 
 // launching the command passed as an array containing the command name and its arguments.
-int psm_launch(char **args) 
+int execute(char **args) 
 {
     // checking for empty commands
     if (args[0] == NULL) {
@@ -167,7 +172,7 @@ int psm_launch(char **args)
 
     // if the first argument of the array equals to the name of a stored command, 
     // the corresponding function is called and the arguments are passed along.
-    for (int i = 0; i < psm_num_commands(); i++) {
+    for (int i = 0; i < num_commands(); i++) {
         if (strcmp(args[0], command_names[i]) == 0) {
             return (*command_addr[i])(args);
         }
@@ -177,18 +182,18 @@ int psm_launch(char **args)
     return -1;
 }
 
-int psm_split_line(char *line, char **tokens, size_t tokens_size)
+int split_line(char *line, char **tokens, size_t tokens_size)
 {
-    int position = 0;
+    int pos = 0;
     char *token;
 
-    token = strtok(line, PSM_TOK_DELIM);
+    token = strtok(line, TOKEN_DELIM);
 
     while (token != NULL) {
-        tokens[position] = token;
-        position++;
-        if (position >= tokens_size) {
-            tokens_size += PSM_TOK_BUFSIZE;
+        tokens[pos] = token;
+        pos++;
+        if (pos >= tokens_size) {
+            tokens_size += TOKEN_BUFSIZE;
             tokens = (char **) realloc(tokens, tokens_size);
             if (!tokens) {
                 perror("psm: allocation error\n");
@@ -196,15 +201,24 @@ int psm_split_line(char *line, char **tokens, size_t tokens_size)
             }
         }
 
-        token = strtok(NULL, PSM_TOK_DELIM);
+        token = strtok(NULL, TOKEN_DELIM);
     }
 
-    tokens[position] = NULL;
+    tokens[pos] = NULL;
     return 0;
 }
 
-void exit_prog(void)
+// this function returns the number of commands in command_names array
+int num_commands(void) 
 {
-    char **empty_args;
-    psm_exit(empty_args);
+    return sizeof(command_names) / sizeof(char *);
 }
+
+/* // this function initializes sodium library (doc.libsodium.org)
+void crypto_alg_init(void) {
+    if (sodium_init() == -1 ) {
+        perror("psm: error during cryptographic algorithm's initialization\n");
+        perror("psm: exiting...");
+        exit(EXIT_FAILURE);
+    }
+} */
