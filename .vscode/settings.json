@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "clipboard_managment.h": "c",
+        "input_acquisition.h": "c",
+        "auth.h": "c",
+        "stdlib.h": "c"
+    }
+}
