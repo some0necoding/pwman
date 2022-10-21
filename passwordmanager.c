@@ -160,15 +160,15 @@ int psm_show(char **args)
     int pos = 0;
     int ret_code = -1;
 
-    // some kinda input verification.
-    if (args[1]) {
-        printf("\"show\" does not accept arguments\n");
-        content ? sodium_free(content) : 0;
+    if (!content) {
+        perror("psm: allocation error");
         return -1;
     }
 
-    if (!content) {
-        perror("psm: allocation error");
+    // some kinda input verification.
+    if (args[1]) {
+        printf("\"show\" does not accept arguments\n");
+        sodium_free(content);
         return -1;
     }
 
@@ -342,15 +342,17 @@ int psm_get(char **args)
     int ret_code = -1;
     int line_indx;
 
-    if (!args[1] || args[2]) {
-        printf("\"get\" needs to know an account name (1 argument needed)\n");
-        return -1;
-    }
-
     if (!content | !pass) {
         perror("psm: allocation error");
         content ? sodium_free(content) : 0;
-        pass ? sodium_free(content) : 0;
+        pass ? sodium_free(pass) : 0;
+        return -1;
+    }
+
+    if (!args[1] || args[2]) {
+        printf("\"get\" needs to know an account name (1 argument needed)\n");
+        sodium_free(content);
+        sodium_free(pass);
         return -1;
     }
 
@@ -927,7 +929,9 @@ int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size)
 
     // decrypting passwords.list file
     if (decrypt_file(file_path, subkeys[skey_pass], &content, content_size) != 0) {
-        goto ret;
+        perror("psm: cryptography error");
+        sodium_free(content);
+        return -1;
     }
 
     // splitting file_content in lines
