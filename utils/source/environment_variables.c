@@ -58,14 +58,13 @@ char *get_env_var(char *key)
 
     while (!(rlen = freadline(file, pair, BUFSIZE) < 0) && ((startswith(pair, key)) != 0));
 
-    if (rlen < 0) {
+    if (rlen == EOF) {
+        return NULL;
+    } else if (rlen < 0) {
         perror("psm: I/O error");
         return NULL;
-    } else if (!(value = get_value(pair))) {
-        perror("psm: ");
-        return NULL;
     } else {
-        return value;
+        return get_value(pair);
     }
 
     return NULL;

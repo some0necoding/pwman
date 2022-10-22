@@ -23,4 +23,7 @@ int fgetfroms(char *file_path, int start_pos, char **ret_buff, size_t ret_buff_s
 // into "ret_buff" (that needs to be allocated using sodium_malloc).
 int fgetfromtos(char *file_path, int start_pos, int end_pos, char **ret_buff, size_t ret_buff_size);
 
+// it reads a single line from a the file stored at file_path
+int freadline(FILE *file, char **ret_buff, size_t bufsize);
+
 #endif

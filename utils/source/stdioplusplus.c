@@ -1,7 +1,11 @@
 #include "../headers/stdioplusplus.h"
 
 #include "../headers/sodiumplusplus.h"
+
 #include <stdio.h>
+#include <string.h>
+
+#define BUFSIZE 64
 
 // returns the size of a null-terminated stream (thus this will not work 
 // with bytes streams that contains multiple null bytes or does not contain 
@@ -284,4 +288,45 @@ int fgetfromtos(char *file_path, int start_pos, int end_pos, char **ret_buff, si
 ret:
     fclose(file);
     return ret_code;
+}
+
+// it reads a line from file and can be used to read a file line
+// by line. When it reaches EOF it returns EOF (-1), -2 is used
+// for errors.
+int freadline(FILE *file, char **ret_buff, size_t bufsize) 
+{
+    size_t old_size;
+
+    char c;
+    int pos = 0;
+
+    if (!file) {
+        perror("psm: I/O error");
+        return -2;
+    }
+
+    while ((c = fgetc(file)) != EOF && c != '\n') {
+        memcpy(*ret_buff+pos, c, sizeof(char));
+        pos++;
+
+        if (pos >= bufsize) {
+            
+            old_size = bufsize;
+            bufsize += BUFSIZE;
+            *ret_buff = (char *) realloc(*ret_buff, bufsize);
+
+            if (!*ret_buff) {
+                perror("psm: allocation error");
+                return -2;
+            }
+        }
+    }
+
+    memcpy(*ret_buff+pos, '\0', sizeof(char));
+
+    if (c == EOF) {
+        return EOF;
+    }
+
+    return pos;
 }
