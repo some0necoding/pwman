@@ -13,7 +13,7 @@
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
 // this function securely reads (i.e. disabling echo) all bytes from stdin and
-// stores them into "buffer" (that needs to be allocated using sodium_malloc).
+// stores them into "buffer" (that needs to be allocated using sodium_malloc) 
 int read_line_s(char **buffer, size_t bufsize) 
 {
     size_t old_size;                // actual buffer size
@@ -45,7 +45,6 @@ int read_line_s(char **buffer, size_t bufsize)
     }
 
     memcpy(*buffer+pos, "\0", sizeof(char));
-
     ret_code = 0;
 
 ret:
@@ -78,6 +77,5 @@ int read_line(char **buffer, size_t bufsize)
     }
 
     memcpy(*buffer+pos, "\0", sizeof(char));
-
     return 0;
 }
