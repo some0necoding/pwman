@@ -1,4 +1,5 @@
 #include "./utils/headers/input_acquisition.h"
+#include "./utils/headers/stdioplusplus.h"
 
 #include "./commands/headers/psm_show.h"
 #include "./commands/headers/psm_add.h"
@@ -11,26 +12,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <pwd.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
-#define TOKEN_BUFSIZE 64
+#define BUFSIZE 64
 #define TOKEN_DELIM " \t\r\n\a"
+
+#define CONFIGS "/etc/pwman.conf"
+
 
 // these should be defined and exported (using a getter) in auth.c
 #define SKEY_ACCT 0
 #define SKEY_PASS 1
 
 const char *HOME;
-const char *PWSTORE_PATH;
+const char *PATH;
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
-char *determine_path();
+int setup();
+
 void print_welcome_message();
 void start(void);
 int loop(void);
@@ -73,8 +77,8 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    // determining the path of .pwstore directory
-    PWSTORE_PATH = determine_path();
+    // setting up the environment
+    setup();
 
     // starting the "shell"
     start();
@@ -82,15 +86,35 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-char *determine_path() 
+int setup() 
 {
+    if (access(CONFIGS, F_OK) != 0) {
+        PATH = make_path();
+
+        if (add_path(PATH) != 0) {
+            perror("psm: I/O error");
+            return -1;
+        }
+
+    } else if (!(PATH = get_path())) {
+        perror("psm: I/O error");
+        return -1;
+    }
+}
+
+// this function builds the path of .pwstore
+// which is /home/user/.pwstore
+char *make_path() 
+{
+    char *home;
+
     // get user's home directory
-    if ((HOME = getenv("HOME")) == NULL) {
-        HOME = getpwuid(getuid())->pw_dir;
+    if (!(home = getenv("HOME"))) {
+        home = getpwuid(getuid())->pw_dir;
     }
 
     // return pwstore path
-    return strcat(HOME, "/.pwstore");
+    return strcat(home, "/.pwstore");
 }
 
 // this function starts the shell
@@ -120,7 +144,7 @@ void print_welcome_message()
 int loop()
 {
     size_t line_size = 1024;
-    size_t args_size = TOKEN_BUFSIZE;
+    size_t args_size = BUFSIZE;
 
     char *line = (char *) malloc(line_size);
     char **args = (char **) malloc(args_size);
@@ -192,7 +216,7 @@ int split_line(char *line, char **tokens, size_t tokens_size)
         tokens[pos] = token;
         pos++;
         if (pos >= tokens_size) {
-            tokens_size += TOKEN_BUFSIZE;
+            tokens_size += BUFSIZE;
             tokens = (char **) realloc(tokens, tokens_size);
             if (!tokens) {
                 perror("psm: allocation error\n");
