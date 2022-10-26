@@ -14,9 +14,9 @@ int arrlen(void **arr)
     return size;
 }
 
-int check_allocation(void **arr) 
+int check_allocation(void *arr) 
 {
-    if (!*arr) {
+    if (!arr) {
         perror("psm: allocation error\n");
         return -1;
     }
