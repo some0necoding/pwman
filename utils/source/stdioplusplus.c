@@ -296,8 +296,6 @@ ret:
 // for errors.
 int freadline(FILE *file, char **ret_buff, size_t bufsize) 
 {
-    size_t old_size;
-
     char c;
     int pos = 0;
 
@@ -312,9 +310,8 @@ int freadline(FILE *file, char **ret_buff, size_t bufsize)
 
         if (pos >= bufsize) {
             
-            old_size = bufsize;
             bufsize += BUFSIZE;
-            *ret_buff = (char *) realloc(*ret_buff, bufsize);
+            *ret_buff = realloc(*ret_buff, sizeof(**ret_buff) * bufsize);
 
             if (!*ret_buff) {
                 perror("psm: allocation error");
@@ -323,7 +320,11 @@ int freadline(FILE *file, char **ret_buff, size_t bufsize)
         }
     }
 
-    memcpy(*ret_buff+pos, '\0', sizeof(char));
+    if (pos >= bufsize) {
+        bufsize += 1;
+        *ret_buff = realloc(*ret_buff, sizeof(**ret_buff) * bufsize);
+        memcpy(*ret_buff+pos, '\0', sizeof(char));
+    }
 
     if (c == EOF) {
         return EOF;
