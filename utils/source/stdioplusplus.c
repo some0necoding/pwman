@@ -1,6 +1,7 @@
 #include "../headers/stdioplusplus.h"
 
 #include "../headers/sodiumplusplus.h"
+#include "../headers/array_handling.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -306,7 +307,7 @@ int freadline(FILE *file, char **ret_buff, size_t bufsize)
     }
 
     while ((c = fgetc(file)) != EOF && c != '\n') {
-        memcpy(*ret_buff+pos, c, sizeof(char));
+        memcpy(*ret_buff+pos, &c, sizeof(char));
         pos++;
 
         if (pos >= bufsize) {
