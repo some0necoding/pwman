@@ -1,147 +1,316 @@
-#include "../../utils/headers/auth.h"
-#include "../../utils/headers/sodiumplusplus.h"
-#include "../../utils/headers/cryptography.h"
+#include "../../utils/headers/config.h"
+#include "../../utils/headers/array_handling.h"
+
 #include <stdio.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <stdlib.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
-#define PSM_TOK_BUFSIZE 64
-
-#define SEPARATE_LINE_STR "\xD8"   // 0xD8 byte stored as a string to use with string.h functions (marks the end of a line in *.list files)
-#define SEPARATE_TKNS_STR "\xF0"   // 0xF0 byte stored as a string to use with string.h functions (separates two tokens on the same line in *.list files)
-
-#define CHUNK_SIZE 512
-
-#define ACCT_FILE_PATH "/usr/share/binaries/accounts.list"
-#define PASS_FILE_PATH "/usr/share/binaries/passwords.list"
+char *PATH;         // local variable PATH
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
-/*----------FUNCTIONS-DEFINITION-START----------*/
-
-unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
-
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
-
 /*------------GLOBAL-VARIABLES-START------------*/
 
-    int skey_acct = 0;
-    int skey_pass = 1;
+// every file has a path, a name and 
+// an indentation level.
+typedef struct {
+    char *path;
+    char *name;
+    int indentation;
+} file_name;
 
 /*-------------GLOBAL-VARIABLES-END-------------*/
 
-// this function shows for every account th account name, the mail and the password
-// marked as hidden. The content processing follows the storage pattern.
-// - Arguments: it does not accept arguments.
+/*----------FUNCTIONS-DEFINITION-START----------*/
+
+int list(char *path);
+file_name *get_subdirs(char *path, int *subdirs_qty);
+int list_rec(char *path);
+int list_file(char *path);
+int is_dir(char *path);
+int is_file(char *path);
+char *build_path(char *root, char *rel_path);
+char *get_last_dir(char *path);
+int print_file(char *name, int indentation);
+int get_indentation_level(char *sub_path);
+int get_tok_num(char *path); 
+
+/*-----------FUNCTIONS-DEFINITION-END-----------*/
+
+/*
+    This function lists all directories and files under .pwstore.
+
+    Arguments:
+        [DIR]     lists all directories and files under .pwstore/dir if dir exists
+        [FILE]    lists file under .pwstore if it exists
+*/ 
 int psm_show(char **args)
 {
-    size_t content_size = CHUNK_SIZE;
+    char *path = get_env_var("PATH");          // /home/{user}/.pwstore     
 
-    char *file_path = ACCT_FILE_PATH;                           // accounts.list file path.
-    
-    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
-    unsigned char **content_lines;                              // array containing the file content splitted in lines. Every line contains an account.
-    unsigned char *content_line;                                // a single line of the file content (i.e. a single account).
-    unsigned char **tokens;                                     // array containing the account name and the mail of the account, stored in a single line.
-    unsigned char *acct_name;                                   // account name.
-    unsigned char *user_mail;                                   // username or mail.
-
-    int pos = 0;
-    int ret_code = -1;
-
-    if (!content) {
-        perror("psm: allocation error");
-        return -1;
-    }
-
-    // some kinda input verification.
     if (args[1]) {
-        printf("\"show\" does not accept arguments\n");
-        sodium_free(content);
-        return -1;
+        path = build_path(path, args[1]);      // /home/{user}/.pwstore/{args[1]}
     }
 
-    // the file remains encrypted, while the decrypted content gets stored in a buffer (i.e. file_content).
-    if (decrypt_file(file_path, subkeys[skey_acct], &content, content_size) != 0) {
-        perror("psm: cryptography error");
-        goto ret;
-    }
+    // environment path is stored inside PATH variable
+    // with additional subdirectories if provided by user 
+    size_t path_len = strlen(path);
+    PATH = malloc(sizeof(char) * (path_len + 1));
+    strcpy(PATH, path); 
 
-    // the file content gets splitted in lines and stored in content_lines, that is NULL terminated.
-    if (!(content_lines = split_by_delim(content, SEPARATE_LINE_STR))) {
-        goto ret;
-    }
+    // listing subdirectories and files under PATH 
+    list(PATH);
 
-    // looping through the lines to print info about every account.
-    while ((content_line = content_lines[pos]) != NULL) {
-
-        // the line gets splitted in tokens (account name and user/mail).
-        if (!(tokens = split_by_delim(content_line, SEPARATE_TKNS_STR))) {
-            goto ret;
-        }
-
-        acct_name = tokens[0];
-        user_mail = tokens[1];
-
-        printf("%1$d.\n\taccount: %2$s\n\tuser: %3$s\n\tpassword: hidden\n", pos+1, acct_name, user_mail);
-
-        pos++;
-    }
-
-    ret_code = 0;
-
-ret:
-    sodium_free(content);
-    return ret_code;
+    return 0;
 }
 
-// this function splits a generic string in tokens using a delimiter string as reference.
-// all tokens are returned in an array.
-unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
+/*
+    This function checks if the user is trying to show a file (in this 
+    case it is just printed) or a directory (in this case it is scanned
+    for subdirs and other files).
+*/
+int list(char *path) 
 {
-    size_t bufsize = PSM_TOK_BUFSIZE;
-    size_t str_len;
-    size_t old_size;
-    
-    unsigned char **tokens = (unsigned char **) sodium_malloc(bufsize);
-    unsigned char *token;
-    unsigned char *str_copy;
-    
+    // the last dir in the PATH is the root of the tree
+    char *root = get_last_dir(path);
+    printf("%s\n", root);
+
+    if (is_dir(path) == 0) {            // dirs are scanned for subdirs and files
+        list_rec(path);           
+    } else if (is_file(path) == 0) {    // files are just printed
+        print_file(path, 1);
+    } else {                            // otherwise path does not exist
+        printf("%s is not in the password store\n", path);
+    }
+
+    return 0;
+}
+
+/*
+    This function recursively scans directories for subdirectories and
+    files
+*/
+int list_rec(char *path) 
+{
+    int subdirs_qty;
+    file_name *subdirs = get_subdirs(path, &subdirs_qty);
+
+    for (int i=0; i < subdirs_qty; i++) {
+
+        file_name subdir = subdirs[i];
+
+        if (is_file(subdir.path) == 0) {
+            print_file(subdir.name, subdir.indentation);
+        } else if (is_dir(subdir.path) == 0) {
+            print_file(subdir.name, subdir.indentation);
+            list_rec(subdir.path);
+        }
+    }
+
+    return 0;
+}
+
+/*
+    This function returns an array of file_name structs 
+    representing all path subdirectories and file 
+*/
+file_name *get_subdirs(char *path, int *subdirs_qty) 
+{
+    DIR *dir = opendir(path);
+    struct dirent *direntp;
+
+    // creating subdirs array
+    size_t subdirs_len = 1;
+    file_name *subdirs = malloc(sizeof(file_name) * subdirs_len);
     int pos = 0;
 
-    if (!tokens) {
-        perror("psm: allocation error\n");
+    // checking for good opening
+    if (!dir) {
+        perror("psm: I/O error");
         return NULL;
     }
 
-    // creating a copy of the original buffer in order to prevent it beeing corrupted by strtok
-    str_len = strlen(str);
-    str_copy = (unsigned char *) sodium_malloc(str_len + 1);
-    strncpy(str_copy, str, str_len);
-    str_copy[str_len] = '\0';
+    // for every subdir create a struct and add it
+    // to subdirs array
+    while ((direntp = readdir(dir)) != NULL) {
+        if ((strcmp(direntp->d_name, ".") != 0) && (strcmp(direntp->d_name, "..") != 0)) {
 
-    token = strtok(str_copy, delim);
+            // if the array is too small it gets stretched
+            if (pos >= subdirs_len) {
+                subdirs_len += 1;
+                subdirs = realloc(subdirs, sizeof(*subdirs) * subdirs_len);
+            }
 
-    while (token != NULL) {
-        tokens[pos] = token;
-        pos++;
-        if (pos >= bufsize) {
-            old_size = bufsize;
-            bufsize += PSM_TOK_BUFSIZE;
-            tokens = (unsigned char **) sodium_realloc(tokens, old_size, bufsize);
-            if (!tokens) {
-                perror("psm: allocation error\n");
-                sodium_free(str_copy);
-                sodium_free(tokens);
-                return NULL;
+            file_name subdir;
+            subdir.name = direntp->d_name;                      // file or subdir name
+            subdir.path = build_path(path, subdir.name);        // file or subdir path
+
+            int indentation_level = get_indentation_level(subdir.path);
+
+            subdir.indentation = indentation_level;             // indentation level for formatting
+
+            subdirs[pos] = subdir;
+            pos++;
+        }
+    }
+
+    // returning also array size
+    *subdirs_qty = pos;
+    return subdirs;
+}
+
+/*
+    This function returns the indentation level of the subdir
+    based on the distance between tree's root and subdir
+
+    path 1: /foo/boo/loo  -> 3
+    path 2: /foo/boo      -> 2
+
+    distance = 3 - 2 = 1
+
+    print_line() output:
+
+    boo
+     |--loo
+    ____ <- distance = 1
+*/
+int get_indentation_level(char *sub_path) 
+{
+    int path_dir_num = get_tok_num(PATH);
+    int sub_path_dir_num = get_tok_num(sub_path);
+
+    return sub_path_dir_num - path_dir_num;
+}
+
+/*
+    This function returns the number of tokens contained 
+    in path (i.e. the number of / excluding the trailing 
+    one if it exists)
+
+    Example 1: /foo/boo  -> 2
+    Example 2: /foo/boo/ -> 2
+                       ^
+                this is ignored
+*/
+int get_tok_num(char *path) 
+{
+    int path_len = strlen(path);
+    int tok_num = 0;
+
+    for (int i = 0; i < path_len; i++) {
+        if (path[i] == '/' && path[i + 1] != '\0') {
+            tok_num++;
+        }
+    }
+
+    return tok_num;
+}
+
+/*
+    This function prints a file name with the right indentation
+*/
+int print_file(char *name, int indentation) 
+{
+    int name_len = strlen(name);
+    int fmt_name_len = name_len + (indentation * 4);
+    char *fmt_name = malloc(fmt_name_len + 1);
+    char *fmt_tok = "|--";
+
+    for (int i = 0; i < fmt_name_len; i++) {
+        fmt_name[i] = ' ';
+    }
+
+    int fmt_index = (fmt_name_len - name_len) - 3;
+    strcpy(fmt_name+fmt_index, fmt_tok);
+    strcpy(fmt_name+(indentation * 4), name);
+
+    printf("%s\n", fmt_name);
+}
+
+/*
+    This function returns the last token of a path
+
+    Example: /foo/boo -> boo
+*/
+char *get_last_dir(char *path) 
+{
+    if (path[0] == '/') {
+
+        int path_len = strlen(path);
+        int first_index = 1;
+
+        for (int i = path_len; (i >= 1 && first_index == 1); i--) {
+            if (path[i] == '/') {
+                first_index = (i + 1);
             }
         }
 
-        token = strtok(NULL, delim);
+        char *new_path = malloc(sizeof(char) * (path_len - first_index + 1));
+
+        strcpy(new_path, path+first_index);
+        return new_path;
     }
 
-    tokens[pos] = NULL;
+    return path;
+}
 
-    sodium_free(str_copy);
-    return tokens;
+/*
+    This function checks if the path is a
+    directory
+*/
+int is_dir(char *path) 
+{
+    struct stat fstat;
+
+    if (stat(path, &fstat) < 0) {
+        return -1;
+    }
+
+    if (S_ISDIR(fstat.st_mode)) {
+        return 0;
+    }
+
+    return -1;
+}
+
+/*
+    This function checks if the path is a
+    file
+*/
+int is_file(char *path) 
+{
+    struct stat fstat;
+
+    if (stat(path, &fstat) < 0) {
+        return -1;
+    }
+
+    if (S_ISREG(fstat.st_mode)) {
+        return 0;
+    }
+    
+    return -1;
+}
+
+/*
+    This function builds a path in the format:
+        
+        root/{rel_path}
+*/
+char *build_path(char *root, char *rel_path) 
+{
+    size_t root_size = strlen(root);
+    size_t rel_path_size = strlen(rel_path);
+
+    char *full_path = malloc(sizeof(char) * root_size + 1 + rel_path_size + 1);     // {root}/{rel_path}
+
+    strcpy(full_path, root);
+    strcat(full_path, "/");
+    strcat(full_path, rel_path);
+
+    return full_path;
 }
