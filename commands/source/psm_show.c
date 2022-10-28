@@ -38,6 +38,7 @@ char *get_last_dir(char *path);
 int print_file(char *name, int indentation);
 int get_indentation_level(char *sub_path);
 int get_tok_num(char *path); 
+char *remove_ext(char *fname, char *ext); 
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
@@ -149,7 +150,10 @@ file_name *get_subdirs(char *path, int *subdirs_qty)
     // for every subdir create a struct and add it
     // to subdirs array
     while ((direntp = readdir(dir)) != NULL) {
-        if ((strcmp(direntp->d_name, ".") != 0) && (strcmp(direntp->d_name, "..") != 0)) {
+
+        char first_char = direntp->d_name[0];
+
+        if (first_char != '.') {    // skipping dot files
 
             // if the array is too small it gets stretched
             if (pos >= subdirs_len) {
@@ -227,8 +231,13 @@ int get_tok_num(char *path)
 */
 int print_file(char *name, int indentation) 
 {
+    name = remove_ext(name, ".gpg");
+
+    if (check_allocation(name)) return -1;
+
     int name_len = strlen(name);
     int fmt_name_len = name_len + (indentation * 4);
+
     char *fmt_name = malloc(fmt_name_len + 1);
     char *fmt_tok = "|--";
 
@@ -244,6 +253,25 @@ int print_file(char *name, int indentation)
     
     free(fmt_name);
     return 0;
+}
+
+char *remove_ext(char *fname, char *ext) 
+{
+    int ext_len = strlen(ext);
+    int fname_len = strlen(fname);
+    int no_ext_len = fname_len - ext_len;
+
+    char *no_ext_fname = malloc(sizeof(char) * (no_ext_len + 1));
+
+    if (check_allocation(no_ext_fname)) return NULL;
+
+    if (strcmp(fname+no_ext_len, ext) == 0) {
+        strcpy(no_ext_fname, fname);
+        no_ext_fname[no_ext_len] = '\0';
+        return no_ext_fname;
+    }
+
+    return fname;
 }
 
 /*
