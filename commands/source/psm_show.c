@@ -52,6 +52,8 @@ int psm_show(char **args)
 {
     char *path = get_env_var("PATH");          // /home/{user}/.pwstore     
 
+    if (!path) return -1;
+
     if (args[1]) {
         path = build_path(path, args[1]);      // /home/{user}/.pwstore/{args[1]}
     }
@@ -65,6 +67,8 @@ int psm_show(char **args)
     // listing subdirectories and files under PATH 
     list(PATH);
 
+    free(path);
+    free(PATH);
     return 0;
 }
 
@@ -87,6 +91,7 @@ int list(char *path)
         printf("%s is not in the password store\n", path);
     }
 
+    free(root);
     return 0;
 }
 
@@ -110,6 +115,13 @@ int list_rec(char *path)
             list_rec(subdir.path);
         }
     }
+
+    for (int i = 0; i < subdirs_qty; i++) {
+        file_name subdir = subdirs[i];
+        free(subdir.path);
+    }
+
+    free(subdirs);
 
     return 0;
 }
@@ -229,6 +241,9 @@ int print_file(char *name, int indentation)
     strcpy(fmt_name+(indentation * 4), name);
 
     printf("%s\n", fmt_name);
+    
+    free(fmt_name);
+    return 0;
 }
 
 /*
