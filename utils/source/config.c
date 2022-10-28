@@ -26,7 +26,7 @@ char *get_config_path()
     int const_len = strlen(CONFIGS);
 
     // if path length is less than const_len + 1 it gets reallocated
-    char *path = malloc(sizeof(*path) * (const_len + 1));
+    char *path = malloc(sizeof(char) * (const_len + 1));
 
     // allocation check
     if (check_allocation(path) != 0) return NULL;
@@ -80,25 +80,26 @@ ret:
 char *get_env_var(char *key) 
 {
     int rlen;                                   // bytes read
-    char *pair = malloc(sizeof(*pair));
+    char *pair = malloc(sizeof(char));
     char *value;
 
     FILE *file = fopen(CONFIGS, "r");
-
+    
     if (!file) {
         perror("psm: I/O error\n");
         return NULL;
     }
-
+    
     // reading the file line by line until the key matches
     while (!(rlen = freadline(file, &pair, sizeof(*pair)) < 0) && ((startswith(pair, key)) != 0));
 
-    if (rlen == EOF) {      // match not found
+    if (rlen == EOF || strcmp(pair, "") == 0) {     // match not found
+        printf("psm: environment variable %s not found\n", key); 
         return NULL;
-    } else if (rlen < 0) {  // an error occured
+    } else if (rlen < 0) {                          // an error occured
         perror("psm: I/O error");
         return NULL;
-    } else {                // match found
+    } else {                                        // match found
         char *value = get_value(pair);
         if (check_allocation(value) != 0) return NULL;
         return value;
@@ -114,7 +115,7 @@ char *build_pair(char *key, char *value)
     int key_len = strlen(key);
     int value_len = strlen(value);
 
-    char *pair = malloc(sizeof(*pair) * (key_len + 1 + value_len + 2));
+    char *pair = malloc(sizeof(char) * (key_len + 1 + value_len + 2));
 
     // allocation check
     if (check_allocation(pair) != 0) return NULL;
