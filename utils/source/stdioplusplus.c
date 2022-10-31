@@ -309,7 +309,8 @@ int freadline(FILE *file, char **ret_buff, size_t bufsize)
         pos++;
 
         if (pos >= bufsize) {
-            
+
+            size_t old_size = bufsize;
             bufsize += BUFSIZE;
             *ret_buff = realloc(*ret_buff, sizeof(**ret_buff) * bufsize);
 
@@ -317,6 +318,10 @@ int freadline(FILE *file, char **ret_buff, size_t bufsize)
                 perror("psm: allocation error");
                 return -2;
             }
+
+            // set to null newly allocated memory in order
+            // to prevent undefined behaviour
+            memset(*ret_buff+old_size, '\0', (BUFSIZE - 1));
         }
     }
 
