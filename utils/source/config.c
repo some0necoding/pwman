@@ -25,14 +25,18 @@ char *get_config_path()
 {
     int const_len = strlen(CONFIGS);
 
-    // if path length is less than const_len + 1 it gets reallocated
+    // path length is malloc'd as const_len + 1
     char *path = malloc(sizeof(char) * (const_len + 1));
 
     // allocation check
     if (check_allocation(path) != 0) return NULL;
 
+    // initializing the array to null in order
+    // to prevent undefined behaviour
+    memset(path, '\0', const_len + 1);
+
     // copying CONFIGS to path
-    memcpy(path, CONFIGS, const_len);
+    strcpy(path, CONFIGS);
     return path;
 }
 
@@ -112,13 +116,18 @@ char *get_env_var(char *key)
 // in the format "key=value"
 char *build_pair(char *key, char *value)
 {
-    int key_len = strlen(key);
-    int value_len = strlen(value);
+    size_t key_len = strlen(key);
+    size_t value_len = strlen(value);
+    size_t pair_len = key_len + 1 + value_len; 
 
-    char *pair = malloc(sizeof(char) * (key_len + 1 + value_len + 2));
+    char *pair = malloc(sizeof(char) * (pair_len + 2));
 
     // allocation check
     if (check_allocation(pair) != 0) return NULL;
+
+    // initializing the array to null in order
+    // to prevent undefined behaviour
+    memset(pair, '\0', pair_len + 2);
 
     strcat(pair, key);
     strcat(pair, "=");
@@ -153,19 +162,17 @@ int startswith(char *str, char *substr)
 char *get_value(char *pair) 
 {
     char *key;
-    char *val;
     const char *delim = "=";
-    int val_len;
 
     key = strtok(pair, delim);
 
     if (key) {
         
-        val = strtok(NULL, delim);
+        char *val = strtok(NULL, delim);
         
         if (check_allocation(val) != 0) return NULL;
         
-        val_len = strlen(val);
+        int val_len = strlen(val);
         char *value = malloc(sizeof(*value) * (val_len + 1));
 
         if (check_allocation(value) != 0) return NULL;
@@ -177,6 +184,5 @@ char *get_value(char *pair)
     }
 
     free(key);
-    free(val);
     return NULL;
 }
