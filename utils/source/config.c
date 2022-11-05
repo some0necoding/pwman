@@ -1,6 +1,7 @@
 #include "../headers/stdioplusplus.h"
 #include "../headers/array_handling.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
@@ -99,16 +100,24 @@ char *get_env_var(char *key)
 
     if (rlen == EOF || strcmp(pair, "") == 0) {     // match not found
         printf("psm: environment variable %s not found\n", key); 
-        return NULL;
+        goto ret; 
     } else if (rlen < 0) {                          // an error occured
         perror("psm: I/O error");
-        return NULL;
+        goto ret;
     } else {                                        // match found
         char *value = get_value(pair);
-        if (check_allocation(value) != 0) return NULL;
+        
+        if (!value) {
+            perror("psm: allocation error\n");
+            goto ret;
+        }
+        
+        fclose(file); 
         return value;
     }
 
+ret:
+    fclose(file);
     return NULL;
 }
 
@@ -173,7 +182,7 @@ char *get_value(char *pair)
         if (check_allocation(val) != 0) return NULL;
         
         int val_len = strlen(val);
-        char *value = malloc(sizeof(*value) * (val_len + 1));
+        char *value = calloc(val_len + 1, sizeof(char));
 
         if (check_allocation(value) != 0) return NULL;
 
