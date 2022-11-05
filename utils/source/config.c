@@ -1,6 +1,7 @@
 #include "../headers/stdioplusplus.h"
 #include "../headers/array_handling.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,40 +16,38 @@
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 char *build_pair(char *key, char *value);
-int startswith(char *str, char *substr);
 char *get_value(char *pair);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
-// this function returns configuration file path
-// (i.e. /etc/pwman.conf)
+/*
+    This function returns configuration file path (i.e. /etc/pwman.conf)
+*/
 char *get_config_path() 
 {
-    int const_len = strlen(CONFIGS);
+    size_t const_len = strlen(CONFIGS);
+    char *path = calloc(const_len + 1, sizeof(char));
 
-    // path length is malloc'd as const_len + 1
-    char *path = malloc(sizeof(char) * (const_len + 1));
+    if (!path) {
+        perror("psm: allocation error\n");
+        return NULL;
+    }
 
-    // allocation check
-    if (check_allocation(path) != 0) return NULL;
-
-    // initializing the array to null in order
-    // to prevent undefined behaviour
-    memset(path, '\0', const_len + 1);
-
-    // copying CONFIGS to path
     strcpy(path, CONFIGS);
     return path;
 }
 
-// this function adds an environment variable
-// in the format key=value inside config file
+/*
+    This function add an environment variable in
+    the format "key=value" in the file stored at
+    CONFIGS path.
+*/
 int add_env_var(char *key, char *value) 
 {
     char *pair;
 
-    int wlen;                       // bytes written 
-    int pair_len;
+    size_t wlen;
+    size_t pair_len;
     int ret_code = -1;
 
     FILE *file = fopen(CONFIGS, "a");
@@ -58,8 +57,7 @@ int add_env_var(char *key, char *value)
         return -1;
     }
 
-    // building a pair out of key and value in the
-    // format "key=value"
+    // builds a pair in the format "key=value"
     if (!(pair = build_pair(key, value))) {
         perror("psm: allocation error");
         fclose(file);
@@ -68,24 +66,28 @@ int add_env_var(char *key, char *value)
 
     pair_len = strlen(pair);
 
-    // writing the pair to file
+    // writes pair into file
     if ((wlen = fwrite(pair, sizeof(char), pair_len, file)) < 0 ) {
         perror("psm: I/O error");
         goto ret;
     }
 
+    ret_code = 0;
+
 ret:
     free(pair);
     fclose(file);
-    return 0;
+    return ret_code;
 }
 
-// returns the value mapped by key in the file
-// CONFIGS
+/*
+    This function returns the value mapped by
+    key in the file stored at CONFIGS path.
+*/
 char *get_env_var(char *key) 
 {
-    int rlen;                                   // bytes read
-    char *pair = malloc(sizeof(char));
+    int rlen;
+    char *pair = calloc(1, sizeof(char));
     char *value;
 
     FILE *file = fopen(CONFIGS, "r");
@@ -95,16 +97,16 @@ char *get_env_var(char *key)
         return NULL;
     }
     
-    // reading the file line by line until the key matches
-    while (!(rlen = freadline(file, &pair, sizeof(*pair)) < 0) && ((startswith(pair, key)) != 0));
+    // reads the file line by line until the key matches
+    while (!(rlen = freadline(file, &pair, sizeof(*pair)) < 0) && ((strncmp(pair, key, strlen(key))) != 0));
 
-    if (rlen == EOF || strcmp(pair, "") == 0) {     // match not found
+    if (rlen == EOF || strcmp(pair, "") == 0) {      // match not found
         printf("psm: environment variable %s not found\n", key); 
         goto ret; 
-    } else if (rlen < 0) {                          // an error occured
+    } else if (rlen < 0) {                                  // an error occured
         perror("psm: I/O error");
         goto ret;
-    } else {                                        // match found
+    } else {                                                // match found
         char *value = get_value(pair);
         
         if (!value) {
@@ -121,22 +123,22 @@ ret:
     return NULL;
 }
 
-// building a pair out of key and value
-// in the format "key=value"
+/*
+    This function returns a string containing
+    a pair of format "key=value"
+*/
 char *build_pair(char *key, char *value)
 {
     size_t key_len = strlen(key);
     size_t value_len = strlen(value);
-    size_t pair_len = key_len + 1 + value_len; 
+    size_t pair_len = key_len + 1 + value_len + 1;      // key + = + value + \n
 
-    char *pair = malloc(sizeof(char) * (pair_len + 2));
+    char *pair = calloc(pair_len + 1, sizeof(char));
 
-    // allocation check
-    if (check_allocation(pair) != 0) return NULL;
-
-    // initializing the array to null in order
-    // to prevent undefined behaviour
-    memset(pair, '\0', pair_len + 2);
+    if (!pair) {
+        perror("psm: allocation error\n");
+        return NULL;
+    }
 
     strcat(pair, key);
     strcat(pair, "=");
@@ -146,28 +148,10 @@ char *build_pair(char *key, char *value)
     return pair;
 }
 
-// checks if a string starts with prefix substr
-int startswith(char *str, char *substr) 
-{
-    int str_len = strlen(str);
-    int substr_len = strlen(substr);
-
-    // overflow checking
-    if (str_len < substr_len) {
-        perror("psm: overflow");
-        return -1;
-    }
-
-    for (int i=0; i < substr_len; i++) {
-        if (str[i] != substr[i]) {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-// returns the value contained in a pair
+/*
+    This function returns the string following the
+    "=" inside a pair
+*/
 char *get_value(char *pair) 
 {
     char *key;
@@ -178,16 +162,21 @@ char *get_value(char *pair)
     if (key) {
         
         char *val = strtok(NULL, delim);
+
+        if (!val) {
+            perror("psm: allocation error\n");
+            return NULL;
+        } 
         
-        if (check_allocation(val) != 0) return NULL;
-        
-        int val_len = strlen(val);
+        size_t val_len = strlen(val);
         char *value = calloc(val_len + 1, sizeof(char));
 
-        if (check_allocation(value) != 0) return NULL;
+        if (!value) {
+            perror("psm: allocation error\n");
+            return NULL;
+        }
 
         strcpy(value, val);
-
         free(key);
         return value;
     }
