@@ -1,5 +1,4 @@
 #include "../../utils/headers/config.h"
-#include "../../utils/headers/array_handling.h"
 
 #define _XOPEN_SOURCE 500
 
@@ -27,9 +26,11 @@ char *remove_ext(const char *fname, const char *ext);
 */ 
 int psm_show(char **args)
 {
-    char *path = get_env_var("PATH");               // /home/{user}/.pwstore     
-    
-    if (check_allocation(path)) return -1;
+    char *path = get_env_var("PATH");                                   // /home/{user}/.pwstore     
+
+    if (!path) {
+        perror("psm: allocation error\n");
+    }    
 
     if (args[1] && (build_path(&path, args[1]) != 0)) {      // /home/{user}/.pwstore/{args[1]}
         perror("psm: ");
@@ -50,8 +51,8 @@ int psm_show(char **args)
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
     const char *last_dir = get_last_dir(path);
-    const char *FMT_TOK = "|--";
     const char *name = remove_ext(last_dir, ".gpg");
+    const char *FMT_TOK = "|--";
 
     if (ftwbuf->level == 0) {
         printf("%s\n", name);
@@ -60,11 +61,9 @@ int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW
         return 0;
     }
 
-    size_t name_len = strlen(name);
     size_t indent = ftwbuf->level * 4;
-    size_t fmt_name_len = name_len + indent;
-    size_t fmt_tok_len = strlen(FMT_TOK);
-    size_t fmt_offset = fmt_name_len - name_len - fmt_tok_len;
+    size_t fmt_name_len = strlen(name) + indent;
+    size_t fmt_offset = indent - strlen(FMT_TOK);
 
     char *fmt_name = calloc(fmt_name_len + 1, sizeof(char));
 
@@ -110,6 +109,11 @@ char *get_last_dir(const char *path)
 
         new_path = realloc(new_path, sizeof(char) * ((path_len - 1) - last_index + 1));
 
+        if (!new_path) {
+            perror("psm: allocation error\n");
+            return NULL;
+        }
+
         strcpy(new_path, path+(last_index + 1));
     } else {
         strcpy(new_path, path);
@@ -141,23 +145,41 @@ int build_path(char **root, char *rel_path)
     return 0;
 }
 
+/*
+    This function returns name after removing ext suffix
+    if present
+
+    Example: remove_ext("file_name.gpg", ".gpg") -> "file_name"
+*/
 char *remove_ext(const char *name, const char *ext) 
 {
     int ext_len = strlen(ext);
     int name_len = strlen(name);
     int no_ext_len = name_len - ext_len;
 
-    char *no_ext_name;
+    char *no_ext_name = NULL;
 
     if ((no_ext_len >= 0) && (strcmp(name+no_ext_len, ext) == 0)) {
         
         no_ext_name = calloc(no_ext_len + 1, sizeof(char));
-        if (check_allocation(no_ext_name)) return NULL; 
+
+        if (!no_ext_name) {
+            perror("psm: allocation error\n");
+            return NULL;
+        }
 
         memset((char *) name+no_ext_len, '\0', ext_len);
         strcpy(no_ext_name, name);
+    
     } else {
+        
         no_ext_name = calloc(name_len + 1, sizeof(char));
+
+        if (!no_ext_name) {
+            perror("psm: allocation error\n");
+            return NULL;
+        } 
+        
         strcpy(no_ext_name, name);
     }
 
