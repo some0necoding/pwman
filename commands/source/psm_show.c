@@ -30,10 +30,12 @@ int psm_show(char **args)
 
     if (!path) {
         perror("psm: allocation error\n");
+        return -1;
     }    
 
     if (args[1] && (build_path(&path, args[1]) != 0)) {      // /home/{user}/.pwstore/{args[1]}
-        perror("psm: ");
+        perror("psm: allocation error");
+        return -1;
     }
 
     if (nftw(path, print_file, 20, 0) == -1) {
