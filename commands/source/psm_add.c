@@ -34,16 +34,20 @@ int psm_add(char **args)
     const char *GPG_ID = get_env_var("GPG_ID"); 
     const char *cyphertext = NULL;
 
+    FILE *file = NULL;
+
     size_t wlen;
     size_t last_index;
 
     int ret_code = -1;
 
+    /* Check allocation */
     if (!plaintext || !PATH || !GPG_ID) {
         perror("psm: allocation error");
         goto ret;
     }
 
+    /* Check arguments */
     if (!args[1]) {
         printf("You missed an argument\n"
                         "\tSyntax: add [FILE]\n");
@@ -59,6 +63,7 @@ int psm_add(char **args)
     
     rel_path = add_ext(args[1], ".gpg"); 
 
+    /* Check allocation */
     if (!rel_path) {
         perror("psm: allocation error");
         goto ret;
@@ -66,6 +71,7 @@ int psm_add(char **args)
 
     printf("Insert password for %s: ", rel_path);
 
+    /* Retrieve plaintext from user */
     if (read_line_s(&plaintext, 1) != 0) {
         perror("psm: allocation error");
         goto ret;
@@ -76,18 +82,20 @@ int psm_add(char **args)
         goto ret;
     } 
 
+    /* Encrypt plaintext */
     if (!(cyphertext = gpg_encrypt(plaintext, GPG_ID))) {
         perror("psm: allocation error");
         goto ret;
     }
 
-    FILE *file = fopen(PATH, "w");
+    file = fopen(PATH, "w");
 
     if (!file) {
         perror("psm: I/O error");
         goto ret;
     }
 
+    /* Write cyphertext to file */
     if ((wlen = fwrite(cyphertext, sizeof(char), strlen(cyphertext), file)) < 0) {
         perror("psm: I/O error");
         goto ret; 
@@ -114,13 +122,16 @@ int build_path(char **root, char *rel_path)
     size_t root_size = strlen(*root);
     size_t rel_path_size = strlen(rel_path);
 
-    *root = realloc(*root, sizeof(char) * (root_size + 1 + rel_path_size + 1));     // {root}/{rel_path}
+    /* Allocate {root}/{rel_path} */
+    *root = realloc(*root, sizeof(char) * (root_size + 1 + rel_path_size + 1));
 
+    /* Check allocation */
     if (!*root) {
         perror("psm: allocation error\n");
         return -1;
     }
 
+    /* Build {root}/{rel_path} */
     strcat(*root, "/");
     strcat(*root, rel_path);
 
@@ -136,13 +147,16 @@ char *add_ext(char *fname, const char *ext)
     size_t ext_size = strlen(ext);
     size_t fname_size = strlen(fname);
 
+    /* Allocate fname + ext */
     char *new_fname = calloc(fname_size + ext_size + 1, sizeof(char));
 
+    /* Check allocation */
     if (!new_fname) {
         perror("psm: allocation error");
         return NULL;
     }
 
+    /* Build fname + ext */
     strcpy(new_fname, fname);
     strcat(new_fname, ext);
 
