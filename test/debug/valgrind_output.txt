@@ -1,5 +1,14 @@
-test: test start
-test: calling functions
-You missed an argument
-	Syntax: add [FILE]
-test: test end
+-----BEGIN PGP MESSAGE-----
+
+hQGMAyaizZ65ttkaAQwAqBxsv5Gs/2ZVenmgFHQ4RILN1ha1pv95KNQOtpA78xzf
+XgQ7Ic8tU91KjHKQMBhSozZSnGNa/B+jKxD4rpwgZ/CMdcxCFDHjM3s/O6sax5US
+tv5lPlc0a/bTtWRYh1iZ8lsPiMbbf4/r4XFnlCNTYQoKIHk65Z2QvgrsTKHv0ce2
+uj8ZfWeMg+7d4rkwiB9aYJf6IgQW2kXJbtMdWsy2O+sDnYxGrxySmmN/FZI5P924
+7WQYTCCjAEm/5syj8BqZkK1xDlkLHFW+ph8uWynMgkUY/JPdTUiZQqr8uMEwJ7iH
+/XJXnEWkdAbIFsn3w4ezsRrT1pfCVlqM+NZPY+8QZfDl7V2Ni4RLdSE2GvlM0x+g
+fh8TN6bEfm+2JVzkjD0WDG+bhUnO64AwDWpNz5VY1GX80z5dPnbq7xP1snJKa2XJ
+Bc4zvvYXqtucAYWh0fKy6oJC2TuJ2dg4G3SIVrkIg/l9bZDliY4yq3E2qY96FmtW
+kYyIowUV327aQwriUUA00j8BAqL6Nhm3kqeVgE8RumKFNyvL/s83qzEqlYThyUe7
+rb9jt3blFIzlIvkDrfhFuRUwZACwh4tgWG1Dw//rzS8=
+=4F7Y
+-----END PGP MESSAGE-----
