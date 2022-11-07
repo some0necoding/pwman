@@ -72,6 +72,7 @@ const char *gpg_encrypt(char *plain, const char *fpr)
 
     if (!buffer) {
         perror("psm: allocation error\n");
+        return NULL;
     }
 
     gpgme_data_release(in);
@@ -135,6 +136,11 @@ const char *gpg_decrypt(char *cypher, const char *fpr)
     }
 
     const char *buffer = data_to_buffer(out);
+
+    if (!buffer) {
+        perror("test: allocation error\n");
+        return NULL;
+    }
 
     gpgme_data_release (in);
     gpgme_data_release (out);
