@@ -1,4 +1,4 @@
-#include "../utils/headers/config.h"
+#include "../../utils/headers/config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
