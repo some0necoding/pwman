@@ -115,7 +115,7 @@ ret:
 /*
     This function builds a path in the format:
         
-        root/{rel_path}
+        {root}/{rel_path}
 */
 int build_path(char **root, char *rel_path) 
 {
