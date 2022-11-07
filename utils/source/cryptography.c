@@ -1,6 +1,7 @@
 #include "../headers/cryptography.h"
 
-//#include <stddef.h>
+#include <stddef.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <gpgme.h>
@@ -67,21 +68,23 @@ const char *gpg_encrypt(char *plain, const char *fpr)
         perror("psm: allocation error\n");
     }
 
-    delete_test_key(ctx,key[0]);
     gpgme_data_release(in);
     gpgme_data_release(out);
     gpgme_release(ctx);
-    return 0;
+    return buffer;
 }
 
 void init_gpgme(gpgme_protocol_t proto)
 {
 	gpgme_error_t err;
 
-	gpgme_check_version(NULL);
+    gpgme_check_version(NULL);
 	setlocale(LC_ALL, "");
-	gpgme_set_locale(NULL, LC_CTYPE, setlocale (LC_CTYPE, NULL));
-	err = gpgme_engine_check_version(proto);
+	
+    err = gpgme_set_locale(NULL, LC_CTYPE, setlocale (LC_CTYPE, NULL));
+    fail_if_err(err);
+    
+    err = gpgme_engine_check_version(proto);
 	fail_if_err(err);
 }
 
@@ -90,6 +93,7 @@ const char *data_to_buffer(gpgme_data_t dh)
     size_t buflen = BUF_SIZE;
     char *buffer = calloc(buflen, sizeof(char));
     int rlen;
+    int last_index = 0;
     
     rlen = gpgme_data_seek (dh, 0, SEEK_SET);
     
@@ -97,10 +101,11 @@ const char *data_to_buffer(gpgme_data_t dh)
         fail_if_err (gpgme_err_code_from_errno (errno));
     }
 
-    while ((rlen = gpgme_data_read (dh, buffer, BUF_SIZE)) > 0) {
+    while ((rlen = gpgme_data_read (dh, buffer+last_index, BUF_SIZE)) > 0) {
         if (rlen < 0) {
             fail_if_err (gpgme_err_code_from_errno (errno));
         } else if (rlen >= buflen) {
+
             buflen += BUF_SIZE;
             buffer = realloc(buffer,  buflen);
 
@@ -109,7 +114,12 @@ const char *data_to_buffer(gpgme_data_t dh)
                 return NULL;
             }
         }
+
+        last_index += rlen;
     }
+
+    last_index -= 1;
+    buffer[last_index] = '\0';
 
     /* 
         Reset read position to the beginning so that dh can be used as input
