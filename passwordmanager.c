@@ -1,5 +1,6 @@
 #include "./utils/headers/input_acquisition.h"
 #include "./utils/headers/stdioplusplus.h"
+#include "./utils/headers/config.h"
 
 #include "./commands/headers/psm_show.h"
 #include "./commands/headers/psm_add.h"
@@ -18,9 +19,6 @@
 
 #define BUFSIZE 64
 #define TOKEN_DELIM " \t\r\n\a"
-
-#define CONFIGS "/etc/pwman.conf"
-
 
 // these should be defined and exported (using a getter) in auth.c
 #define SKEY_ACCT 0
@@ -46,6 +44,8 @@ int num_commands(void);
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 /*------------GLOBAL-VARIABLES-START------------*/
+
+char *CONFIGS = get_config_path();
 
 // array of command names
 char *command_names[] = {
@@ -91,12 +91,14 @@ int setup()
     if (access(CONFIGS, F_OK) != 0) {
         PATH = make_path();
 
-        if (add_path(PATH) != 0) {
+        // add also gpg key
+
+        if (add_env_var("PATH", PATH) != 0) {
             perror("psm: I/O error");
             return -1;
         }
 
-    } else if (!(PATH = get_path())) {
+    } else if (!(PATH = get_env_var("PATH"))) {
         perror("psm: I/O error");
         return -1;
     }

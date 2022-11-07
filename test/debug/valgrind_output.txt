@@ -1,0 +1,5 @@
+test: test start
+test: calling functions
+You missed an argument
+	Syntax: add [FILE]
+test: test end
