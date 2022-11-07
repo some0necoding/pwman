@@ -118,7 +118,7 @@ const char *data_to_buffer(gpgme_data_t dh)
         Otherwise GPG_ERR_NO_DATA is returned since this method moves the
         read position. 
     */
-    ret = gpgme_data_seek (dh, 0, SEEK_SET);
+    rlen = gpgme_data_seek (dh, 0, SEEK_SET);
 
     return buffer;
 }
