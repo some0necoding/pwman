@@ -12,7 +12,7 @@ int main(int argc, char const *argv[]) {
     
     char **args = calloc(2, sizeof(char *));
     args[0] = "show";
-    args[1] = "amazon";
+    //args[1] = "test_file";
 
     psm_show(args);
 
