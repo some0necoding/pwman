@@ -11,7 +11,7 @@ int main(int argc, char const *argv[]) {
     
     char **args = calloc(2, sizeof(char *));
     args[0] = "add";
-    //args[1] = "test_file";
+    args[1] = "test_file";
 
     psm_add(args);
 
