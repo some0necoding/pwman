@@ -1,5 +1,5 @@
-#include "../headers/cryptography.h"
-#include "../headers/input_acquisition.h"
+#include "../headers/crypto.h"
+#include "../headers/input.h"
 
 #include <unistd.h>
 #include <stdio.h>
