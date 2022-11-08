@@ -1,6 +1,6 @@
-#include "../../utils/headers/input_acquisition.h"
+#include "../../utils/headers/input.h"
 #include "../../utils/headers/config.h"
-#include "../../utils/headers/cryptography.h"
+#include "../../utils/headers/crypto.h"
 
 #include <stddef.h>
 #include <stdio.h>
