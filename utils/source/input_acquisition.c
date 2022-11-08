@@ -1,42 +1,43 @@
 #include "../headers/input_acquisition.h"
-
-#include "../headers/sodiumplusplus.h"
 #include "../headers/termiosplusplus.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
+#define BUFSIZE_S 32
 #define BUFSIZE 1024
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
-// this function securely reads (i.e. disabling echo) all bytes from stdin and
-// stores them into "buffer" (that needs to be allocated using sodium_malloc) 
+/*
+    This function reads all bytes from stdin
+    disabling echo and stores them into a buffer.
+*/
 int read_line_s(char **buffer, size_t bufsize) 
 {
-    size_t old_size;                // actual buffer size
-
     struct termios old;
 
-    char c;
-    int pos = 0;                    // index of the buffer
-    int ret_code = -1;              // return values
+    char ch;
+    int pos = 0;
+    int ret_code = -1;
 
-    // disabling echo
+    /* Disable echo */
     old = disable_terminal_echo();
 
-    while ((c = getchar()) != EOF && c != '\n') 
-    {
-        memcpy(*buffer+pos, &c, sizeof(char));
+    while ((ch = getchar()) != EOF && ch != '\n') {
+        
+        memcpy(*buffer+pos, &ch, sizeof(char));
         pos++;
 
-        // if the buffer is not large enough, it gets stretched (sodium_realloc is a custom function)
+        /* Stretch buffer if needed */
         if (pos >= bufsize) {
-            old_size = bufsize;
-            bufsize += BUFSIZE;
-            *buffer = (char *) sodium_realloc(*buffer, old_size, bufsize);
+            
+            bufsize += BUFSIZE_S;
+            *buffer = realloc(*buffer, sizeof(char *) * bufsize);
+            
             if (!*buffer) {
                 perror("psm: allocation error");
                 goto ret;
@@ -48,27 +49,31 @@ int read_line_s(char **buffer, size_t bufsize)
     ret_code = 0;
 
 ret:
-    // re-enabling echo
+    /* Re-enable echo */ 
     enable_terminal_echo(old);
     return ret_code;
 }
 
-// this function simply reads all bytes from stdin and stores them into
-// "buffer" (that needs to be allocated using malloc).
+/*
+    This function reads all bytes from stdin
+    and stores them into a buffer.
+*/
 int read_line(char **buffer, size_t bufsize) 
 {    
-    char c;
-    int pos = 0;                    // index of the buffer
+    char ch;
+    int pos = 0;
 
-    while ((c = getchar()) != EOF && c != '\n')
-    {
-        memcpy(*buffer+pos, &c, sizeof(char));
+    while ((ch = getchar()) != EOF && ch != '\n') {
+        
+        memcpy(*buffer+pos, &ch, sizeof(char));
         pos++;
 
-        // if the buffer is too short, it gets stretched
+        /* Stretch buffer if needed */
         if (pos >= bufsize) {
+            
             bufsize += BUFSIZE;
             *buffer = (char *) realloc(*buffer, bufsize);
+            
             if (!*buffer) {
                 perror("psm: allocation error");
                 return -1;
