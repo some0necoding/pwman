@@ -1,5 +1,4 @@
 #include "../headers/stdioplusplus.h"
-#include "../headers/array_handling.h"
 
 #include <stddef.h>
 #include <stdio.h>
