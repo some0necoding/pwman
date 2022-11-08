@@ -1,4 +1,4 @@
-#include "../headers/clipboard_managment.h"
+#include "../headers/clipboard.h"
 
 #include <string.h>
 #include <X11/Xlib.h>
