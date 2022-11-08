@@ -61,7 +61,7 @@ char *command_names[] = {
 int (*command_addr[]) (char **) = {
     &psm_show,
     &psm_add,
-    &psm_remove,
+    &psm_rm,
     &psm_get,
     &psm_help,
     &psm_exit
