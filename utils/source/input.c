@@ -1,5 +1,5 @@
-#include "../headers/input_acquisition.h"
-#include "../headers/termiosplusplus.h"
+#include "../headers/input.h"
+#include "../headers/console.h"
 
 #include <stdio.h>
 #include <string.h>
