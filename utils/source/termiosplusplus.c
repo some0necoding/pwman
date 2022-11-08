@@ -1,7 +1,6 @@
 #include "../headers/termiosplusplus.h"
 
-#include "../headers/stdioplusplus.h"
-
+#include <stdio.h>
 #include <termios.h>
 
 struct termios disable_terminal_echo() {
