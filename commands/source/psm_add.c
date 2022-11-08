@@ -10,6 +10,7 @@
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 int build_path(char **root, char *rel_path); 
+int add_newline(char **str);
 char *add_ext(char *fname, const char *ext);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
@@ -75,7 +76,15 @@ int psm_add(char **args)
     if (read_line_s(&plaintext, 1) != 0) {
         perror("psm: allocation error");
         goto ret;
-    } 
+    }
+
+    printf("\n");
+
+    /* Add newline char after plaintext */
+    if (add_newline(&plaintext) != 0) {
+        perror("psm: allocation error");
+        goto ret;
+    }
 
     if (build_path((char **) &PATH, rel_path) != 0) {
         perror("psm: allocation error");
@@ -161,4 +170,26 @@ char *add_ext(char *fname, const char *ext)
     strcat(new_fname, ext);
 
     return new_fname;
+}
+
+/*
+    This function add a newline char
+    after str.
+*/
+int add_newline(char **str)
+{
+    size_t str_size = strlen(*str);
+
+    /* Stretch the array to fit one more char */
+    *str = realloc(*str, sizeof(char) * (str_size + 2));
+
+    if (!*str) {
+        perror("psm: allocation error");
+        return -1;
+    }
+
+    str[0][str_size] = '\n';
+    str[0][str_size + 1] = '\0';
+    
+    return 0;
 }
