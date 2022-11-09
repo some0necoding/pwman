@@ -1,6 +1,8 @@
 #include "../headers/crypto.h"
 #include "../headers/input.h"
 
+#include <gpg-error.h>
+#include <stddef.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -86,14 +88,16 @@ const char *gpg_encrypt(char *plain, const char *fpr)
     key of fingerprint fpg. It returns a statically allocated
     buffer containing plaintext.
 */
-const char *gpg_decrypt(char *cypher, const char *fpr) 
+int gpg_decrypt(char *cypher, const char *fpr, char **buf, size_t bufsize) 
 {
     gpgme_ctx_t ctx;
     gpgme_error_t err;
-    gpgme_data_t in,out;
+    gpgme_data_t in, out;
     gpgme_encrypt_result_t enc_result;
     gpgme_decrypt_result_t dec_result;
     gpgme_key_t keys[2] = {NULL,NULL};
+
+    size_t plaintext_size;
 
     char *agent_info;
 
@@ -128,24 +132,45 @@ const char *gpg_decrypt(char *cypher, const char *fpr)
 
     /* Decrypt data. */
     err = gpgme_op_decrypt (ctx, in, out);
-    fail_if_err (err);
+
+    if (err == GPG_ERR_BAD_PASSPHRASE) {
+        return 0;
+    } else {
+        fail_if_err (err);
+    }
+
     dec_result = gpgme_op_decrypt_result (ctx);
+    
     if (dec_result->unsupported_algorithm) {
         fprintf(stderr, "%s:%i: unsupported algorithm: %s\n", __FILE__, __LINE__, dec_result->unsupported_algorithm);
         exit(1);
     }
 
-    const char *buffer = data_to_buffer(out);
+    const char *plaintext = data_to_buffer(out);
 
-    if (!buffer) {
+    if (!plaintext) {
         perror("test: allocation error\n");
-        return NULL;
+        return -1;
     }
+
+    plaintext_size = strlen(plaintext);
+
+    if ((plaintext_size + 1) > bufsize) {
+        
+        *buf = realloc(*buf, sizeof(char) * (plaintext_size + 1));
+
+        if (!*buf) {
+            perror("psm: allocation error");
+            return -1;
+        }
+    }
+
+    strcpy(*buf, plaintext);
 
     gpgme_data_release (in);
     gpgme_data_release (out);
     gpgme_release (ctx);
-    return buffer;
+    return 0;
 }
 
 /*
