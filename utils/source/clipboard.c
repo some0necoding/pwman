@@ -11,7 +11,7 @@ Atom targets_atom, text_atom, UTF8, XA_ATOM = 4, XA_STRING = 31;
 
 int save_in_clipboard(unsigned char *text)
 {
-    size_t text_len = strlen(text);
+    size_t text_len = strlen((char *) text);
 
     display = XOpenDisplay(0);
     int N = DefaultScreen(display);
