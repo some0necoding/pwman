@@ -101,10 +101,10 @@ int gpg_decrypt(char *cypher, const char *fpr, char **buf, size_t bufsize)
 
     char *agent_info;
 
-    init_gpgme (GPGME_PROTOCOL_OpenPGP);
+    init_gpgme(GPGME_PROTOCOL_OpenPGP);
 
-    err = gpgme_new (&ctx);
-    fail_if_err (err);
+    err = gpgme_new(&ctx);
+    fail_if_err(err);
 
     /* 
         If no ssh-agent provides a passphrase to unlock 
@@ -119,27 +119,27 @@ int gpg_decrypt(char *cypher, const char *fpr, char **buf, size_t bufsize)
 
     /* Search key for encryption. */
     gpgme_key_t key;
-    err = gpgme_get_key (ctx,fpr,&key,1);
-    fail_if_err (err);
+    err = gpgme_get_key(ctx,fpr,&key,1);
+    fail_if_err(err);
 
     /* Initialize input buffer. */
-    err = gpgme_data_new_from_mem (&in,cypher, strlen(cypher), 0);
-    fail_if_err (err);
+    err = gpgme_data_new_from_mem(&in,cypher, strlen(cypher), 0);
+    fail_if_err(err);
 
     /* Initialize output buffer. */
-    err = gpgme_data_new (&out);
-    fail_if_err (err);
+    err = gpgme_data_new(&out);
+    fail_if_err(err);
 
     /* Decrypt data. */
-    err = gpgme_op_decrypt (ctx, in, out);
+    err = gpgme_op_decrypt(ctx, in, out);
 
     if (err == GPG_ERR_BAD_PASSPHRASE) {
         return 0;
     } else {
-        fail_if_err (err);
+        fail_if_err(err);
     }
 
-    dec_result = gpgme_op_decrypt_result (ctx);
+    dec_result = gpgme_op_decrypt_result(ctx);
     
     if (dec_result->unsupported_algorithm) {
         fprintf(stderr, "%s:%i: unsupported algorithm: %s\n", __FILE__, __LINE__, dec_result->unsupported_algorithm);
@@ -167,10 +167,10 @@ int gpg_decrypt(char *cypher, const char *fpr, char **buf, size_t bufsize)
 
     strcpy(*buf, plaintext);
 
-    gpgme_data_release (in);
-    gpgme_data_release (out);
-    gpgme_release (ctx);
-    return 0;
+    gpgme_data_release(in);
+    gpgme_data_release(out);
+    gpgme_release(ctx);
+    return 1;
 }
 
 /*
