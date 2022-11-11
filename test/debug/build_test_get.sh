@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script builds test_psm_add.c test
+# This script builds test_psm_get.c test
 
 TEST_DIR="$HOME/coding/c/projects/pwman/test"
 ROOT_DIR="$HOME/coding/c/projects/pwman"
