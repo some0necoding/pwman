@@ -8,7 +8,7 @@
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
-#define CONFIGS "/home/marco/coding/c/projects/pwman/test/config/config.test"  // meant for testing: default = "/etc/pwman.conf"
+#define CONFIGS "/etc/pwman.conf"
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
