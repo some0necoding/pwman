@@ -1,252 +1,182 @@
-#include "../../utils/headers/auth.h"
-#include "../../utils/headers/clipboard_managment.h"
-#include "./utils/headers/sodiumplusplus.h"
-#include "./utils/headers/cryptography.h"
-#include "./utils/headers/array_handling.h"
+#include "../../utils/headers/clipboard.h"
+#include "../../utils/headers/crypto.h"
+#include "../../utils/headers/config.h"
+#include "../../utils/headers/fio.h"
 
+#include <gpg-error.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include <unistd.h>
+#include <pthread.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
-#define PSM_TOK_BUFSIZE 64
-#define SEPARATE_LINE_STR "\xD8"   // 0xD8 byte stored as a string to use with string.h functions (marks the end of a line in *.list files)
-#define SEPARATE_TKNS_STR "\xF0"   // 0xF0 byte stored as a string to use with string.h functions (separates two tokens on the same line in *.list files)
-
-#define CHUNK_SIZE 512
-
-#define ACCT_FILE_PATH "/usr/share/binaries/accounts.list"
-#define PASS_FILE_PATH "/usr/share/binaries/passwords.list"
-
-#define PASS_LENGTH 65
+#define BUFSIZE 32
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
-unsigned char **split_by_delim(unsigned char *str, unsigned char *delim);
-int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *line_len);
-int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size);
+char *add_ext(char *fname, const char *ext);
+int build_path(char **root, char *rel_path);
+int rm_newline(char **str);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
-/*------------GLOBAL-VARIABLES-START------------*/
+/*
+    This function decrypts a file and stores its content
+    into clipboard.
 
-    int skey_acct = 0;
-    int skey_pass = 1;
+    Arguments:
+        [FILE]      this is a relative path which has PATH as root
 
-/*-------------GLOBAL-VARIABLES-END-------------*/
-
+    Examples:
+        get test_file               stored at PATH/test_file
+        get test_dir/test_file      stored at PATH/test_dir/test_file
+*/
 int psm_get(char **args)
 {
-    size_t line_len;
-    size_t content_size = CHUNK_SIZE;
-    size_t pass_size = PASS_LENGTH;
+    char *rel_path = NULL;
+    char *cyphertext = calloc(BUFSIZE, sizeof(char));
+    char *plaintext = calloc(BUFSIZE, sizeof(char));
+    const char *PATH = get_env_var("PATH");
+    const char *GPG_ID = get_env_var("GPG_ID");
+
+    size_t rlen;
+    int ret_code = -1;
 
     pthread_t thread_id;
 
-    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
-    unsigned char **lines;
-    unsigned char *pass = (unsigned char *) sodium_malloc(pass_size);
-
-    char *file_path = ACCT_FILE_PATH;
-
-    int ret_code = -1;
-    int line_indx;
-
-    if (!content | !pass) {
+    if (!PATH || !GPG_ID || !cyphertext) {
         perror("psm: allocation error");
-        content ? sodium_free(content) : 0;
-        pass ? sodium_free(pass) : 0;
-        return -1;
-    }
-
-    if (!args[1] || args[2]) {
-        printf("\"get\" needs to know an account name (1 argument needed)\n");
-        sodium_free(content);
-        sodium_free(pass);
-        return -1;
-    }
-
-    // decrypting accounts.list
-    if (decrypt_file(file_path, subkeys[skey_acct], &content, content_size) != 0) {
         goto ret;
     }
 
-    // splitting file content in lines
-    lines = split_by_delim(content, SEPARATE_LINE_STR);
-
-    // finding account index
-    if ((line_indx = find_line_indx(lines, args[1], &line_len)) < 0) {
-        printf("account not found\n");
+    /* Check arguments */
+    if (!args[1]) {
+        printf("You missed an argument\n"
+                        "\tSyntax: get [FILE]\n");
         goto ret;
     }
 
-    // get password at right index
-    if (get_pass(line_indx, pass, pass_size) != 0) {
-        perror("psm: I/O error");
+    rel_path = add_ext(args[1], ".gpg");
+
+    /* Check allocation */
+    if (!rel_path) {
+        perror("psm: allocation error");
         goto ret;
     }
 
-    //start a new thread handling password copying in clipboard
-    pthread_create(&thread_id, NULL, (void *) save_in_clipboard, pass);
+    if (build_path((char **) &PATH, rel_path) != 0) {
+        perror("psm: allocation error");
+        goto ret;
+    }
+
+    /* Check for file existance */
+    if (access(PATH, F_OK) != 0) {
+        printf("No such file or directory\n");
+        ret_code = 0;
+        goto ret;
+    }
+
+    /* Retrieve cyphertext */
+    if ((rlen = fgetall((char *) PATH, &cyphertext, BUFSIZE)) < 0) {
+        perror("psm: allocation error");
+        goto ret;
+    } 
+
+    int err = gpg_decrypt(cyphertext, GPG_ID, &plaintext, BUFSIZE);
+
+    if (err == 0) {
+        printf("Incorrect passphrase\n");
+        ret_code = 0;
+        goto ret;
+    } else if (err == -1) {
+        perror("psm: allocation error");
+        goto ret;
+    }
+
+    rm_newline(&plaintext);
+
+    /* Create a thread managing clipboard */
+    if (pthread_create(&thread_id, NULL, (void *) save_in_clipboard, plaintext) != 0) {
+        perror("psm: error in thread creation");
+        goto ret;
+    }
 
     ret_code = 0;
 
 ret:
-    sodium_free(content);
-    sodium_free(pass);
-    return ret_code;
+    rel_path ? free(rel_path) : 0;
+    cyphertext ? free(cyphertext) : 0;
+    plaintext ? free((char *) plaintext) : 0;
+    PATH ? free((char *) PATH) : 0;
+    GPG_ID ? free((char *) GPG_ID) : 0;
+    return ret_code;  
 }
 
-// this function splits a generic string in tokens using a delimiter string as reference.
-// all tokens are returned in an array.
-unsigned char **split_by_delim(unsigned char *str, unsigned char *delim)
+/*
+    This function builds a path in the format:
+        
+        {root}/{rel_path}
+*/
+int build_path(char **root, char *rel_path) 
 {
-    size_t bufsize = PSM_TOK_BUFSIZE;
-    size_t str_len;
-    size_t old_size;
-    
-    unsigned char **tokens = (unsigned char **) sodium_malloc(bufsize);
-    unsigned char *token;
-    unsigned char *str_copy;
-    
-    int pos = 0;
+    size_t root_size = strlen(*root);
+    size_t rel_path_size = strlen(rel_path);
 
-    if (!tokens) {
+    /* Allocate {root}/{rel_path} */
+    *root = realloc(*root, sizeof(char) * (root_size + 1 + rel_path_size + 1));
+
+    /* Check allocation */
+    if (!*root) {
         perror("psm: allocation error\n");
+        return -1;
+    }
+
+    /* Build {root}/{rel_path} */
+    strcat(*root, "/");
+    strcat(*root, rel_path);
+
+    return 0;
+}
+
+/*
+    This function adds the extension ext to
+    a string fname.
+*/
+char *add_ext(char *fname, const char *ext)
+{
+    size_t ext_size = strlen(ext);
+    size_t fname_size = strlen(fname);
+
+    /* Allocate fname + ext */
+    char *new_fname = calloc(fname_size + ext_size + 1, sizeof(char));
+
+    /* Check allocation */
+    if (!new_fname) {
+        perror("psm: allocation error");
         return NULL;
     }
 
-    // creating a copy of the original buffer in order to prevent it beeing corrupted by strtok
-    str_len = strlen(str);
-    str_copy = (unsigned char *) sodium_malloc(str_len + 1);
-    strncpy(str_copy, str, str_len);
-    str_copy[str_len] = '\0';
+    /* Build fname + ext */
+    strcpy(new_fname, fname);
+    strcat(new_fname, ext);
 
-    token = strtok(str_copy, delim);
-
-    while (token != NULL) {
-        tokens[pos] = token;
-        pos++;
-        if (pos >= bufsize) {
-            old_size = bufsize;
-            bufsize += PSM_TOK_BUFSIZE;
-            tokens = (unsigned char **) sodium_realloc(tokens, old_size, bufsize);
-            if (!tokens) {
-                perror("psm: allocation error\n");
-                sodium_free(str_copy);
-                sodium_free(tokens);
-                return NULL;
-            }
-        }
-
-        token = strtok(NULL, delim);
-    }
-
-    tokens[pos] = NULL;
-
-    sodium_free(str_copy);
-    return tokens;
+    return new_fname;
 }
 
-// this function returns the index of a line. the line's length will be stored 
-// at line_len address.
-int find_line_indx(unsigned char **lines, unsigned char *str_to_match, size_t *line_len) 
+/*
+    This function removes a newline char
+    after str.
+*/
+int rm_newline(char **str)
 {
-    size_t single_line_len;
+    size_t str_size = strlen(*str);
+    str[0][str_size - 1] = '\0';
 
-    unsigned char *line;
-    unsigned char **line_tokens;                                    // account_name and mail_or_user                                
-
-    int pos = 0;
-
-    while ((line = lines[pos]) != NULL) {
-
-        single_line_len = strlen(line);  
-        line_tokens = split_by_delim(line, SEPARATE_TKNS_STR);
-
-        if (!line_tokens) {
-            perror("psm: allocation error");
-            return -1;
-        }
-
-        // if the account_name matches the one provided by the user, line's index and length get returned.
-        if (strcmp(line_tokens[0], str_to_match) == 0) {
-            *line_len = single_line_len;
-            sodium_free(line_tokens);
-            return pos;
-        }
-
-        pos++;
-    }
-
-    // if the program runs up to here, it means that no match was found.
-    sodium_free(line_tokens);
-    return -1;
-}
-
-// this function retrieves the password located at line_indx
-// index from passwords.file
-int get_pass(int line_indx, unsigned char *ret_buff, size_t ret_buff_size)
-{
-    size_t pass_len;
-    size_t content_size = CHUNK_SIZE;
-
-    unsigned char *content = (unsigned char *) sodium_malloc(content_size);
-    unsigned char **lines;
-
-    char *file_path = PASS_FILE_PATH;
-
-    int ret_code = -1;
-
-    if (!content) {
-        perror("psm: allocation error");
-        return -1;
-    }
-
-    // decrypting passwords.list file
-    if (decrypt_file(file_path, subkeys[skey_pass], &content, content_size) != 0) {
-        perror("psm: cryptography error");
-        sodium_free(content);
-        return -1;
-    }
-
-    // splitting file_content in lines
-    lines = split_by_delim(content, SEPARATE_LINE_STR);
-
-    if (!lines) {
-        perror("psm: allocation error");
-        sodium_free(content);
-        return -1;
-    }
-
-    // if line_indx > number of lines return -1
-    if (line_indx > arrlen((void **) lines)) {
-        perror("psm: get_pass: invalid index");
-        goto ret;
-    }
-
-    // retrieving line at index line_indx
-    pass_len = strlen(lines[line_indx]);
-    
-    if (ret_buff_size < pass_len) {
-        ret_buff = (unsigned char *) sodium_realloc(ret_buff, ret_buff_size, (pass_len + 1));
-
-        if (!ret_buff) {
-            perror("psm: allocation error");
-            goto ret;
-        }
-    }
-
-    memcpy(ret_buff, lines[line_indx], pass_len);
-    ret_buff[pass_len] = '\0';
-
-    ret_code = 0;
-
-ret:
-    sodium_free(content);
-    sodium_free(lines);
-    return ret_code;
+    return 0;
 }
