@@ -1,5 +1,6 @@
 #include "../headers/clipboard.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <X11/Xlib.h>
 
@@ -11,13 +12,12 @@ Atom targets_atom, text_atom, UTF8, XA_ATOM = 4, XA_STRING = 31;
 
 int save_in_clipboard(unsigned char *text)
 {
-    size_t text_len = strlen((char *) text);
-
     display = XOpenDisplay(0);
     int N = DefaultScreen(display);
 
     XSetWindowAttributes attrs;
     window = XCreateWindow(display, RootWindow(display, N), 0, 0, 1, 1, 0, 0, InputOnly, 0, 0, &attrs);
+    //window = XCreateSimpleWindow(display, RootWindow(display, N), 0, 0, 1, 1, 0, BlackPixel(display, N), BlackPixel(display, N));
 
     targets_atom = XInternAtom(display, "TARGETS", 0);
     text_atom = XInternAtom(display, "TEXT", 0);
@@ -29,7 +29,7 @@ int save_in_clipboard(unsigned char *text)
 
     Atom selection = XInternAtom(display, "CLIPBOARD", 0);
 
-    XCopy(selection, text, text_len);
+    XCopy(selection, text, strlen((char *) text));
 
     return 0;
 }
