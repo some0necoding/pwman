@@ -237,13 +237,4 @@ int split_line(char *line, char **tokens, size_t tokens_size)
 int num_commands(void) 
 {
     return sizeof(command_names) / sizeof(char *);
-}
-
-/* // this function initializes sodium library (doc.libsodium.org)
-void crypto_alg_init(void) {
-    if (sodium_init() == -1 ) {
-        perror("psm: error during cryptographic algorithm's initialization\n");
-        perror("psm: exiting...");
-        exit(EXIT_FAILURE);
-    }
-} */
+}   
