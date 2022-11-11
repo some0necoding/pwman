@@ -174,6 +174,62 @@ int gpg_decrypt(char *cypher, const char *fpr, char **buf, size_t bufsize)
 }
 
 /*
+    This function returns an array containing all local 
+    gpg keys. Every gpgme_key_t struct can then be accessed
+    to retrieve useful data.
+*/
+gpgme_key_t *gpg_get_keys() 
+{
+    /* key + NULL */
+    size_t keys_size = 2;
+
+    gpgme_ctx_t ctx;
+    gpgme_error_t err;
+    gpgme_key_t key;
+    gpgme_key_t *keys = calloc(keys_size, sizeof(gpgme_key_t));
+
+    int pos = 0;
+
+    if (!keys) {
+        perror("psm: allocation error");
+        return NULL;
+    }
+
+    init_gpgme(GPGME_PROTOCOL_OpenPGP);
+
+    err = gpgme_new(&ctx);
+    fail_if_err(err);
+
+    /* Start keylist operation */
+    err = gpgme_op_keylist_start(ctx, NULL, 1);
+    fail_if_err(err);
+
+    /* Retrieve keys until EOF is reached */
+    while ((err = gpgme_op_keylist_next(ctx, &key)) == 0) {
+
+        keys[pos] = key;
+        pos++;
+
+        /* Stretch keys array if needed (last index is kept free for NULL) */
+        if ((keys_size - 1) <= pos) {
+            
+            keys_size += 1;
+            keys = realloc(keys, (sizeof(gpgme_key_t) * keys_size));
+
+            if (!keys) {
+                perror("psm: allocation error");
+                return NULL;
+            }
+        }
+    }
+
+    /* Null terminate keys */
+    keys[keys_size - 1] = NULL;
+
+    return keys;
+}
+
+/*
     This is a passphrase callback function used to 
     retrieve private key passphrase from user.
 
