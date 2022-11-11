@@ -57,6 +57,7 @@ int psm_add(char **args)
 
     last_index = strlen(args[1]) - 1;
 
+    /* Check for trailing slash (i.e. directory) */
     if (args[1][last_index] == '/') {
         printf("Cannot create empty directories\n");
         goto ret;

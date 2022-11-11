@@ -11,6 +11,16 @@ int build_path(char **root, char *rel_path);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
+/*
+    This function removes a file from PATH.
+
+    Arguments:
+        [FILE]      this is a relative path which has PATH as root
+
+    Examples:
+        rm test_file                stored at PATH/test_file
+        rm test_dir/test_file       stored at PATH/test_dir/test_file
+*/
 int psm_rm(char **args) 
 {
     char *rel_path = NULL;
