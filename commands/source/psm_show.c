@@ -157,13 +157,16 @@ int build_path(char **root, char *rel_path)
     size_t root_size = strlen(*root);
     size_t rel_path_size = strlen(rel_path);
 
+    /* Allocate {root}/{rel_path} */
     *root = realloc(*root, sizeof(char) * (root_size + 1 + rel_path_size + 1));     // {root}/{rel_path}
 
+    /* Check allocation */
     if (!*root) {
         perror("psm: allocation error\n");
         return -1;
     }
 
+    /* Build {root}/{rel_path} */
     strcat(*root, "/");
     strcat(*root, rel_path);
 
