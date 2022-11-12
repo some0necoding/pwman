@@ -1,4 +1,5 @@
 #include "../../utils/headers/config.h"
+#include "../../utils/headers/path.h"
 
 #define _XOPEN_SOURCE 500
 
@@ -11,7 +12,6 @@
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
-int build_path(char **root, char *rel_path);
 int remove_ext(char **fname, const char *ext); 
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
 char *get_last_dir(const char *path);
@@ -145,32 +145,6 @@ char *get_last_dir(const char *path)
     }
 
     return new_path;
-}
-
-/*
-    This function builds a path in the format:
-        
-        root/{rel_path}
-*/
-int build_path(char **root, char *rel_path) 
-{
-    size_t root_size = strlen(*root);
-    size_t rel_path_size = strlen(rel_path);
-
-    /* Allocate {root}/{rel_path} */
-    *root = realloc(*root, sizeof(char) * (root_size + 1 + rel_path_size + 1));     // {root}/{rel_path}
-
-    /* Check allocation */
-    if (!*root) {
-        perror("psm: allocation error\n");
-        return -1;
-    }
-
-    /* Build {root}/{rel_path} */
-    strcat(*root, "/");
-    strcat(*root, rel_path);
-
-    return 0;
 }
 
 /*
