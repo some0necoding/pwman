@@ -1,5 +1,5 @@
-#include "./utils/headers/input_acquisition.h"
-#include "./utils/headers/stdioplusplus.h"
+#include "./utils/headers/input.h"
+#include "./utils/headers/fio.h"
 #include "./utils/headers/config.h"
 
 #include "./commands/headers/psm_show.h"
@@ -9,43 +9,28 @@
 #include "./commands/headers/psm_help.h"
 #include "./commands/headers/psm_exit.h"
 
-#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <pwd.h>
+#include <string.h>
 
 /*----------CONSTANTS-DEFINITION-START----------*/
 
 #define BUFSIZE 64
 #define TOKEN_DELIM " \t\r\n\a"
 
-// these should be defined and exported (using a getter) in auth.c
-#define SKEY_ACCT 0
-#define SKEY_PASS 1
-
-const char *HOME;
-const char *PATH;
-
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
-int setup();
-
-void print_welcome_message();
+void welcome_message();
 void start(void);
 int loop(void);
 int execute(char **args) ;
-
 int split_line(char *line, char **tokens, size_t tokens_size);
 int num_commands(void);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
-
-/*------------GLOBAL-VARIABLES-START------------*/
-
-char *CONFIGS = get_config_path();
 
 // array of command names
 char *command_names[] = {
@@ -71,78 +56,51 @@ int (*command_addr[]) (char **) = {
 
 int main(int argc, char const *argv[])
 {
-    // checking for bad command line args at shell run
-    if (argc > 1) {
-        printf("this command does not accept arguments\n");
-        return 1;
+    if (access(CONFIG_FILE, F_OK) != 0) {
+        printf("You have to run \"pwman-init\" before\n");
+        return 0;
     }
 
-    // setting up the environment
-    setup();
-
-    // starting the "shell"
+    /* starting the "shell" */
     start();
 
     return 0;
 }
 
-int setup() 
-{
-    if (access(CONFIGS, F_OK) != 0) {
-        PATH = make_path();
-
-        // add also gpg key
-
-        if (add_env_var("PATH", PATH) != 0) {
-            perror("psm: I/O error");
-            return -1;
-        }
-
-    } else if (!(PATH = get_env_var("PATH"))) {
-        perror("psm: I/O error");
-        return -1;
-    }
-}
-
-// this function builds the path of .pwstore
-// which is /home/user/.pwstore
-char *make_path() 
-{
-    char *home;
-
-    // get user's home directory
-    if (!(home = getenv("HOME"))) {
-        home = getpwuid(getuid())->pw_dir;
-    }
-
-    // return pwstore path
-    return strcat(home, "/.pwstore");
-}
-
-// this function starts the shell
+/*
+    This function starts the shell
+*/
 void start(void) 
-{
-    print_welcome_message();
+{/*----------FUNCTIONS-DEFINITION-START----------*/
+
+    welcome_message();
  
-    // starting the shell loop
+    /* Starting shell loop */
     if (loop() != 0) {
         exit(EXIT_FAILURE);
     }
 }
 
-void print_welcome_message() 
+/*
+    This function prints a welcome message
+    at start.
+*/
+void welcome_message() 
 {
-    unsigned char *start_txt = "\nWELCOME TO PASSMAN!\n"
-                               "\n"
-                               "    digit \"help\" for help\n"
-                               "    digit \"exit\" to exit passman\n";
+    char *start_txt = "\nWELCOME TO PASSMAN!\n\n"
+                        "\tdigit \"help\" for help\n"
+                        "\tdigit \"exit\" to exit passman\n";
 
     printf("%s\n", start_txt);
 }
 
-// this function is basically the shell itself: it prints a prompt on the screen, reads 
-// the user input, splits the input in tokens separated by spaces (command name + args) 
-// and executes commands using execute() function.
+/*
+    This function is basically the shell itself: 
+    it prints a prompt on the screen, reads the user
+    input, splits the input in tokens separated by
+    spaces (command name + args) and executes commands
+    using execute() function.
+*/
 int loop()
 {
     size_t line_size = 1024;
@@ -155,48 +113,52 @@ int loop()
 
     if (!line | !args) {
         perror("psm: allocation error");
-        line ? free(line) : 0;
-        args ? free(args) : 0;
-        return ret_code;
+        goto ret;
     }
 
     while (1) 
     {
-        // printing the prompt.
+        /* Print the prompt */
         printf("> ");
 
-        // reading the user input.
+        /* Read the user input */
         if (read_line(&line, line_size) != 0) {
+            perror("psm: allocation error");
             goto ret;
         }
 
-        // splitting the input in tokens (command name + arg1 + arg2 + ...).
+        /* Split the input in tokens (command name + arg1 + arg2 + ...) */
         if (split_line(line, args, args_size) != 0) {
+            perror("psm: allocation error");
             goto ret;
         }
 
-        // launching the command passing its name along with its arguments.
-        execute(args);
+        /* Launch the command */
+        if (execute(args) != 0) {
+            goto ret;
+        }
     }
 
     ret_code = 0;
 
 ret:
-    free(line);
-    free(args);
+    line ? free(line) : 0;
+    args ? free(args) : 0;
     return ret_code;
 }
 
-// launching the command passed as an array containing the command name and its arguments.
+/*
+    This function launchs the command passed as
+    an array containing command name and its args.
+*/
 int execute(char **args) 
 {
-    // checking for empty commands
+    /* check for empty commands */
     if (args[0] == NULL) {
-        return -1;
+        return 0;
     }
 
-    // if the first argument of the array equals to the name of a stored command, 
-    // the corresponding function is called and the arguments are passed along.
+    /* Call the function associated with command name */
     for (int i = 0; i < num_commands(); i++) {
         if (strcmp(args[0], command_names[i]) == 0) {
             return (*command_addr[i])(args);
@@ -204,9 +166,14 @@ int execute(char **args)
     }
 
     printf("command not found\n");
-    return -1;
+    return 0;
 }
 
+/*
+    This funciton splits a line around spaces
+    and stores tokens into statically allocated
+    tokens buffer.
+*/
 int split_line(char *line, char **tokens, size_t tokens_size)
 {
     int pos = 0;
@@ -214,12 +181,16 @@ int split_line(char *line, char **tokens, size_t tokens_size)
 
     token = strtok(line, TOKEN_DELIM);
 
-    while (token != NULL) {
+    while (token) {
+
         tokens[pos] = token;
         pos++;
+        
         if (pos >= tokens_size) {
+            
             tokens_size += BUFSIZE;
-            tokens = (char **) realloc(tokens, tokens_size);
+            tokens = realloc(tokens, sizeof(char *) * tokens_size);
+            
             if (!tokens) {
                 perror("psm: allocation error\n");
                 return -1;
@@ -229,11 +200,15 @@ int split_line(char *line, char **tokens, size_t tokens_size)
         token = strtok(NULL, TOKEN_DELIM);
     }
 
+    /* NULL terminate array */
     tokens[pos] = NULL;
     return 0;
 }
 
-// this function returns the number of commands in command_names array
+/*
+    This function returns the number of commands
+    in command_names array.
+*/
 int num_commands(void) 
 {
     return sizeof(command_names) / sizeof(char *);
