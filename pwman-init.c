@@ -10,12 +10,6 @@
 #include <errno.h>
 #include <sys/types.h>
 
-/*-------------GLOBAL-VARIABLES-END-------------*/
-
-int UID, GID;
-
-/*------------GLOBAL-VARIABLES-START------------*/
-
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
 int setup();
@@ -26,9 +20,6 @@ char *get_gpg_id();
 
 int main(int argc, char const *argv[]) 
 {
-    UID = getuid();
-    GID = getgid();
-
     if (setup() != 0) {
         perror("psm: setup error");
         return -1;
