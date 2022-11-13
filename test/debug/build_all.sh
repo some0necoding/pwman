@@ -17,7 +17,3 @@ gcc -o $TEST_DIR/bin/test_pwman_init.o -g $ROOT_DIR/pwman-init.c \
     $ROOT_DIR/utils/source/fio.c \
     $ROOT_DIR/utils/source/input.c \
     -lgpgme
-
-#sudo chown root:root $TEST_DIR/bin/test_pwman_init.o
-#sudo chmod u+s $TEST_DIR/bin/test_pwman_init.o
-#sudo setcap cap_setuid+eip $TEST_DIR/bin/test_pwman_init.o
