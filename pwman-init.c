@@ -36,12 +36,7 @@ int main(int argc, char const *argv[])
 int setup()
 {
     char *path = NULL;
-    char *path_pair = NULL;
     char *gpg_id = NULL;
-    char *id_pair = NULL;
-    char *buffer = NULL;
-
-    FILE *file = NULL;
 
     int ret_code = -1;
 
@@ -88,11 +83,7 @@ int setup()
 
 ret:
     path ? free(path) : 0;
-    path_pair ? free(path_pair) : 0;
     gpg_id ? free(gpg_id) : 0;
-    id_pair ? free(id_pair) : 0;
-    buffer ? free(buffer) : 0;
-    file ? fclose(file) : 0;
     return ret_code;
 }
 
