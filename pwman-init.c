@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#include <errno.h>
+#include <sys/types.h>
 
 /*-------------GLOBAL-VARIABLES-END-------------*/
 
@@ -19,28 +21,13 @@ int UID, GID;
 int setup();
 char *get_path();
 char *get_gpg_id();
-char *build_gpg_id(char *id_value);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 int main(int argc, char const *argv[]) 
 {
-    /* Get current uid and gid */
     UID = getuid();
     GID = getgid();
-
-    /*
-        We need to gain root privileges to create
-        config files in system directories.
-
-        setuid(0) works only if pwman-init is owned
-        by root and set as setuid allowed. This is
-        delegated to make utility at build time.
-    */
-    if (setuid(0) != 0) {
-        perror("psm: failed to gain root privileges");
-        return -1;
-    }
 
     if (setup() != 0) {
         perror("psm: setup error");
@@ -58,8 +45,9 @@ int main(int argc, char const *argv[])
 int setup()
 {
     char *path = NULL;
-    char *id_value = NULL;
+    char *path_pair = NULL;
     char *gpg_id = NULL;
+    char *id_pair = NULL;
     char *buffer = NULL;
 
     FILE *file = NULL;
@@ -77,65 +65,30 @@ int setup()
     path = get_path();
 
     /* gpg key fingerprint */
-    id_value = get_gpg_id();
+    gpg_id = get_gpg_id();
 
     /* Check allocation */
-    if (!path || !id_value) {
+    if (!path || !gpg_id) {
       perror("psm: allocation error");
       goto ret;
     }
 
-    /* Create file in path location with 700 permissions */
-    if (mknod(path, S_IFREG|S_IRWXU, 0) != 0) {
+    struct stat st = {0};
+
+    /* Create directory in path location with 700 permissions */
+    if ((stat(path, &st) == -1) && (mkdir(path, 0700) != 0)) {
         perror("psm: I/O error");
         goto ret;
     }
 
-    /* Set ownership to UID (not root) */
-    if (chown(path, UID, GID) != 0) {
-        perror("psm: error setting ownership");
+    /* Add PATH environment variable */
+    if (add_env_var("PATH", path) != 0) {
+        perror("psm: I/O error");
         goto ret;
     }
 
-    /* "GPG_ID=id_value" pair */
-    gpg_id = build_gpg_id(id_value);
-
-    /* Check allocation */
-    if (!gpg_id) {
-      perror("psm: allocation error");
-      goto ret;
-    }
-
-    /* path + \n + gpg_id + \0 */
-    buffer = calloc(strlen(path) + 1 + strlen(gpg_id) + 1, sizeof(char));
-
-    /* Check allocation */
-    if (!buffer) {
-      perror("psm: allocation error");
-      goto ret;
-    }
-
-    strcpy(buffer, path);
-    strcat(buffer, "\n");
-    strcat(buffer, gpg_id);
-
-    /* Change permissions to 644 */
-    if (chmod(CONFIG_FILE, S_IRWXU|S_IRGRP|S_IROTH) != 0) {
-        perror("psm: error setting permissions");
-        goto ret;
-    }
-
-    file = fopen(CONFIG_FILE, "w");
-    size_t wlen;
-
-    /* Check opening */
-    if (!file) {
-      perror("psm: I/O error");
-      goto ret;
-    }
-
-    /* Write buffer to CONFIG_FILE */
-    if ((wlen = fwrite(buffer, sizeof(char), strlen(buffer), file)) < 0) {
+    /* Add GPG_ID environment variable */
+    if (add_env_var("GPG_ID", gpg_id) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
@@ -144,46 +97,45 @@ int setup()
 
 ret:
     path ? free(path) : 0;
-    id_value ? free(id_value) : 0;
+    path_pair ? free(path_pair) : 0;
     gpg_id ? free(gpg_id) : 0;
+    id_pair ? free(id_pair) : 0;
     buffer ? free(buffer) : 0;
     file ? fclose(file) : 0;
     return ret_code;
 }
 
 /*
-    This function returns the PATH pair in the
-    format "PATH=$HOME/.pwstore".
+    This function returns PATH in the format 
+    "PATH=$HOME/.pwstore".
 */
 char *get_path() 
 {
-    char *path_value;
-    char *path_key = "PATH=";
-    char *path_pair;
+    char *home_dir;
+    char *db_name = ".pwstore";
+    char *path;
 
     /* Get $HOME */
-    if ((path_value = getenv("HOME"))) {
-        path_value = getpwuid(getuid())->pw_dir;
+    if ((home_dir = getenv("HOME"))) {
+        home_dir = getpwuid(getuid())->pw_dir;
     } else {
         perror("psm: $HOME not found");
         return NULL;
     }
 
-    /* Build $HOME/.pwstore */
-    strcat(path_value, "/.pwstore");
+    path = calloc(strlen(home_dir) + 1 + strlen(db_name) + 1, sizeof(char));
 
-    path_pair = calloc(strlen(path_key) + strlen(path_value) + 1, sizeof(char));
-
-    if (!path_pair) {
+    if (!path) {
         perror("psm: allocation error");
         return NULL;
     }
 
-    /* Build "PATH=$HOME/.pwstore" pair*/
-    strcpy(path_pair, path_key);
-    strcat(path_pair, path_value);
+    /* Build $HOME/.pwstore */
+    strcpy(path, home_dir);
+    strcat(path, "/");
+    strcat(path, db_name);
 
-    return path_pair;
+    return path;
 }
 
 /*
@@ -224,25 +176,4 @@ char *get_gpg_id()
 
     /* Returning key fingerprint */
     return keys[userInput - 1]->fpr;
-}
-
-/*
-    This function returns the GPG_ID pair
-    in the format "GPG_ID=id_value".
-*/
-char *build_gpg_id(char *id_value) 
-{
-    char *id_key = "GPG_ID=";
-    char *id_pair = calloc(strlen(id_key) + strlen(id_value) + 1, sizeof(char));
-
-    /* Check allocation */
-    if (!id_pair) {
-        perror("psm: allocation error");
-        return NULL;
-    }
-
-    strcpy(id_pair, id_key);
-    strcat(id_pair, id_value);
-
-    return id_pair;
 }
