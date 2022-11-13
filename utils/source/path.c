@@ -1,3 +1,5 @@
+#include "../headers/path.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
