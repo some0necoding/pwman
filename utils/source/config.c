@@ -1,16 +1,11 @@
 #include "../headers/fio.h"
+#include "../headers/config.h"
 
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
-
-/*----------CONSTANTS-DEFINITION-START----------*/
-
-#define CONFIGS "/etc/pwman.conf"
-
-/*-----------CONSTANTS-DEFINITION-END-----------*/
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
