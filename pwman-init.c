@@ -37,12 +37,12 @@ int main(int argc, char const *argv[])
         by root and set as setuid allowed. This is
         delegated to make utility at build time.
     */
-    if (!(setuid(0))) {
+    if (setuid(0) != 0) {
         perror("psm: failed to gain root privileges");
         return -1;
     }
 
-    if (!(setup())) {
+    if (setup() != 0) {
         perror("psm: setup error");
         return -1;
     }
@@ -67,7 +67,7 @@ int setup()
     int ret_code = -1;
 
     /* Set up if CONFIG_FILE does no exist */
-    if (access(CONFIG_FILE, F_OK)) {
+    if (access(CONFIG_FILE, F_OK) == 0) {
         printf("pwman has already been initialized: %s file exists\n", CONFIG_FILE);
         ret_code = 0;
         goto ret;
@@ -86,13 +86,13 @@ int setup()
     }
 
     /* Create file in path location with 700 permissions */
-    if (!(mknod(path, S_IFREG|S_IRWXU, 0))) {
+    if (mknod(path, S_IFREG|S_IRWXU, 0) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
 
     /* Set ownership to UID (not root) */
-    if (!(chown(path, UID, GID))) {
+    if (chown(path, UID, GID) != 0) {
         perror("psm: error setting ownership");
         goto ret;
     }
@@ -120,7 +120,7 @@ int setup()
     strcat(buffer, gpg_id);
 
     /* Change permissions to 644 */
-    if (!(chmod(CONFIG_FILE, S_IRWXU|S_IRGRP|S_IROTH))) {
+    if (chmod(CONFIG_FILE, S_IRWXU|S_IRGRP|S_IROTH) != 0) {
         perror("psm: error setting permissions");
         goto ret;
     }
