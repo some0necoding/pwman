@@ -19,7 +19,7 @@ char *get_value(char *pair);
 */
 char *get_config_path() 
 {
-    size_t const_len = strlen(CONFIGS);
+    size_t const_len = strlen(CONFIG_FILE);
     char *path = calloc(const_len + 1, sizeof(char));
 
     if (!path) {
@@ -27,7 +27,7 @@ char *get_config_path()
         return NULL;
     }
 
-    strcpy(path, CONFIGS);
+    strcpy(path, CONFIG_FILE);
     return path;
 }
 
@@ -44,7 +44,7 @@ int add_env_var(char *key, char *value)
     size_t pair_len;
     int ret_code = -1;
 
-    FILE *file = fopen(CONFIGS, "a");
+    FILE *file = fopen(CONFIG_FILE, "a");
 
     if (!file) {
         perror("psm: I/O error");
@@ -84,7 +84,7 @@ char *get_env_var(char *key)
     char *pair = calloc(1, sizeof(char));
     char *value;
 
-    FILE *file = fopen(CONFIGS, "r");
+    FILE *file = fopen(CONFIG_FILE, "r");
     
     if (!file) {
         perror("psm: I/O error\n");
