@@ -135,7 +135,7 @@ char *get_gpg_id()
     int userInput;
     int pos = 0;
 
-    /* TODO: keys=NULL could also mean "no keys found" */
+    /* Check allocation */
     if (!keys) {
         perror("psm: allocation error");
         return NULL;
