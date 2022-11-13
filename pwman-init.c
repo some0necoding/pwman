@@ -75,7 +75,7 @@ int setup()
 
     struct stat st = {0};
 
-    /* Create directory in path location with 700 permissions */
+    /* Create directory in path location with 700 permissions if it does not exist */
     if ((stat(path, &st) == -1) && (mkdir(path, 0700) != 0)) {
         perror("psm: I/O error");
         goto ret;
