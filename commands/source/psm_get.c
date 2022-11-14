@@ -49,7 +49,7 @@ int psm_get(char **args)
 
     pthread_t thread_id;
 
-    if (!PATH || !GPG_ID || !cyphertext) {
+    if (!PATH || !GPG_ID || !cyphertext || !plaintext) {
         perror("psm: allocation error");
         goto ret;
     }
@@ -111,7 +111,6 @@ int psm_get(char **args)
 ret:
     rel_path ? free(rel_path) : 0;
     cyphertext ? free(cyphertext) : 0;
-    plaintext ? free((char *) plaintext) : 0;
     PATH ? free((char *) PATH) : 0;
     GPG_ID ? free((char *) GPG_ID) : 0;
     return ret_code;  
