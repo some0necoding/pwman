@@ -133,7 +133,7 @@ int gpg_decrypt(char *cypher, const char *fpr, char **buf, size_t bufsize)
     /* Decrypt data. */
     err = gpgme_op_decrypt(ctx, in, out);
 
-    if (err == GPG_ERR_BAD_PASSPHRASE) {
+    if (gpgme_err_code(err) == GPG_ERR_BAD_PASSPHRASE) {
         return 0;
     } else {
         fail_if_err(err);
