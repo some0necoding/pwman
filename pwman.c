@@ -56,14 +56,23 @@ int (*command_addr[]) (char **) = {
 
 int main(int argc, char const *argv[])
 {
-    if (access(CONFIG_FILE, F_OK) != 0) {
+    char *config_file = get_config_path();
+
+    if (!config_file) {
+        perror("psm: allocation error");
+        return -1;
+    }
+
+    if (access(config_file, F_OK) != 0) {
         printf("You have to run \"pwman-init\" before\n");
+        free(config_file);
         return 0;
     }
 
     /* starting the "shell" */
     start();
 
+    free(config_file);
     return 0;
 }
 
@@ -87,7 +96,7 @@ void start(void)
 */
 void welcome_message() 
 {
-    char *start_txt = "\nWELCOME TO PASSMAN!\n\n"
+    char *start_txt = "WELCOME TO PASSMAN!\n\n"
                         "\tdigit \"help\" for help\n"
                         "\tdigit \"exit\" to exit passman\n";
 

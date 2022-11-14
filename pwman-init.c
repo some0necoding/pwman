@@ -37,12 +37,18 @@ int setup()
 {
     char *path = NULL;
     char *gpg_id = NULL;
+    char *config_file = get_config_path();
 
     int ret_code = -1;
 
+    if (!config_file) {
+        perror("psm: allocation error");
+        goto ret;
+    }
+
     /* Set up if CONFIG_FILE does no exist */
-    if (access(CONFIG_FILE, F_OK) == 0) {
-        printf("pwman has already been initialized: %s file exists\n", CONFIG_FILE);
+    if (access(config_file, F_OK) == 0) {
+        printf("pwman has already been initialized: %s file exists\n", config_file);
         ret_code = 0;
         goto ret;
     }
@@ -82,6 +88,7 @@ int setup()
     ret_code = 0;
 
 ret:
+    config_file ? free(config_file) : 0;
     path ? free(path) : 0;
     gpg_id ? free(gpg_id) : 0;
     return ret_code;
