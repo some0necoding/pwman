@@ -133,7 +133,7 @@ char *get_env_var(char *key)
         perror("psm: I/O error");
         goto ret;
     } else {                                                // match found
-        char *value = get_value(pair);
+        value = get_value(pair);
         
         if (!value) {
             perror("psm: allocation error\n");
@@ -204,10 +204,10 @@ char *get_value(char *pair)
         }
 
         strcpy(value, val);
-        free(key);
+        //free(key);
         return value;
     }
 
-    free(key);
+    //free(key);
     return NULL;
 }
