@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
+#include <unistd.h>
 
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
@@ -19,15 +20,30 @@ char *get_value(char *pair);
 */
 char *get_config_path() 
 {
-    size_t const_len = strlen(CONFIG_FILE);
-    char *path = calloc(const_len + 1, sizeof(char));
+    char *home_dir;
+    char *config_path = ".config/pwman.conf";
+    char *path;
 
-    if (!path) {
-        perror("psm: allocation error\n");
+    /* Get $HOME */
+    if ((home_dir = getenv("HOME"))) {
+        home_dir = getpwuid(getuid())->pw_dir;
+    } else {
+        perror("psm: $HOME not found");
         return NULL;
     }
 
-    strcpy(path, CONFIG_FILE);
+    path = calloc(strlen(home_dir) + 1 + strlen(config_path) + 1, sizeof(char));
+
+    if (!path) {
+        perror("psm: allocation error");
+        return NULL;
+    }
+
+    /* Build $HOME/.pwstore */
+    strcpy(path, home_dir);
+    strcat(path, "/");
+    strcat(path, config_path);
+
     return path;
 }
 
@@ -38,24 +54,31 @@ char *get_config_path()
 */
 int add_env_var(char *key, char *value) 
 {
-    char *pair;
+    char *pair = NULL;
+    char *config_file = get_config_path();
 
     size_t wlen;
     size_t pair_len;
     int ret_code = -1;
 
-    FILE *file = fopen(CONFIG_FILE, "a");
+    FILE *file = NULL;
+
+    if (!config_file) {
+        perror("psm: allocation error");
+        goto ret;
+    } 
+    
+    file = fopen(config_file, "a");
 
     if (!file) {
         perror("psm: I/O error");
-        return -1;
+        goto ret;
     }
 
     // builds a pair in the format "key=value"
     if (!(pair = build_pair(key, value))) {
         perror("psm: allocation error");
-        fclose(file);
-        return -1;
+        goto ret;
     }
 
     pair_len = strlen(pair);
@@ -69,8 +92,9 @@ int add_env_var(char *key, char *value)
     ret_code = 0;
 
 ret:
-    free(pair);
-    fclose(file);
+    pair ? free(pair) : 0;
+    config_file ? free(config_file) : 0;
+    file ? fclose(file) : 0;
     return ret_code;
 }
 
@@ -81,14 +105,22 @@ ret:
 char *get_env_var(char *key) 
 {
     int rlen;
+    char *config_file = get_config_path();
     char *pair = calloc(1, sizeof(char));
-    char *value;
+    char *value = NULL;
 
-    FILE *file = fopen(CONFIG_FILE, "r");
+    FILE *file = NULL;
+    
+    if (!config_file || !pair) {
+        perror("psm: allocation error");
+        goto ret;
+    }
+
+    file = fopen(config_file, "r");
     
     if (!file) {
         perror("psm: I/O error\n");
-        return NULL;
+        goto ret;
     }
     
     // reads the file line by line until the key matches
@@ -108,13 +140,14 @@ char *get_env_var(char *key)
             goto ret;
         }
         
-        fclose(file); 
-        return value;
+        goto ret;
     }
 
 ret:
-    fclose(file);
-    return NULL;
+    config_file ? free(config_file) : 0;
+    pair ? free(pair) : 0;
+    file ? fclose(file) : 0;
+    return value;
 }
 
 /*
