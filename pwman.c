@@ -80,8 +80,7 @@ int main(int argc, char const *argv[])
     This function starts the shell
 */
 void start(void) 
-{/*----------FUNCTIONS-DEFINITION-START----------*/
-
+{
     welcome_message();
  
     /* Starting shell loop */
@@ -96,9 +95,9 @@ void start(void)
 */
 void welcome_message() 
 {
-    char *start_txt = "WELCOME TO PASSMAN!\n\n"
+    char *start_txt = "WELCOME TO PWMAN!\n"
                         "\tdigit \"help\" for help\n"
-                        "\tdigit \"exit\" to exit passman\n";
+                        "\tdigit \"exit\" to exit pwman";
 
     printf("%s\n", start_txt);
 }
