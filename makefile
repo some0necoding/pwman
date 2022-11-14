@@ -7,17 +7,18 @@
 
 CC := gcc
 
-LIBS := sodium X11 pthread
+LIBS := gpgme X11 pthread
 CFLAGS := $(LIBS:%=-l%)
 
-SRCS := $(wildcard *.c) $(wildcard headers_source/*.c)
+COMMANDS_SRCS := $(wildcard commands/source/*.c) 
+UTILS_SRCS := $(wildcard utils/source/*.c)
+PWMAN_SRC := pwman.c
+INIT_SRC := pwman-init.c
 
 SYSTEM_PATH := /usr/local/bin
 
-BIN_FOLDER := /usr/share/binaries
-BIN_FILES := accounts.list passwords.list crypto.salt login.hash
-
-EXEC_NAME := pwman
+EXEC_NAME := $(PWMAN_SRC:%.c=%)
+INIT_NAME := $(INIT_SRC:%.c=%)
 
 all: help
 
@@ -26,37 +27,23 @@ help:
 	@echo "  run \"make install\" to install $(EXEC_NAME)"
 	@echo "  run \"make clean\" to remove $(EXEC_NAME)"
 
-install: create_needed_files compile
+install: check-x11 compile
 	@echo "Done"
 
-create_needed_files: create_bin_dir create_bin_files
-
-create_bin_dir:
-	@echo "Creating needed files..."
-	@sudo mkdir $(BIN_FOLDER)
-
-create_bin_files: $(BIN_FILES)
-	@sudo chmod a=rwx $(BIN_FOLDER)/*
-	@echo "Needed files created"
-
-$(BIN_FILES):
-	@sudo touch $(BIN_FOLDER)/$@
+check-x11:
+# 	check if x11 is installed
 
 # compiling source code and saving the bin executable in /usr/local/bin to make it easily runnable from terminal
 compile:
 	@echo "Compiling..."
-	@sudo $(CC) -o $(SYSTEM_PATH)/$(EXEC_NAME) $(SRCS) $(CFLAGS)
+	@sudo $(CC) -o $(SYSTEM_PATH)/$(EXEC_NAME) $(COMMANDS_SRCS) $(UTILS_SRCS) $(PWMAN_SRC) $(CFLAGS)
+	@sudo $(CC) -o $(SYSTEM_PATH)/$(INIT_NAME) $(UTILS_SRCS) $(INIT_SRC) $(CFLAGS)
 
 # deleting bin executable from /usr/local/bin and deleting bin files
-clean: remove_exec delete_bin_files delete_bin_dir
+clean: remove_exec
 	@echo "Done"
 
 remove_exec:
 	@echo "Cleaning up..."
 	@sudo rm $(SYSTEM_PATH)/$(EXEC_NAME)
-
-delete_bin_files:
-	@sudo rm $(BIN_FOLDER)/*
-
-delete_bin_dir:
-	@sudo rmdir $(BIN_FOLDER)
+	@sudo rm $(SYSTEM_PATH)/$(INIT_NAME)
