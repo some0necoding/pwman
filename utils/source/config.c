@@ -204,10 +204,8 @@ char *get_value(char *pair)
         }
 
         strcpy(value, val);
-        //free(key);
         return value;
     }
 
-    //free(key);
     return NULL;
 }
