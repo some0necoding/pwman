@@ -12,14 +12,6 @@ uses gpg asymmetric encryption.
 
 ## Installation
 
-### Needed Libs
-
-
-[gpgme](https://gnupg.org/software/gpgme/index.html), which provides functions for gpg encryption, is needed 
-to make Pwman run. Even if it's likely already installed on your system, check for its installation.
-
-### Installation using make
-
 ```
 $ ./configure.sh
 $ make install
@@ -27,7 +19,7 @@ $ pwman-init                // only on first run
 $ pwman
 ```
 
-<p class="callout warning">A success message</p>
+Note that [gpgme](https://gnupg.org/software/gpgme/index.html) needs to be installed on your system for pwman to run.
 
 ## Lincense
 
