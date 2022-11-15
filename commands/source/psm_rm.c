@@ -1,3 +1,4 @@
+#include "../headers/psm_rm.h"
 #include "../../utils/headers/config.h"
 #include "../../utils/headers/path.h"
 
