@@ -27,42 +27,11 @@ which provides functions for asymmetric cryptography.
 ### Installation using make
 
 ```
-$ make install                      // install pwman
-$ pwman                             // run pwman
-$ make clean                        // uninstall pwman
+$ ./configure.sh
+$ make install
+$ pwman-init
+$ pwman
 ```
-
-## Cryptography
-
-To encrypt user's data Pwman uses XChaCha20Poly1305 algorithm, that offers AEAD encryption.
-
-<!--
-The algorithm used to support file cryptography in pwman is XChaCha20Poly1305, an AEAD 
-(Authenticated Encryption with Additional Data) algorithm.   
-AEAD encryption aims to provide three security and privacy goals:  
-- confidentiality  
-- integrity  
-- authenticity    
-
-The algorithm is composed of two cryptographic primitives: XChaCha20 and Poly1305.
-
-#### XChaCha20 - Confidentiality 
-
-XChaCha20 is the most recent and secure evolution of ChaCha20, based on Salsa20, a symmetric stream 
-cypher that performs ARX (add-rotate-XOR) operations on the given stream using 256-bit key and 192-bit 
-nonce.   
-It is usually preferred over AES for CPUs where AES acceleration is not supported due to its better
-performance.
-
-#### Poly1305 - Integrity and Authenticity
-
-Poly1305 is a cryptographic MAC (Message Authentication Code) used to verify authenticity and data 
-integrity of a message.  
-It works similarly to a digital signature function, but using symmetric encryption: provided a key and 
-an input string (in this case the plaintext), the function returns a unique hash value (*tag*) that gets 
-appended at the end of the cyphertext. To verify integrity and authenticity of the message, the appended 
-tag must match the one obtained by passing in the function the same key and the decrypted cyphertext. --> 
-
 
 ## Lincense
 
