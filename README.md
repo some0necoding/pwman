@@ -19,7 +19,7 @@ $ pwman-init                // only on first run
 $ pwman
 ```
 
-Note that [gpgme](https://gnupg.org/software/gpgme/index.html) needs to be installed on your system for pwman to run.
+Note that [gpgme](https://gnupg.org/software/gpgme/index.html) needs to be installed on your system for pwman to run (it's usually installed by default).
 
 ## Lincense
 
