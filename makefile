@@ -3,22 +3,35 @@
 # make install			# installs pwman in /usr/local/bin/
 # make clean			# removes pwman from /usr/local/bin
 
-.PHONY := all help install create_needed_files create_bin_dir create_bin_files compile clean remove_exec delete_bin_files delete_bin_dir
+.PHONY := all help install check-x11 clean
 
 CC := gcc
 
-LIBS := gpgme X11 pthread
-CFLAGS := $(LIBS:%=-l%)
+PWMAN_CFLAGS := -lgpgme -lX11 -lpthread
+INIT_CFLAGS := -lgpgme
 
-COMMANDS_SRCS := $(wildcard commands/source/*.c) 
-UTILS_SRCS := $(wildcard utils/source/*.c)
-PWMAN_SRC := pwman.c
-INIT_SRC := pwman-init.c
+COMMANDS := commands/source/psm_add.o  \
+			commands/source/psm_exit.o \
+			commands/source/psm_get.o  \
+			commands/source/psm_help.o \
+			commands/source/psm_rm.o   \
+			commands/source/psm_show.o 
+
+UTILS := utils/source/clipboard.o \
+		 utils/source/config.o    \
+		 utils/source/console.o   \
+		 utils/source/crypto.o    \
+		 utils/source/fio.o		  \
+		 utils/source/input.o	  \
+		 utils/source/path.o
+
+PWMAN := pwman.o
+INIT := pwman-init.o
+
+EXEC_NAME := $(PWMAN:%.c=%)
+INIT_NAME := $(INIT:%.c=%)
 
 SYSTEM_PATH := /usr/local/bin
-
-EXEC_NAME := $(PWMAN_SRC:%.c=%)
-INIT_NAME := $(INIT_SRC:%.c=%)
 
 all: help
 
@@ -27,23 +40,68 @@ help:
 	@echo "  run \"make install\" to install $(EXEC_NAME)"
 	@echo "  run \"make clean\" to remove $(EXEC_NAME)"
 
-install: check-x11 compile
+install: check-x11 $(SYSTEM_PATH)/$(EXEC_NAME) $(SYSTEM_PATH)/$(INIT_NAME)
 	@echo "Done"
 
 check-x11:
 # 	check if x11 is installed
 
-# compiling source code and saving the bin executable in /usr/local/bin to make it easily runnable from terminal
-compile:
-	@echo "Compiling..."
-	@sudo $(CC) -o $(SYSTEM_PATH)/$(EXEC_NAME) $(COMMANDS_SRCS) $(UTILS_SRCS) $(PWMAN_SRC) $(CFLAGS)
-	@sudo $(CC) -o $(SYSTEM_PATH)/$(INIT_NAME) $(UTILS_SRCS) $(INIT_SRC) $(CFLAGS)
+# Compiling pwman	
+$(SYSTEM_PATH)/$(EXEC_NAME): $(COMMANDS) $(UTILS) $(PWMAN)
+	@sudo $(CC) -o $(SYSTEM_PATH)/$(EXEC_NAME) $(COMMANDS) $(UTILS) $(PWMAN) $(PWMAN_CFLAGS)
 
-# deleting bin executable from /usr/local/bin and deleting bin files
-clean: remove_exec
-	@echo "Done"
+# Compiling pwman-init
+$(SYSTEM_PATH)/$(INIT_NAME): $(UTILS) $(INIT)
+	@sudo $(CC) -o $(SYSTEM_PATH)/$(INIT_NAME) $(UTILS) $(INIT) $(INIT_CFLAGS)
 
-remove_exec:
+# Commands build
+commands/source/psm_add.o: utils/headers/input.h 	  \
+						   utils/headers/config.h 	  \ 
+						   utils/headers/crypto.h 	  \
+						   utils/headers/path.h		  \
+						   commands/headers/psm_add.h
+
+commands/source/psm_exit.o: commands/headers/psm_exit.h
+
+commands/source/psm_get.o: utils/headers/clipboard.h \
+						   utils/headers/crypto.h 	 \
+						   utils/headers/config.h 	 \
+						   utils/headers/fio.h 	 	 \
+						   utils/headers/path.h		 \
+						   commands/headers/psm_get.h 
+
+commands/source/psm_help.o: commands/headers/psm_help.o
+
+commands/source/psm_rm.o: utils/headers/config.h   	 \
+						  utils/headers/path.h 		 \
+						  commands/headers/psm_rm.h
+
+commands/source/psm_show.o: utils/headers/config.h   \
+						  	utils/headers/path.h 	 \
+						  	commands/headers/psm_show.h
+
+# Utils build
+utils/source/clipboard.o: utils/headers/clipboard.h
+
+utils/source/config.o: utils/headers/fio.h \
+					   utils/headers/config.h
+
+utils/source/console.o: utils/headers/console.h
+
+utils/source/crypto.o: utils/headers/input.h \
+					   utils/headers/crypto.h 
+
+utils/source/fio.o: utils/headers/fio.h
+
+utils/source/input.o: utils/headers/console.h \
+					  utils/headers/input.h 
+
+utils/source/path.o: utils/headers/path.h 
+
+# Deleting bins and object files
+clean:
 	@echo "Cleaning up..."
+	@sudo rm $(COMMANDS) $(UTILS) $(PWMAN) $(INIT)
 	@sudo rm $(SYSTEM_PATH)/$(EXEC_NAME)
 	@sudo rm $(SYSTEM_PATH)/$(INIT_NAME)
+	@echo "Done"
