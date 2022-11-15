@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img width="300" alt="PWM4N" src="https://github.com/some0necoding/pwman/blob/main/.github/pwman_logo.png">
+    <img width="500" alt="PWM4N" src="https://github.com/some0necoding/pwman/blob/main/.github/pwman_logo.png">
 </h1>
 
 <!-- links and badges here -->
