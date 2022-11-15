@@ -6,14 +6,13 @@
 
 ## Basic Overview
 
-Pwman (pronounced *pi-double-u-man*) is a security-focused command line password manager coded in C.
-Its simpler purpose is to store user's accounts along with passwords in encrypted format, in order
-to improve user's security. The use of a password manager makes it possible for the user
-to adopt a different password for every account he has, so that if one account gets exploited the
-others remain safe.
+Pwman (pronounced *pi-double-u-man*) is a command line password manager written in C. Its simpler purpose is 
+to store user's accounts and passwords in encrypted format, in order to improve user's security. The use of 
+a password manager makes it possible for the user to adopt a different password for every account he has, so 
+that if one account gets exploited the others remain safe.
 
 ## Features
-- AEAD encryption
+- GPG encryption
 - Plaintext handled only in RAM
 - Secure input for passwords
 - CLI == faster
@@ -22,9 +21,8 @@ others remain safe.
 
 ### Needed Libs
 
-The only third party library needed to make Pwman run is [libsodium](https://libsodium.gitbook.io/doc/installation),
-which provides functions for file cryptography, user authentication and secure memory allocation.
-<!--old link: https://doc.libsodium.org/installation-->
+The only third party library needed to make Pwman run is [gpgme](https://gnupg.org/software/gpgme/index.html),
+which provides functions for asymmetric cryptography.
 
 ### Installation using make
 
