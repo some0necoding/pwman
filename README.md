@@ -14,9 +14,9 @@ uses gpg asymmetric encryption.
 
 ### Needed Libs
 
-The only third party library needed to make Pwman run is [gpgme](https://gnupg.org/software/gpgme/index.html),
-which provides functions for asymmetric cryptography. Even if it's likely already installed on your system,
-check for its installation.
+
+[gpgme](https://gnupg.org/software/gpgme/index.html), which provides functions for gpg encryption, is needed 
+to make Pwman run. Even if it's likely already installed on your system, check for its installation.
 
 ### Installation using make
 
