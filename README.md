@@ -27,6 +27,8 @@ $ pwman-init                // only on first run
 $ pwman
 ```
 
+<p class="callout warning">A success message</p>
+
 ## Lincense
 
 This project is licensed under the terms of the [**GPL**](https://github.com/some0necoding/pwman/blob/main/LICENSE.md) license.
