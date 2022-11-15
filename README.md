@@ -23,7 +23,7 @@ check for its installation.
 ```
 $ ./configure.sh
 $ make install
-$ pwman-init
+$ pwman-init                // only on first run
 $ pwman
 ```
 
