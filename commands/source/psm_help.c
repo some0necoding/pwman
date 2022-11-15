@@ -1,3 +1,5 @@
+#include "../headers/psm_help.h"
+
 #include <stdio.h>
 
 int psm_help(char **args)
