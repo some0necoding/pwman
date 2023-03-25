@@ -1,0 +1,121 @@
+# this file simply compiles all source code
+# Usage:
+# make install			# installs pwman in /usr/local/bin/
+# make clean			# removes pwman from /usr/local/bin
+
+SHELL := /bin/bash
+
+.SUFFIXES:
+.SUFFIXES: .c .o .h
+
+.PHONY := all help install clean
+
+CC := gcc
+
+CFLAGS := -lgpgme -lX11 -lpthread
+
+COMMANDS := ./src/commands/psm_add.o  \
+			./src/commands/psm_exit.o \
+			./src/commands/psm_get.o  \
+			./src/commands/psm_help.o \
+			./src/commands/psm_rm.o   \
+			./src/commands/psm_show.o 
+
+UTILS := ./src/utils/clipboard.o \
+		 ./src/utils/config.o    \
+		 ./src/utils/console.o   \
+		 ./src/utils/crypto.o    \
+		 ./src/utils/fio.o		 \
+		 ./src/utils/input.o	 \
+		 ./src/utils/path.o
+
+PWMAN := ./src/pwman.o
+INIT := ./src/pwman-init.o
+
+SYSTEM_PATH := /usr/local/bin
+
+EXEC_NAME := $(SYSTEM_PATH)/pwman
+INIT_NAME := $(SYSTEM_PATH)/pwman-init
+
+all: help
+
+help:
+	@echo "Usage:"
+	@echo "  run \"make install\" to install $(PWMAN:%.o=%)"
+	@echo "  run \"make clean\" to remove $(PWMAN:%.o=%)"
+
+install: $(EXEC_NAME) $(INIT_NAME)
+	@echo "Done"
+
+# Compiling pwman	
+$(EXEC_NAME): $(COMMANDS) $(UTILS) $(PWMAN)
+	@sudo $(CC) -o $(EXEC_NAME) $(COMMANDS) $(UTILS) $(PWMAN) $(CFLAGS)
+
+# Compiling pwman-init
+$(INIT_NAME): $(UTILS) $(INIT)
+	@sudo $(CC) -o $(INIT_NAME) $(UTILS) $(INIT) $(CFLAGS)
+
+src/pwman.o: ./src/utils/input.h 	   \
+		 ./src/utils/fio.h 		   \
+		 ./src/utils/config.h 	   \
+		 ./src/commands/psm_add.h  \
+		 ./src/commands/psm_show.h \
+		 ./src/commands/psm_rm.h   \
+		 ./src/commands/psm_get.h  \
+		 ./src/commands/psm_help.h \
+		 ./src/commands/psm_exit.h
+
+src/pwman-init.o: ./src/utils/config.h \
+			  ./src/utils/crypto.h
+
+# Commands build
+src/commands/source/psm_add.o: ./src/utils/input.h 	\
+						   ./src/utils/config.h \
+						   ./src/utils/crypto.h \
+						   ./src/utils/path.h	\
+						   ./src/commands/psm_add.h
+
+src/commands/source/psm_exit.o: ./src/commands/psm_exit.h
+
+src/commands/source/psm_get.o: ./src/utils/clipboard.h \
+						   ./src/utils/crypto.h    \
+						   ./src/utils/config.h    \
+						   ./src/utils/fio.h 	   \
+						   ./src/utils/path.h  	   \
+						   ./src/commands/psm_get.h 
+
+src/commands/source/psm_help.o: ./src/commands/psm_help.h
+
+src/commands/source/psm_rm.o: ./src/utils/config.h \
+						  ./src/utils/path.h   \
+						  ./src/commands/psm_rm.h
+
+src/commands/source/psm_show.o: ./src/utils/config.h \
+						  	./src/utils/path.h 	 \
+						  	./src/commands/psm_show.h
+
+# Utils build
+src/utils/source/clipboard.o: ./src/utils/clipboard.h
+
+src/utils/source/config.o: ./src/utils/fio.h \
+					   ./src/utils/config.h
+
+src/utils/source/console.o: ./src/utils/console.h
+
+src/utils/source/crypto.o: ./src/utils/input.h \
+					   ./src/utils/crypto.h 
+
+src/utils/source/fio.o: ./src/utils/fio.h
+
+src/utils/source/input.o: ./src/utils/console.h \
+					  ./src/utils/input.h 
+
+src/utils/source/path.o: ./src/utils/path.h 
+
+# Deleting bins and object files
+clean:
+	@echo "Cleaning up..."
+	@sudo rm $(UTILS) $(COMMANDS) $(PWMAN) $(INIT)
+	@sudo rm $(EXEC_NAME)
+	@sudo rm $(INIT_NAME)
+	@echo "Done"
