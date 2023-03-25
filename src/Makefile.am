@@ -3,3 +3,5 @@
 bin_PROGRAMS = pwman pwman-init
 pwman_SOURCES = pwman.c
 pwman_init_SOURCES = pwman-init.c
+
+SUBDIRS = commands utils
