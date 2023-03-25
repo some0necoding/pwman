@@ -1,4 +1,4 @@
-#include "../headers/console.h"
+#include "./console.h"
 
 #include <stdio.h>
 #include <termios.h>

@@ -1,13 +1,13 @@
-#include "./utils/headers/input.h"
-#include "./utils/headers/fio.h"
-#include "./utils/headers/config.h"
+#include "./utils/input.h"
+#include "./utils/fio.h"
+#include "./utils/config.h"
 
-#include "./commands/headers/psm_show.h"
-#include "./commands/headers/psm_add.h"
-#include "./commands/headers/psm_rm.h"
-#include "./commands/headers/psm_get.h"
-#include "./commands/headers/psm_help.h"
-#include "./commands/headers/psm_exit.h"
+#include "./commands/psm_show.h"
+#include "./commands/psm_add.h"
+#include "./commands/psm_rm.h"
+#include "./commands/psm_get.h"
+#include "./commands/psm_help.h"
+#include "./commands/psm_exit.h"
 
 #include <stdlib.h>
 #include <stdio.h>

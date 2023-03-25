@@ -1,5 +1,5 @@
-#include "../headers/fio.h"
-#include "../headers/config.h"
+#include "./fio.h"
+#include "./config.h"
 
 #include <stddef.h>
 #include <stdio.h>

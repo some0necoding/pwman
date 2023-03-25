@@ -1,5 +1,5 @@
-#include "../headers/crypto.h"
-#include "../headers/input.h"
+#include "./crypto.h"
+#include "./input.h"
 
 #include <gpg-error.h>
 #include <stddef.h>

@@ -1,4 +1,4 @@
-#include "../headers/psm_exit.h"
+#include "./psm_exit.h"
 
 #include <stdlib.h>
 

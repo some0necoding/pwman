@@ -1,5 +1,5 @@
-#include "./utils/headers/config.h"
-#include "./utils/headers/crypto.h"
+#include "./utils/config.h"
+#include "./utils/crypto.h"
 
 #include <stdio.h>
 #include <stdlib.h>

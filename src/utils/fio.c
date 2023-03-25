@@ -1,4 +1,4 @@
-#include "../headers/fio.h"
+#include "./fio.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,9 +1,9 @@
-#include "../headers/psm_get.h"
-#include "../../utils/headers/clipboard.h"
-#include "../../utils/headers/crypto.h"
-#include "../../utils/headers/config.h"
-#include "../../utils/headers/fio.h"
-#include "../../utils/headers/path.h"
+#include "./psm_get.h"
+#include "../utils/clipboard.h"
+#include "../utils/crypto.h"
+#include "../utils/config.h"
+#include "../utils/fio.h"
+#include "../utils/path.h"
 
 #include <gpg-error.h>
 #include <stddef.h>

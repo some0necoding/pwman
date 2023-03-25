@@ -1,6 +1,6 @@
-#include "../headers/psm_rm.h"
-#include "../../utils/headers/config.h"
-#include "../../utils/headers/path.h"
+#include "./psm_rm.h"
+#include "../utils/config.h"
+#include "../utils/path.h"
 
 #include <stdlib.h>
 #include <stdio.h>

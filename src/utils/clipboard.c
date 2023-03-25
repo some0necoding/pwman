@@ -1,4 +1,4 @@
-#include "../headers/clipboard.h"
+#include "./clipboard.h"
 
 #include <stdio.h>
 #include <string.h>

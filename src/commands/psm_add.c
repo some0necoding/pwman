@@ -1,8 +1,8 @@
-#include "../headers/psm_add.h"
-#include "../../utils/headers/input.h"
-#include "../../utils/headers/config.h"
-#include "../../utils/headers/crypto.h"
-#include "../../utils/headers/path.h"
+#include "./psm_add.h"
+#include "../utils/input.h"
+#include "../utils/config.h"
+#include "../utils/crypto.h"
+#include "../utils/path.h"
 
 #include <stddef.h>
 #include <stdio.h>

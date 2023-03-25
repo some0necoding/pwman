@@ -1,6 +1,6 @@
-#include "../headers/psm_show.h"
-#include "../../utils/headers/config.h"
-#include "../../utils/headers/path.h"
+#include "./psm_show.h"
+#include "../utils/config.h"
+#include "../utils/path.h"
 
 #define _XOPEN_SOURCE 500
 
