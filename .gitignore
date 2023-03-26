@@ -7,3 +7,7 @@ config.h.in
 depcomp
 install-sh
 missing
+config.h
+config.log
+config.status
+stamp-h1
