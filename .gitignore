@@ -1,0 +1,9 @@
+test/
+
+autom4te.cache
+aclocal.m4
+compile
+config.h.in
+depcomp
+install-sh
+missing

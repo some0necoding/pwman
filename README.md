@@ -22,7 +22,7 @@ uses gpg asymmetric encryption.
 ## Installation
 
 ```
-$ ./configure.sh
+$ ./configure && make
 $ make install
 $ pwman-init                // only on first run
 $ pwman
