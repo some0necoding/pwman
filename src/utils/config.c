@@ -33,7 +33,7 @@ const char *get_config_path()
 	char *home = (char *) malloc(sizeof(char) * (strlen(tmp_home) + 1));
 
 	if (!home) {
-		fprintf(stderr, "psm: allocation error\n");
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		return NULL;
 	}
 	
@@ -42,7 +42,7 @@ const char *get_config_path()
     char *path = malloc(sizeof(char) * (strlen(home) + 1 + strlen(CONFIG_PATH) + 1));
 
 	if (!path) {
-		fprintf(stderr, "psm: allocation error\n");
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		free(home);
 		return NULL;
 	}
@@ -65,7 +65,7 @@ int psm_putenv(const char *key, const char *value)
 	const char *config_file = get_config_path();
 
 	if (!config_file) {
-		fprintf(stderr, "cannot get config path\n");
+		fprintf(stderr, "cannot define path of configuration file\n");
 		goto ret;
 	}
 
@@ -82,7 +82,7 @@ int psm_putenv(const char *key, const char *value)
     const char *pair = build_pair(key, value);
 
 	if (!pair) {
-		fprintf(stderr, "psm: allocation error\n");
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		goto ret;
 	}
 
@@ -112,14 +112,14 @@ const char *psm_getenv(const char *key)
     char *pair = (char *) malloc(sizeof(char));
 
     if (!config_file || !pair) {
-        fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
     FILE *file = fopen(config_file, "r");
     
     if (!file) {
-        fprintf(stderr, "%s:%d: cannot open %s\n", __FILE__, __LINE__, config_file);
+        fprintf(stderr, "cannot open %s\n", config_file);
         goto ret;
     }
     
@@ -127,10 +127,10 @@ const char *psm_getenv(const char *key)
     while (!(rlen = freadline(file, &pair, sizeof(char *)) < 0) && ((strncmp(pair, key, strlen(key))) != 0));
 
     if (rlen == EOF || strcmp(pair, "") == 0) {		// NOT FOUND
-        fprintf(stderr, "psm: %s:%d: environment variable %s not found\n", __FILE__, __LINE__, key); 
+        fprintf(stderr, "psm:%s:%d: environment variable %s not found\n", __FILE__, __LINE__, key); 
         goto ret; 
     } else if (rlen < 0) {							// ERROR
-        fprintf(stderr, "psm: %s:%d: I/O error\n", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -139,7 +139,7 @@ const char *psm_getenv(const char *key)
 	const char *value = get_value(pair);
         
     if (!value) {
-        fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
         
@@ -159,7 +159,7 @@ const char *build_pair(const char *key, const char *value)
     char *pair = (char *) malloc(sizeof(char) * (strlen(key) + 1 + strlen(value) + 2)); 
 
 	if (!pair) {
-		fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		return NULL;
 	}
 
@@ -181,14 +181,14 @@ const char *get_value(char *pair)
         const char *val = strtok(NULL, "=");
 
         if (!val) {
-            fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+            fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
             return NULL;
         } 
         
 		char *value = (char *) malloc(sizeof(char *) * (strlen(val) + 1));
 
         if (!value) {
-            fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+            fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
             return NULL;
         }
 

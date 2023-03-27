@@ -11,25 +11,11 @@
 #include <stdlib.h>
 #include <errno.h>
 
-/*----------CONSTANTS-DEFINITION-START----------*/
-
 #define BUF_SIZE 512
-
-#define fail_if_err(err)					\
-    if (err) {							\
-        fprintf (stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, gpgme_strsource (err), gpgme_strerror (err));			\
-        exit(1);						\
-    }									\
-
-/*-----------CONSTANTS-DEFINITION-END-----------*/
-
-/*----------FUNCTIONS-DEFINITION-START----------*/
 
 const char *data_to_buffer(gpgme_data_t dh);
 gpgme_error_t passphrase_cb(void *opaque, const char *uid_hint, const char *passphrase_info, int last_was_bad, int fd);
 int init_gpgme(gpgme_protocol_t proto);
-
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 /*
     This function encrypts buffer plain using openpgp public 
@@ -89,7 +75,7 @@ const char *gpg_encrypt(const char *plain, const char *fpr)
 	result = gpgme_op_encrypt_result(ctx);
     
 	if (result->invalid_recipients) {
-        fprintf(stderr,"psm: %s:%d: invalid recipient: %s\n", __FILE__, __LINE__, result->invalid_recipients->fpr);
+        fprintf(stderr,"psm:%s:%d: invalid recipient: %s\n", __FILE__, __LINE__, result->invalid_recipients->fpr);
 		gpgme_data_release(in);
 		gpgme_data_release(out);
 		gpgme_release(ctx);
@@ -99,7 +85,7 @@ const char *gpg_encrypt(const char *plain, const char *fpr)
 	const char *buffer = data_to_buffer(out);
 
     if (!buffer) {
-        fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		gpgme_data_release(in);
 		gpgme_data_release(out);
 		gpgme_release(ctx);
@@ -195,7 +181,7 @@ int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize)
     const char *plaintext = data_to_buffer(out);
 
     if (!plaintext) {
-        fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		goto ret; 
 	}
 
@@ -203,7 +189,7 @@ int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize)
         *buf = realloc(*buf, sizeof(char) * (strlen(plaintext) + 1));
         
 	if (!*buf) {
-        fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		goto ret; 
 	}
 
@@ -236,7 +222,7 @@ gpgme_key_t *gpg_get_keys()
     int pos = 0;
 
     if (!keys) {
-        fprintf(stderr, "psm: %s:%d: allocation error", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
         return NULL;
     }
 
@@ -270,7 +256,7 @@ gpgme_key_t *gpg_get_keys()
             keys = realloc(keys, (sizeof(gpgme_key_t) * keys_size));
 
             if (!keys) {
-                fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+                fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 				gpgme_release(ctx);
                 return NULL;
             }
@@ -301,7 +287,7 @@ gpgme_error_t passphrase_cb(void *opaque, const char *uid_hint, const char *pass
 
     /* Read pass with echo disabled (from input_aquisition.h) */
     if (read_line_s(&pass, BUF_SIZE) != 0) {
-        fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         return -1;   
     }
 
@@ -381,7 +367,7 @@ const char *data_to_buffer(gpgme_data_t dh)
             buffer = realloc(buffer, buflen);
 
             if  (!buffer) {
-                fprintf(stderr, "psm: %s:%d: allocation error\n", __FILE__, __LINE__);
+                fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
                 return NULL;
             }
         }
