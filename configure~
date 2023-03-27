@@ -4113,7 +4113,7 @@ else
 fi
 
 
-CFLAGS="-g -lpthread -lX11 -lgpgme -lsodium"
+CFLAGS="-lpthread -lX11 -lgpgme -lsodium"
 ac_config_headers="$ac_config_headers config.h"
 
 ac_config_files="$ac_config_files Makefile src/Makefile"
