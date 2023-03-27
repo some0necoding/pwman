@@ -17,7 +17,6 @@ int save_in_clipboard(unsigned char *text)
 
     XSetWindowAttributes attrs;
     window = XCreateWindow(display, RootWindow(display, N), 0, 0, 1, 1, 0, 0, InputOnly, 0, 0, &attrs);
-    //window = XCreateSimpleWindow(display, RootWindow(display, N), 0, 0, 1, 1, 0, BlackPixel(display, N), BlackPixel(display, N));
 
     targets_atom = XInternAtom(display, "TARGETS", 0);
     text_atom = XInternAtom(display, "TEXT", 0);
