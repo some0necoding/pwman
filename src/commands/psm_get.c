@@ -42,8 +42,8 @@ int psm_get(char **args)
     char *rel_path = NULL;
     char *cyphertext = calloc(BUFSIZE, sizeof(char));
     char *plaintext = calloc(BUFSIZE, sizeof(char));
-    const char *PATH = get_env_var("PATH");
-    const char *GPG_ID = get_env_var("GPG_ID");
+    const char *PATH = psm_getenv("PATH");
+    const char *GPG_ID = psm_getenv("GPG_ID");
 
     size_t rlen;
     int ret_code = -1;

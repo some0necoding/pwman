@@ -31,8 +31,8 @@ int psm_add(char **args)
     char *plaintext = calloc(1, sizeof(char));
     char *rel_path = NULL;
     
-    const char *PATH = get_env_var("PATH");
-    const char *GPG_ID = get_env_var("GPG_ID"); 
+    const char *PATH = psm_getenv("PATH");
+    const char *GPG_ID = psm_getenv("GPG_ID"); 
     const char *cyphertext = NULL;
 
     FILE *file = NULL;

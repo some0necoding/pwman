@@ -28,7 +28,7 @@ char *get_last_dir(const char *path);
 */ 
 int psm_show(char **args)
 {
-    char *PATH = get_env_var("PATH");
+    const char *PATH = psm_getenv("PATH");
     int ret_code = -1;
 
     if (!PATH) {
@@ -36,7 +36,7 @@ int psm_show(char **args)
         goto ret;
     }    
 
-    if (args[1] && (build_path(&PATH, args[1]) != 0)) {
+    if (args[1] && (build_path((char **) &PATH, args[1]) != 0)) {
         perror("psm: allocation error");
         goto ret;
     }
@@ -55,7 +55,7 @@ int psm_show(char **args)
     ret_code = 0;
 
 ret:
-    PATH ? free(PATH) : 0;
+    PATH ? free((char *) PATH) : 0;
     return ret_code;
 }
 

@@ -19,7 +19,7 @@
 int psm_rm(char **args) 
 {
     char *rel_path = NULL;
-    const char *PATH = get_env_var("PATH");
+    const char *PATH = psm_getenv("PATH");
 
     int ret_code = -1;
 
