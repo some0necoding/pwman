@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <termios.h>
 
-struct termios disable_terminal_echo() {
+const struct termios disable_terminal_echo() {
 
     struct termios old_t;
     struct termios new_t;
@@ -18,6 +18,6 @@ struct termios disable_terminal_echo() {
     return old_t;
 }
 
-void enable_terminal_echo(struct termios old_t) {
+void enable_terminal_echo(const struct termios old_t) {
     tcsetattr(fileno(stdin), TCSAFLUSH, &old_t);
 }
