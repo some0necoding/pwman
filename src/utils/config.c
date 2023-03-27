@@ -1,16 +1,18 @@
 #include "./fio.h"
 #include "./config.h"
 
-#include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
 
+#define CONFIG_PATH ".config/pwman.conf"
+
 /*----------FUNCTIONS-DEFINITION-START----------*/
 
-char *build_pair(char *key, char *value);
+char *build_pair(const char *key, const char *value);
 char *get_value(char *pair);
 
 /*-----------FUNCTIONS-DEFINITION-END-----------*/
@@ -20,30 +22,33 @@ char *get_value(char *pair);
 */
 char *get_config_path() 
 {
-    char *home_dir;
-    char *config_path = ".config/pwman.conf";
-    char *path;
+	char *tmp_home = getenv("HOME");
 
-    /* Get $HOME */
-    if ((home_dir = getenv("HOME"))) {
-        home_dir = getpwuid(getuid())->pw_dir;
-    } else {
-        perror("psm: $HOME not found");
-        return NULL;
-    }
+	if (!tmp_home) {
+		fprintf(stderr, "cannot find $HOME environment variable");
+		return NULL;
+	}
 
-    path = calloc(strlen(home_dir) + 1 + strlen(config_path) + 1, sizeof(char));
+	char *home = (char *) malloc(sizeof(char) * (strlen(tmp_home) + 1));
+	strcpy(home, tmp_home);
 
-    if (!path) {
-        perror("psm: allocation error");
-        return NULL;
-    }
+	if (!home) {
+		fprintf(stderr, "psm: allocation error\n");
+		return NULL;
+	}
 
-    /* Build $HOME/.pwstore */
-    strcpy(path, home_dir);
-    strcat(path, "/");
-    strcat(path, config_path);
+    char *path = malloc(sizeof(char) * (strlen(home) + 1 + strlen(CONFIG_PATH) + 1));
 
+	if (!path) {
+		fprintf(stderr, "psm: allocation error\n");
+		free(home);
+		return NULL;
+	}
+
+    /* Build $HOME/.config/pwman.conf */
+	sprintf(path, "%s/%s", home, CONFIG_PATH);
+
+	free(home);
     return path;
 }
 
@@ -52,50 +57,39 @@ char *get_config_path()
     the format "key=value" in the file stored at
     CONFIGS path.
 */
-int add_env_var(char *key, char *value) 
+int add_env_var(const char *key, const char *value) 
 {
-    char *pair = NULL;
-    char *config_file = get_config_path();
+	const char *config_file = get_config_path();
+
+	if (!config_file) {
+		fprintf(stderr, "cannot get config path\n");
+	}
 
     size_t wlen;
     size_t pair_len;
-    int ret_code = -1;
 
-    FILE *file = NULL;
-
-    if (!config_file) {
-        perror("psm: allocation error");
-        goto ret;
-    } 
-    
-    file = fopen(config_file, "a");
+    FILE *file = fopen(config_file, "a");
 
     if (!file) {
-        perror("psm: I/O error");
-        goto ret;
+		fprintf(stderr, "cannot open %s\n", config_file);
+        return -1;
     }
 
-    // builds a pair in the format "key=value"
-    if (!(pair = build_pair(key, value))) {
-        perror("psm: allocation error");
-        goto ret;
-    }
-
-    pair_len = strlen(pair);
+    const char *pair = build_pair(key, value);
 
     // writes pair into file
-    if ((wlen = fwrite(pair, sizeof(char), pair_len, file)) < 0 ) {
-        perror("psm: I/O error");
-        goto ret;
+    if ((wlen = fwrite(pair, sizeof(char), strlen(pair), file)) < 0 ) {
+		fprintf(stderr, "cannot write to %s\n", config_file);
+        fclose(file);
+		free((char *) pair);
+		free((char *) config_file);
+		return -1;
     }
 
-    ret_code = 0;
-
-ret:
-    pair ? free(pair) : 0;
-    config_file ? free(config_file) : 0;
-    file ? fclose(file) : 0;
-    return ret_code;
+	fclose(file);
+	free((char *) pair);
+	free((char *) config_file);
+    return 0;
 }
 
 /*
@@ -154,23 +148,11 @@ ret:
     This function returns a string containing
     a pair of format "key=value"
 */
-char *build_pair(char *key, char *value)
+char *build_pair(const char *key, const char *value)
 {
-    size_t key_len = strlen(key);
-    size_t value_len = strlen(value);
-    size_t pair_len = key_len + 1 + value_len + 1;      // key + = + value + \n
+    char *pair = (char *) malloc(sizeof(char) * (strlen(key) + 1 + strlen(value) + 2)); 
 
-    char *pair = calloc(pair_len + 1, sizeof(char));
-
-    if (!pair) {
-        perror("psm: allocation error\n");
-        return NULL;
-    }
-
-    strcat(pair, key);
-    strcat(pair, "=");
-    strcat(pair, value);
-    strcat(pair, "\n");
+	sprintf(pair, "%s=%s\n", key, value);
 
     return pair;
 }

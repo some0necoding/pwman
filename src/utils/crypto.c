@@ -16,12 +16,10 @@
 #define BUF_SIZE 512
 
 #define fail_if_err(err)					\
-  	do {									\
-      	if (err) {							\
-          	fprintf (stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, gpgme_strsource (err), gpgme_strerror (err));			\
-          	exit(1);						\
-        }									\
-    } while (0)
+    if (err) {							\
+        fprintf (stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, gpgme_strsource (err), gpgme_strerror (err));			\
+        exit(1);						\
+    }									\
 
 /*-----------CONSTANTS-DEFINITION-END-----------*/
 
@@ -50,7 +48,8 @@ const char *gpg_encrypt(char *plain, const char *fpr)
       
     err = gpgme_new(&ctx);
     fail_if_err(err);
-    gpgme_set_armor(ctx, 1);            // output will be ascii armored
+
+	gpgme_set_armor(ctx, 1);            // output will be ascii armored
 
     err = gpgme_data_new_from_mem(&in, plain, strlen(plain), 0);
     fail_if_err (err);
@@ -221,6 +220,7 @@ gpgme_key_t *gpg_get_keys()
                 return NULL;
             }
         }
+
     }
 
     /* Null terminate keys */

@@ -10,13 +10,15 @@
 #include <errno.h>
 #include <sys/types.h>
 
-/*----------FUNCTIONS-DEFINITION-START----------*/
+#define CONFIG_PATH "$HOME/.config/pwman.conf"
+
+/* ---------- FUNCTIONS DEFINITION START ---------- */
 
 int setup();
 char *get_path();
 char *get_gpg_id();
 
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
+/* ----------- FUNCTIONS DEFINITION END ----------- */
 
 int main(int argc, char const *argv[]) 
 {
@@ -37,7 +39,7 @@ int setup()
 {
     char *path = NULL;
     char *gpg_id = NULL;
-    char *config_file = get_config_path();
+    const char *config_file = get_config_path();
 
     int ret_code = -1;
 
@@ -65,7 +67,7 @@ int setup()
       goto ret;
     }
 
-    struct stat st = {0};
+	struct stat st = {0};
 
     /* Create directory in path location with 700 permissions if it does not exist */
     if ((stat(path, &st) == -1) && (mkdir(path, 0700) != 0)) {
@@ -73,24 +75,24 @@ int setup()
         goto ret;
     }
 
-    /* Add PATH environment variable */
+	/* Add PATH environment variable */
     if (add_env_var("PATH", path) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
 
-    /* Add GPG_ID environment variable */
+	/* Add GPG_ID environment variable */
     if (add_env_var("GPG_ID", gpg_id) != 0) {
         perror("psm: I/O error");
         goto ret;
     }
 
-    ret_code = 0;
+	ret_code = 0;
 
 ret:
-    config_file ? free(config_file) : 0;
-    path ? free(path) : 0;
-    gpg_id ? free(gpg_id) : 0;
+	if (path) free(path);
+	if (config_file) free((char *) config_file);
+    if (gpg_id) free(gpg_id);
     return ret_code;
 }
 
@@ -139,12 +141,12 @@ char *get_gpg_id()
     /* Get available keys */
     gpgme_key_t *keys = gpg_get_keys();
 
-    int userInput;
+    int user_input;
     int pos = 0;
 
     /* Check allocation */
     if (!keys) {
-        perror("psm: allocation error");
+        fprintf(stderr, "psm: allocation error\n");
         return NULL;
     }
 
@@ -161,8 +163,13 @@ char *get_gpg_id()
     }
 
     printf("Choose the gpg key you want to use to encrypt your passwords: ");
-    scanf("%d", &userInput);
+    scanf("%d", &user_input);
+
+	char *ret_key = (char *) malloc(sizeof(char *) * (strlen(keys[user_input - 1]->fpr) + 1));
+	strcpy(ret_key, keys[user_input - 1]->fpr);
+
+	free(keys);
 
     /* Returning key fingerprint */
-    return keys[userInput - 1]->fpr;
+    return ret_key;
 }
