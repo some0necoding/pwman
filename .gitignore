@@ -11,3 +11,9 @@ config.h
 config.log
 config.status
 stamp-h1
+
+**/.dirstamp
+**/.deps/
+
+**/Makefile
+**/Makefile.in
