@@ -92,6 +92,8 @@ int psm_putenv(const char *key, const char *value)
 		goto ret;
     }
 
+	ret_val = 0;
+
 ret:
 	if (file) fclose(file);
 	if (pair) free((char *) pair);

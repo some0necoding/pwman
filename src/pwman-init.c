@@ -1,6 +1,7 @@
 #include "./utils/config.h"
 #include "./utils/crypto.h"
 
+#include <gpgme.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,14 +89,14 @@ int setup()
     }
 
 	/* Add PATH environment variable */
-    if (add_env_var("PATH", path) != 0) {
-        perror("psm: I/O error");
+    if (psm_putenv("PATH", path) != 0) {
+        fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
         goto ret;
     }
 
 	/* Add GPG_ID environment variable */
-    if (add_env_var("GPG_ID", gpg_id) != 0) {
-        perror("psm: I/O error");
+    if (psm_putenv("GPG_ID", gpg_id) != 0) {
+        fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
         goto ret;
     }
 

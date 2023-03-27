@@ -56,7 +56,7 @@ int (*command_addr[]) (char **) = {
 
 int main(int argc, char const *argv[])
 {
-    char *config_file = get_config_path();
+    const char *config_file = get_config_path();
 
     if (!config_file) {
         perror("psm: allocation error");
@@ -65,14 +65,14 @@ int main(int argc, char const *argv[])
 
     if (access(config_file, F_OK) != 0) {
         printf("You have to run \"pwman-init\" before\n");
-        free(config_file);
+        free((char *) config_file);
         return 0;
     }
 
     /* starting the "shell" */
     start();
 
-    free(config_file);
+    free((char *) config_file);
     return 0;
 }
 
