@@ -20,6 +20,18 @@ char *get_gpg_id();
 
 /* ----------- FUNCTIONS DEFINITION END ----------- */
 
+
+/*
+	To check if X11 is running:
+
+	if (!getenv("DISPLAY")) {
+		fprintf(stderr, "missing X11 display, have you forgotten something?\n");
+		exit(1);
+	}
+
+*/
+
+
 int main(int argc, char const *argv[]) 
 {
     if (setup() != 0) {
