@@ -1,17 +1,17 @@
 test/
 
-autom4te.cache
-aclocal.m4
-compile
-config.h.in
-depcomp
-install-sh
-missing
+#autom4te.cache
+#aclocal.m4
+#compile
+#config.h.in
+#depcomp
+#install-sh
+#missing
 config.h
 config.log
 config.status
 stamp-h1
-configure
+#configure
 configure~
 
 **/.dirstamp
