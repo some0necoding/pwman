@@ -71,6 +71,7 @@ ret:
 */
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
+	// TODO: write a get_basename function to pass a copy of path to it.
     char *base_name = basename((char *) path);
 	char *file_name = NULL;
 	char *indent = NULL;
