@@ -7,8 +7,6 @@
 
 
 #define MAX_LINE_LENGTH 4096
-#define BUFSIZE_S 32
-#define BUFSIZE 1024
 
 
 /*
