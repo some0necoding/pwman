@@ -5,12 +5,12 @@
 #include <stdio.h>
 
 /* Returns the size of a stream */
-size_t fsize(char *path);
+size_t fsize(const char *path);
 
 /* Returns all bytes contained in a stream */
-int fgetall(char *path, char **buf, size_t bufsize);
+char *fgetall(const char *path);
 
 /* Reads a single line from file */
-int freadline(FILE *file, char **ret_buff, size_t bufsize);
+char *freadline(FILE *file);
 
 #endif
