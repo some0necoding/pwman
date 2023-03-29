@@ -17,9 +17,6 @@
 #include <errno.h>
 
     
-#define FMT_TOK "|--"
-
-
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
 
 
@@ -49,7 +46,7 @@ int psm_show(char **args)
         goto ret;
     }
 
-    /* Recursively call print_file on all directories and files */
+	/* Recursively call print_file on all directories and files */
     if (nftw(PATH, print_file, 20, 0) == -1) {
         if (errno == 2) {
             printf("No such file or directory\n");
@@ -74,50 +71,48 @@ ret:
 */
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
-    char *file_name = NULL;
+    char *base_name = basename((char *) path);
+	char *file_name = NULL;
 	char *indent = NULL;
 
 	int ret_code = -1;
-    
-	size_t indentation = ftwbuf->level * 4; 
-	
-	file_name = basename((char *) path);
 
-    if (!file_name) {
+	size_t indentation = (ftwbuf->level - 1) * 4; 
+
+    if (!base_name) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
    
-	file_name = (char *) rm_ext(file_name, ".gpg");
+	file_name = (char *) rm_ext(base_name, "gpg");
 
-    /* If indentation level equals 0 */ 
+	if (!file_name) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+        goto ret;
+	}
+
+	/* If indentation level equals 0 */ 
     if (ftwbuf->level == 0) {
-        printf("%s\n", file_name);
+        printf("Password Store\n");
         ret_code = 0;
         goto ret;
     }
+    
+	indent = (char *) malloc(sizeof(char) * indentation);
 
-    //char *fmt_name = (char *) malloc(sizeof(char) * (indentation + strlen(FMT_TOK) + strlen(file_name) + 1));
-	indent = (char *) malloc(sizeof(char) * (indentation + 1));
-
-    if (/*!fmt_name ||*/ !indent) {
+    if (!indent) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret; 
     }
 
-    memset(indent, ' ', indentation - 1);
-	indent[indentation] = '\0';
+    memset(indent, ' ', indentation);
 
-	//sprintf(fmt_name, "%s%s%s", indent, FMT_TOK, file_name);
-	printf("%s%s%s\n", indent, FMT_TOK, file_name);
-
-    //printf("%s\n", fmt_name);
+	printf("%s|---%s\n", indent, file_name);
 
     ret_code = 0;
 
 ret:
-    //fmt_name ? free(fmt_name) : 0;
-    if (file_name) free((char *) file_name);
+    if (file_name) free(file_name);
 	if (indent) free(indent);
     return ret_code;
 }

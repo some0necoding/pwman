@@ -50,7 +50,7 @@ const char *add_ext(const char *fname, const char *ext)
 */
 const char *rm_ext(const char *fname, const char* ext)
 {
-	char *new_fname = (char *) malloc(sizeof(char) * (strlen(fname) - strlen(ext) + 1));
+	char *new_fname = (char *) malloc(sizeof(char) * (strlen(fname) + 1));
 
 	if (!new_fname) {
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
@@ -59,8 +59,8 @@ const char *rm_ext(const char *fname, const char* ext)
 
 	/* fname does not contain ext */
 	if (strcmp(fname+(strlen(fname) - strlen(ext)), ext) != 0) {
-		if (new_fname) free(new_fname);
-		return fname;
+		strcpy(new_fname, fname);
+		return new_fname;
 	}
 
 	strncpy(new_fname, fname, strlen(fname) - strlen(ext));
