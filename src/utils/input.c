@@ -20,7 +20,6 @@ char *read_line_s()
     struct termios old;
 
 	char *line = (char *) malloc(sizeof(char) * (MAX_LINE_LENGTH));	
-    char *ret_val = NULL;
 
     char c;
    
@@ -28,7 +27,7 @@ char *read_line_s()
 
 	if (!line) {
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-		goto ret;
+		return NULL;
 	}
 
     old = disable_terminal_echo();
@@ -39,15 +38,14 @@ char *read_line_s()
 
 	if (c == EOF && ferror(stdin)) {
 		fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
-		goto ret;
+		return NULL;	
 	}
 
 	line[pos++] = '\0';
-    ret_val = line;
 
 ret:
     enable_terminal_echo(old);
-    return ret_val;
+    return line;
 }
 
 
