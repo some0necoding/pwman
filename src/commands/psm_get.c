@@ -80,6 +80,7 @@ int psm_get(char **args)
         goto ret;
     } 
 
+	// TODO: this gpg_decrypt function could be revised.
     int err = gpg_decrypt(cyphertext, GPG_ID, &plaintext, BUFSIZE);
 
     if (err == 0) {

@@ -80,6 +80,8 @@ int psm_add(char **args)
         goto ret;
     }
 
+	// TODO: move following code to a fio.c function (something like file_write())
+
     FILE *file = fopen(file_path, "w");
 
     if (!file) {

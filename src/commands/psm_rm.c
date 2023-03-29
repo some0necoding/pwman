@@ -18,14 +18,14 @@
 */
 int psm_rm(char **args) 
 {
-    char *rel_path = NULL;
     const char *PATH = psm_getenv("PATH");
+	const char *file_path;
 
     int ret_code = -1;
 
     /* Check allocation */
     if (!PATH) {
-        perror("psm: allocation error");
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -36,27 +36,27 @@ int psm_rm(char **args)
         goto ret;
     }
 
-    rel_path = add_ext(args[1], ".gpg"); 
+    const char *file_name = add_ext(args[1], "gpg"); 
 
     /* Check allocation */
-    if (!rel_path) {
-        perror("psm: allocation error");
+    if (!file_name) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
-    if (build_path((char **) &PATH, rel_path) != 0) {
-        perror("psm: allocation error");
+    if (!(file_path = build_path(PATH, file_name))) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     } 
 
     /* Ask for confirm */
-    printf("Do you really want to permanently delete \"%s\" [y/N]:", PATH);
-    int userInput = getchar();
+    printf("Do you really want to permanently delete \"%s\" [y/N]:", file_path);
+    int user_input = getchar();
 
     /* Delete file */
-    if (userInput == 'y' || userInput == 'Y') {
-        if (remove(PATH) != 0) {
-            perror("psm: I/O error");
+    if (user_input == 'y' || user_input == 'Y') {
+        if (remove(file_path) != 0) {
+            fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
             goto ret;
         }
     }
@@ -64,7 +64,8 @@ int psm_rm(char **args)
     ret_code = 0;
 
 ret:
-    rel_path ? free(rel_path) : 0;
-    PATH ? free((char *) PATH) : 0;
+    if (file_name) free((char *) file_name);
+	if (file_path) free((char *) file_path);
+    if (PATH) free((char *) PATH);
     return ret_code;
 }

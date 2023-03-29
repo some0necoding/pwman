@@ -1,23 +1,27 @@
 #include "./psm_show.h"
 #include "../utils/config.h"
 #include "../utils/path.h"
+#include <stddef.h>
 
+
+// this define needs to remain here (i.e. before including ftw.h)
 #define _XOPEN_SOURCE 500
 
+
 #include <stdio.h>
+#include <ftw.h>
 #include <string.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <sys/stat.h>
-#include <ftw.h>
 #include <errno.h>
 
-/*----------FUNCTIONS-DEFINITION-START----------*/
+    
+#define FMT_TOK "|--"
 
-int remove_ext(char **fname, const char *ext); 
+
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
-char *get_last_dir(const char *path);
 
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 /*
     This function lists all directories and files under .pwstore.
@@ -29,15 +33,16 @@ char *get_last_dir(const char *path);
 int psm_show(char **args)
 {
     const char *PATH = psm_getenv("PATH");
+	const char *file_path;
     int ret_code = -1;
 
     if (!PATH) {
-        perror("psm: allocation error\n");
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }    
 
-    if (args[1] && (build_path((char **) &PATH, args[1]) != 0)) {
-        perror("psm: allocation error");
+    if (args[1] && (!(file_path = build_path(PATH, args[1])))) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -46,7 +51,7 @@ int psm_show(char **args)
         if (errno == 2) {
             printf("No such file or directory\n");
         } else {
-            perror("psm: I/O error");
+            fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
         }
 
         goto ret;
@@ -55,114 +60,59 @@ int psm_show(char **args)
     ret_code = 0;
 
 ret:
-    PATH ? free((char *) PATH) : 0;
+	if (file_path) free((char *) file_path);
+    if (PATH) free((char *) PATH);
     return ret_code;
 }
+
 
 /*
     This function prints a file name with the right indentation
 */
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
-    const char *FMT_TOK = "|--";
-    char *last_dir = get_last_dir(path);
+    char *file_name = basename((char *) path);
 
     int ret_code = -1;
 
-    if (!last_dir) {
-        perror("psm: allocation error");
+    if (!file_name) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
-    
-    remove_ext(&last_dir, ".gpg");
+   
+	file_name = (char *) rm_ext(file_name, ".gpg");
 
     /* If indentation level equals 0 */ 
     if (ftwbuf->level == 0) {
-        printf("%s\n", last_dir);
+        printf("%s\n", file_name);
         ret_code = 0;
         goto ret;
     }
 
     /* Every indentation level equals 4 spaces */
-    size_t indent = ftwbuf->level * 4;
-    size_t fmt_name_len = strlen(last_dir) + indent;
-    size_t fmt_offset = indent - strlen(FMT_TOK);
+	size_t indentation = ftwbuf->level * 4; 
 
-    char *fmt_name = calloc(fmt_name_len + 1, sizeof(char));
+    //char *fmt_name = (char *) malloc(sizeof(char) * (indentation + strlen(FMT_TOK) + strlen(file_name) + 1));
+	char *indent = (char *) malloc(sizeof(char) * (indentation + 1));
 
-    if (!fmt_name) {
-        perror("psm: allocation error\n");
+    if (/*!fmt_name ||*/ !indent) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret; 
     }
 
-    /* Set all string to whitespaces */
-    memset(fmt_name, ' ', fmt_name_len);
+    memset(indent, ' ', indentation - 1);
+	indent[indentation] = '\0';
 
-    strcpy(fmt_name+fmt_offset, FMT_TOK);
-    strcpy(fmt_name+indent, last_dir);
+	//sprintf(fmt_name, "%s%s%s", indent, FMT_TOK, file_name);
+	printf("%s%s%s\n", indent, FMT_TOK, file_name);
 
-    printf("%s\n", fmt_name);
+    //printf("%s\n", fmt_name);
 
     ret_code = 0;
 
 ret:
-    fmt_name ? free(fmt_name) : 0;
-    last_dir ? free((char *) last_dir) : 0;
+    //fmt_name ? free(fmt_name) : 0;
+	if (indent) free(indent);
+    if (file_name) free((char *) file_name);
     return ret_code;
-}
-
-/*
-    This function returns the last token of a path.
-
-    Example: /foo/boo -> boo
-*/
-char *get_last_dir(const char *path) 
-{
-    size_t path_len = strlen(path);
-    char *new_path = calloc(path_len + 1, sizeof(char));
-
-    /* Check if path contains at least one '/' */ 
-    if (strchr(path, '/')) {
-    
-        int last_index = 0;
-
-        /* Check path backwards until a '/' is found */ 
-        for (int i = (path_len - 1); (i >= 1 && last_index == 0); i--) {
-            if (path[i] == '/') {
-                last_index = i;
-            }
-        }
-
-        new_path = realloc(new_path, sizeof(char) * (path_len - last_index));
-
-        if (!new_path) {
-            perror("psm: allocation error\n");
-            return NULL;
-        }
-
-        strcpy(new_path, path+(last_index + 1));
-    } else {
-        strcpy(new_path, path);
-    }
-
-    return new_path;
-}
-
-/*
-    This function returns name after removing ext suffix
-    if present.
-
-    Example: remove_ext("file_name.gpg", ".gpg") -> "file_name"
-*/
-int remove_ext(char **name, const char *ext) 
-{
-    int ext_len = strlen(ext);
-    int name_len = strlen(*name);
-    int no_ext_len = name_len - ext_len;
-
-    if (strcmp(*name+no_ext_len, ".gpg") == 0) {
-        name[0][no_ext_len] = '\0';
-    }
-
-    return 0;
 }

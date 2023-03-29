@@ -4,14 +4,12 @@
 
 int psm_help(char **args)
 {
-    char *help_txt;
-
     if (args[1]) {
         printf("\"help\" does not accept arguments\n");
         return -1;
     }
 
-    help_txt = "\n"
+    const char *help_txt = "\n"
                "    Pwman is a really simple password manager\n"
                "\n"
                "SYNTAX:\n" 
