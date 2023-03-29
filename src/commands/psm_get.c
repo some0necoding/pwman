@@ -14,17 +14,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
-/*----------CONSTANTS-DEFINITION-START----------*/
 
 #define BUFSIZE 32
 
-/*-----------CONSTANTS-DEFINITION-END-----------*/
-
-/*----------FUNCTIONS-DEFINITION-START----------*/
-
-int rm_newline(char **str);
-
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 /*
     This function decrypts a file and stores its content
@@ -39,11 +31,12 @@ int rm_newline(char **str);
 */
 int psm_get(char **args)
 {
-    char *rel_path = NULL;
-    char *cyphertext = calloc(BUFSIZE, sizeof(char));
-    char *plaintext = calloc(BUFSIZE, sizeof(char));
-    const char *PATH = psm_getenv("PATH");
+    char *plaintext = (char *) malloc(sizeof(char) * BUFSIZE);
+    
+	const char *PATH = psm_getenv("PATH");
     const char *GPG_ID = psm_getenv("GPG_ID");
+	const char *file_path;
+	const char *cyphertext;
 
     size_t rlen;
     int ret_code = -1;
@@ -51,7 +44,7 @@ int psm_get(char **args)
     pthread_t thread_id;
 
     if (!PATH || !GPG_ID || !cyphertext || !plaintext) {
-        perror("psm: allocation error");
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -62,16 +55,15 @@ int psm_get(char **args)
         goto ret;
     }
 
-    rel_path = add_ext(args[1], ".gpg");
+    const char *file_name = add_ext(args[1], "gpg");
 
-    /* Check allocation */
-    if (!rel_path) {
-        perror("psm: allocation error");
+    if (!file_name) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
-    if (build_path((char **) &PATH, rel_path) != 0) {
-        perror("psm: allocation error");
+    if (!(file_path = build_path(PATH, file_name))) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -83,8 +75,8 @@ int psm_get(char **args)
     }
 
     /* Retrieve cyphertext */
-    if ((rlen = fgetall((char *) PATH, &cyphertext, BUFSIZE)) < 0) {
-        perror("psm: allocation error");
+    if (!(cyphertext = fgetall(PATH))) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     } 
 
@@ -95,36 +87,24 @@ int psm_get(char **args)
         ret_code = 0;
         goto ret;
     } else if (err == -1) {
-        perror("psm: allocation error");
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
-    rm_newline(&plaintext);
-
     /* Create a thread managing clipboard */
     if (pthread_create(&thread_id, NULL, (void *) save_in_clipboard, plaintext) != 0) {
-        perror("psm: error in thread creation");
+        fprintf(stderr, "psm:%s:%d: error in thread creation\n", __FILE__, __LINE__);
         goto ret;
     }
 
     ret_code = 0;
 
 ret:
-    rel_path ? free(rel_path) : 0;
-    cyphertext ? free(cyphertext) : 0;
-    PATH ? free((char *) PATH) : 0;
-    GPG_ID ? free((char *) GPG_ID) : 0;
+    if (file_name) free((char *) file_name);
+    if (file_path) free((char *) file_path);
+    if (cyphertext) free((char *) cyphertext);
+    if (plaintext) free((char *) plaintext);
+    if (PATH) free((char *) PATH);
+    if (GPG_ID) free((char *) GPG_ID);
     return ret_code;  
-}
-
-/*
-    This function removes a newline char
-    after str.
-*/
-int rm_newline(char **str)
-{
-    size_t str_size = strlen(*str);
-    str[0][str_size - 1] = '\0';
-
-    return 0;
 }
