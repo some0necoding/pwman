@@ -13,9 +13,11 @@
 
 #define BUF_SIZE 512
 
+
 const char *data_to_buffer(gpgme_data_t dh);
 gpgme_error_t passphrase_cb(void *opaque, const char *uid_hint, const char *passphrase_info, int last_was_bad, int fd);
 int init_gpgme(gpgme_protocol_t proto);
+
 
 /*
     This function encrypts buffer plain using openpgp public 
@@ -97,6 +99,7 @@ const char *gpg_encrypt(const char *plain, const char *fpr)
     gpgme_release(ctx);
     return buffer;
 }
+
 
 /*
     This function decrypts buffer cypher using openpgp private
@@ -204,6 +207,7 @@ ret:
     return ret_val;
 }
 
+
 /*
     This function returns an array containing all local 
     gpg keys. Every gpgme_key_t struct can then be accessed
@@ -271,6 +275,7 @@ gpgme_key_t *gpg_get_keys()
     return keys;
 }
 
+
 /*
     This is a passphrase callback function used to 
     retrieve private key passphrase from user.
@@ -311,6 +316,7 @@ gpgme_error_t passphrase_cb(void *opaque, const char *uid_hint, const char *pass
     return 0;
 }
 
+
 /* 
     This function calls a set of functions to 
     set up gpgme.
@@ -334,6 +340,7 @@ int init_gpgme(gpgme_protocol_t proto)
 
 	return 0;
 }
+
 
 /*
     This function convert a gpgme_data_t object (which
