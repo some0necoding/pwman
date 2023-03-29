@@ -75,7 +75,7 @@ const char *get_home()
 */
 int psm_putenv(const char *key, const char *value) 
 {
-	int ret_val = -1;
+	int ret_code = -1;
 
 	const char *config_file = get_config_path();
 
@@ -107,13 +107,13 @@ int psm_putenv(const char *key, const char *value)
 		goto ret;
     }
 
-	ret_val = 0;
+	ret_code = 0;
 
 ret:
 	if (file) fclose(file);
 	if (pair) free((char *) pair);
 	if (config_file) free((char *) config_file);
-    return ret_val;
+    return ret_code;
 }
 
 

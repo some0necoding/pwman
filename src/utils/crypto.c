@@ -117,7 +117,7 @@ int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize)
 
     size_t plaintext_size;
 
-	int ret_val = -1;
+	int ret_code = -1;
 
     if (init_gpgme(GPGME_PROTOCOL_OpenPGP) != 0) {
 		goto ret;	
@@ -167,7 +167,7 @@ int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize)
     err = gpgme_op_decrypt(ctx, in, out);
 
     if (gpgme_err_code(err) == GPG_ERR_BAD_PASSPHRASE) {
-		ret_val = 0;	
+		ret_code = 0;	
 		goto ret; 
 	} else if (err) {
 		fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, gpgme_strsource(err), gpgme_strerror(err));
@@ -198,13 +198,13 @@ int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize)
 
     strcpy(*buf, plaintext);
 
-	ret_val = 1;
+	ret_code = 1;
 
 ret:
     gpgme_data_release(in);
     gpgme_data_release(out);
     gpgme_release(ctx);
-    return ret_val;
+    return ret_code;
 }
 
 
