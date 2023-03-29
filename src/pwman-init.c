@@ -1,5 +1,6 @@
 #include "./utils/config.h"
 #include "./utils/crypto.h"
+#include "./utils/path.h"
 
 #include <gpgme.h>
 #include <stdio.h>
@@ -123,16 +124,12 @@ const char *get_store_path()
 		return NULL;
 	}
     
-	char *path = (char *) malloc(sizeof(char) * (strlen(home) + 1 + strlen(DB_NAME) + 1));
+	const char *path = build_path(home, DB_NAME);
 
-    if (!path) {
-        fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
-		if (home) free((char *) home);
+	if (!path) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		return NULL;
-    }
-
-    /* Build $HOME/.pwstore */
-	sprintf(path, "%s/%s", home, DB_NAME);
+	}
 
 	if (home) free((char *) home);
     return path;

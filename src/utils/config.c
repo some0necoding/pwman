@@ -31,6 +31,11 @@ const char *get_config_path()
   
 	const char *path = build_path(home, CONFIG_PATH);
 
+	if (!path) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		return NULL;
+	}
+
 	if (home) free((char *) home);
     return path;
 }
