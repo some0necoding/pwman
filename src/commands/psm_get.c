@@ -31,19 +31,23 @@
 */
 int psm_get(char **args)
 {
-    char *plaintext = (char *) malloc(sizeof(char) * BUFSIZE);
+    const char *file_name = NULL;
+	const char *file_path = NULL;
+	const char *PATH = NULL;
+    const char *GPG_ID = NULL;
+	const char *cyphertext = NULL;
     
-	const char *PATH = psm_getenv("PATH");
-    const char *GPG_ID = psm_getenv("GPG_ID");
-	const char *file_path;
-	const char *cyphertext;
+	char *plaintext = (char *) malloc(sizeof(char) * BUFSIZE);
 
     size_t rlen;
     int ret_code = -1;
 
     pthread_t thread_id;
 
-    if (!PATH || !GPG_ID || !cyphertext || !plaintext) {
+	PATH = psm_getenv("PATH");
+    GPG_ID = psm_getenv("GPG_ID");
+    
+	if (!PATH || !GPG_ID || !cyphertext || !plaintext) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
@@ -55,7 +59,7 @@ int psm_get(char **args)
         goto ret;
     }
 
-    const char *file_name = add_ext(args[1], "gpg");
+    file_name = add_ext(args[1], "gpg");
 
     if (!file_name) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
@@ -68,14 +72,14 @@ int psm_get(char **args)
     }
 
     /* Check for file existance */
-    if (access(PATH, F_OK) != 0) {
+    if (access(file_path, F_OK) != 0) {
         printf("No such file or directory\n");
         ret_code = 0;
         goto ret;
     }
 
     /* Retrieve cyphertext */
-    if (!(cyphertext = fgetall(PATH))) {
+    if (!(cyphertext = fgetall(file_path))) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     } 
@@ -103,9 +107,9 @@ int psm_get(char **args)
 ret:
     if (file_name) free((char *) file_name);
     if (file_path) free((char *) file_path);
-    if (cyphertext) free((char *) cyphertext);
-    if (plaintext) free((char *) plaintext);
     if (PATH) free((char *) PATH);
     if (GPG_ID) free((char *) GPG_ID);
+    if (cyphertext) free((char *) cyphertext);
+    if (plaintext) free(plaintext);
     return ret_code;  
 }

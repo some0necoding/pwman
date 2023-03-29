@@ -18,12 +18,15 @@
 */
 int psm_rm(char **args) 
 {
-    const char *PATH = psm_getenv("PATH");
-	const char *file_path;
+    const char *file_name = NULL; 
+	const char *file_path = NULL;
+    const char *PATH = NULL;
+    
+	int ret_code = -1;
 
-    int ret_code = -1;
-
-    /* Check allocation */
+    PATH = psm_getenv("PATH");
+    
+	/* Check allocation */
     if (!PATH) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
@@ -36,7 +39,7 @@ int psm_rm(char **args)
         goto ret;
     }
 
-    const char *file_name = add_ext(args[1], "gpg"); 
+    file_name = add_ext(args[1], "gpg"); 
 
     /* Check allocation */
     if (!file_name) {

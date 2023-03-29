@@ -9,6 +9,7 @@
 #include <pwd.h>
 #include <unistd.h>
 
+
 #define CONFIG_PATH ".config/pwman.conf"
 
 
@@ -23,7 +24,7 @@ const char *get_value(char *pair);
 const char *get_config_path() 
 {
 	const char *home = get_home();
-	
+
 	if (!home) {
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		return NULL;
@@ -73,9 +74,14 @@ const char *get_home()
 */
 int psm_putenv(const char *key, const char *value) 
 {
+	const char *config_file = NULL;
+    const char *pair = NULL;
+    
+	FILE *file = NULL;
+	
 	int ret_code = -1;
 
-	const char *config_file = get_config_path();
+	config_file = get_config_path();
 
 	if (!config_file) {
 		fprintf(stderr, "cannot define path of configuration file\n");
@@ -85,14 +91,14 @@ int psm_putenv(const char *key, const char *value)
     size_t wlen;
     size_t pair_len;
 
-    FILE *file = fopen(config_file, "a");
+    file = fopen(config_file, "a");
 
     if (!file) {
 		fprintf(stderr, "cannot open %s\n", config_file);
         goto ret;
     }
 
-    const char *pair = build_pair(key, value);
+    pair = build_pair(key, value);
 
 	if (!pair) {
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
@@ -121,15 +127,22 @@ ret:
 */
 const char *psm_getenv(const char *key) 
 {
-    const char *config_file = get_config_path();
-    char *pair = (char *) malloc(sizeof(char));
+    const char *config_file = NULL;
+	const char *value = NULL;
+
+	char *pair = NULL;
+    
+    FILE *file = NULL;
+	
+	config_file = get_config_path();
+	pair = (char *) malloc(sizeof(char));
 
     if (!config_file || !pair) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
-    FILE *file = fopen(config_file, "r");
+    file = fopen(config_file, "r");
     
     if (!file) {
         fprintf(stderr, "cannot open %s\n", config_file);
@@ -149,7 +162,7 @@ const char *psm_getenv(const char *key)
 
 	// else if FOUND
 	
-	const char *value = get_value(pair);
+	value = get_value(pair);
         
     if (!value) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);

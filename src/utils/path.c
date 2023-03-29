@@ -21,7 +21,7 @@ const char *build_path(const char *root, const char *rel_path)
 
 	sprintf(path, "%s/%s", root, rel_path);
 
-    return 0;
+    return path;
 }
 
 

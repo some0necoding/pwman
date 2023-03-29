@@ -23,16 +23,22 @@
 */
 int psm_add(char **args)
 {
-    char *plaintext = (char *) malloc(sizeof(char));
+	const char *file_path = NULL;
+	const char *file_name = NULL;
+    const char *PATH = NULL;
+    const char *GPG_ID = NULL; 
+    const char *cyphertext = NULL;
+    
+	char *plaintext = (char *) malloc(sizeof(char));
 
-    const char *PATH = psm_getenv("PATH");
-    const char *GPG_ID = psm_getenv("GPG_ID"); 
-    const char *cyphertext;
-	const char *file_path;
-
-    size_t wlen;
+    FILE *file = NULL;
+    
+	size_t wlen;
 
     int ret_code = -1;
+    
+	PATH = psm_getenv("PATH");
+    GPG_ID = psm_getenv("GPG_ID"); 
 
     if (!plaintext || !PATH || !GPG_ID) {
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
@@ -62,7 +68,7 @@ int psm_add(char **args)
 
     printf("\n");
 
-	const char *file_name = add_ext(args[1], "gpg"); 
+	file_name = add_ext(args[1], "gpg"); 
 
     if (!file_name) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
@@ -82,7 +88,7 @@ int psm_add(char **args)
 
 	// TODO: move following code to a fio.c function (something like file_write())
 
-    FILE *file = fopen(file_path, "w");
+    file = fopen(file_path, "w");
 
     if (!file) {
         fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
@@ -100,10 +106,10 @@ int psm_add(char **args)
 ret:
 	if (file_path) free((char *) file_path);
     if (file_name) free((char *) file_name);
-    if (GPG_ID) free((char *) GPG_ID);
-    if (file) fclose(file);
     if (PATH) free((char *) PATH);
-    if (plaintext) free(plaintext);
+    if (GPG_ID) free((char *) GPG_ID);
     if (cyphertext) free((char *) cyphertext);
+    if (plaintext) free(plaintext);
+    if (file) fclose(file);
     return ret_code;
 }

@@ -38,14 +38,18 @@ int main(int argc, char const *argv[])
 */
 int setup()
 {
-    int ret_code = -1;
+    const char *config_file = NULL;
+    const char *store_path = NULL;
+    const char *gpg_fpr = NULL;
+    
+	int ret_code = -1;
 	
 	if (check_X11() != 0) {
 		fprintf(stderr, "missing needed X11 display\n");
 		goto ret;
 	}
 
-    const char *config_file = get_config_path();
+    config_file = get_config_path();
 
     if (!config_file) {
         fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
@@ -60,10 +64,10 @@ int setup()
     }
 
     /* $HOME/.pwstore */
-    const char *store_path = get_store_path();
+    store_path = get_store_path();
 
     /* gpg key fingerprint */
-    const char *gpg_fpr = get_gpg_fpr();
+    gpg_fpr = get_gpg_fpr();
 
     /* Check allocation */
     if (!store_path || !gpg_fpr) {

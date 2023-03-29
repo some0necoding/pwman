@@ -14,14 +14,11 @@
 #include <unistd.h>
 #include <string.h>
 
-/*----------CONSTANTS-DEFINITION-START----------*/
 
+#define LINE_SIZE 1024
 #define BUFSIZE 64
 #define TOKEN_DELIM " \t\r\n\a"
 
-/*-----------CONSTANTS-DEFINITION-END-----------*/
-
-/*----------FUNCTIONS-DEFINITION-START----------*/
 
 void welcome_message();
 void start(void);
@@ -30,7 +27,6 @@ int execute(char **args) ;
 int split_line(char *line, char **tokens, size_t tokens_size);
 int num_commands(void);
 
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 // array of command names
 char *command_names[] = {
@@ -52,14 +48,13 @@ int (*command_addr[]) (char **) = {
     &psm_exit
 };
 
-/*-------------GLOBAL-VARIABLES-END-------------*/
 
 int main(int argc, char const *argv[])
 {
     const char *config_file = get_config_path();
 
     if (!config_file) {
-        perror("psm: allocation error");
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         return -1;
     }
 
@@ -95,7 +90,7 @@ void start(void)
 */
 void welcome_message() 
 {
-    char *start_txt = "WELCOME TO PWMAN!\n"
+    const char *start_txt = "WELCOME TO PWMAN!\n"
                         "\tdigit \"help\" for help\n"
                         "\tdigit \"exit\" to exit pwman";
 
@@ -111,16 +106,16 @@ void welcome_message()
 */
 int loop()
 {
-    size_t line_size = 1024;
-    size_t args_size = BUFSIZE;
-
-    char *line = (char *) malloc(line_size);
-    char **args = (char **) malloc(args_size);
+    char *line = NULL;
+    char **args = NULL;
 
     int ret_code = -1;
+    
+	line = (char *) malloc(LINE_SIZE);
+    args = (char **) malloc(BUFSIZE);
 
     if (!line | !args) {
-        perror("psm: allocation error");
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -130,14 +125,14 @@ int loop()
         printf("> ");
 
         /* Read the user input */
-        if (read_line(&line, line_size) != 0) {
-            perror("psm: allocation error");
+        if (!(line = read_line())) {
+            fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
             goto ret;
         }
 
         /* Split the input in tokens (command name + arg1 + arg2 + ...) */
-        if (split_line(line, args, args_size) != 0) {
-            perror("psm: allocation error");
+        if (split_line(line, args, BUFSIZE) != 0) {
+            fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
             goto ret;
         }
 
@@ -150,8 +145,8 @@ int loop()
     ret_code = 0;
 
 ret:
-    line ? free(line) : 0;
-    args ? free(args) : 0;
+    if (line) free(line);
+    if (args) free(args);
     return ret_code;
 }
 
@@ -200,7 +195,7 @@ int split_line(char *line, char **tokens, size_t tokens_size)
             tokens = realloc(tokens, sizeof(char *) * tokens_size);
             
             if (!tokens) {
-                perror("psm: allocation error\n");
+                fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
                 return -1;
             }
         }

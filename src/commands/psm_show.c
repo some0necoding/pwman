@@ -32,11 +32,14 @@ int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW
 */ 
 int psm_show(char **args)
 {
-    const char *PATH = psm_getenv("PATH");
-	const char *file_path;
+	const char *file_path = NULL;
+    const char *PATH = NULL;
+
     int ret_code = -1;
 
-    if (!PATH) {
+    PATH = psm_getenv("PATH");
+    
+	if (!PATH) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }    
@@ -71,9 +74,14 @@ ret:
 */
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
-    char *file_name = basename((char *) path);
+    char *file_name = NULL;
+	char *indent = NULL;
 
-    int ret_code = -1;
+	int ret_code = -1;
+    
+	size_t indentation = ftwbuf->level * 4; 
+	
+	file_name = basename((char *) path);
 
     if (!file_name) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
@@ -89,11 +97,8 @@ int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW
         goto ret;
     }
 
-    /* Every indentation level equals 4 spaces */
-	size_t indentation = ftwbuf->level * 4; 
-
     //char *fmt_name = (char *) malloc(sizeof(char) * (indentation + strlen(FMT_TOK) + strlen(file_name) + 1));
-	char *indent = (char *) malloc(sizeof(char) * (indentation + 1));
+	indent = (char *) malloc(sizeof(char) * (indentation + 1));
 
     if (/*!fmt_name ||*/ !indent) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
@@ -112,7 +117,7 @@ int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW
 
 ret:
     //fmt_name ? free(fmt_name) : 0;
-	if (indent) free(indent);
     if (file_name) free((char *) file_name);
+	if (indent) free(indent);
     return ret_code;
 }

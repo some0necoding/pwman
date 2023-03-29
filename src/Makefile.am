@@ -39,4 +39,6 @@ pwman_init_SOURCES = pwman-init.c \
 					 utils/input.c \
 					 utils/input.h \
 					 utils/console.c \
-					 utils/console.h
+					 utils/console.h \
+					 utils/path.c \
+					 utils/path.h
