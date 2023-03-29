@@ -2,9 +2,9 @@
 #define PATH_UTIL
 
 /* Builds {root}/{rel_path} */
-int build_path(char **root, char *rel_path);
+const char *build_path(const char *root, const char *rel_path);
 
 /* Adds extention ext to fname */
-char *add_ext(char *fname, const char *ext);
+const char *add_ext(const char *fname, const char *ext);
 
 #endif
