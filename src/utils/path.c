@@ -7,7 +7,7 @@
 /*
     This function builds a path in the format:
         
-        root/{rel_path}
+	{root}/{rel_path}
 */
 const char *build_path(const char *root, const char *rel_path) 
 {

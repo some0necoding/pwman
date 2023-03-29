@@ -1,5 +1,6 @@
 #include "./fio.h"
 #include "./config.h"
+#include "./path.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,16 +28,8 @@ const char *get_config_path()
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		return NULL;
 	}
-   
-	char *path = malloc(sizeof(char) * (strlen(home) + 1 + strlen(CONFIG_PATH) + 1));
-
-	if (!path) {
-		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-		if (home) free((char *) home);
-		return NULL;
-	}
-
-	sprintf(path, "%s/%s", home, CONFIG_PATH);
+  
+	const char *path = build_path(home, CONFIG_PATH);
 
 	if (home) free((char *) home);
     return path;
@@ -123,7 +116,6 @@ ret:
 */
 const char *psm_getenv(const char *key) 
 {
-    int rlen;
     const char *config_file = get_config_path();
     char *pair = (char *) malloc(sizeof(char));
 
@@ -140,14 +132,14 @@ const char *psm_getenv(const char *key)
     }
     
     // reads the file line by line until the key matches
-    while (!(rlen = freadline(file, &pair, sizeof(char *)) < 0) && ((strncmp(pair, key, strlen(key))) != 0));
+    while ((pair = freadline(file)) && (strncmp(pair, key, strlen(key))) != 0);
 
-    if (rlen == EOF || strcmp(pair, "") == 0) {		// NOT FOUND
-        fprintf(stderr, "psm:%s:%d: environment variable %s not found\n", __FILE__, __LINE__, key); 
-        goto ret; 
-    } else if (rlen < 0) {							// ERROR
+	if (!pair) {							// ERROR
         fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
         goto ret;
+	} else if (strcmp(pair, "") == 0) {		// NOT FOUND
+        fprintf(stderr, "psm:%s:%d: environment variable %s not found\n", __FILE__, __LINE__, key); 
+        goto ret; 
     }
 
 	// else if FOUND
@@ -160,7 +152,7 @@ const char *psm_getenv(const char *key)
     }
         
 ret:
-    if (config_file) free((char *) config_file); 
+    if (config_file) free((char *) config_file);
     if (pair) free(pair);
     if (file) fclose(file);
     return value;
