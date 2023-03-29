@@ -10,12 +10,10 @@
 
 #define CONFIG_PATH ".config/pwman.conf"
 
-/*----------FUNCTIONS-DEFINITION-START----------*/
 
 const char *build_pair(const char *key, const char *value);
 const char *get_value(char *pair);
 
-/*-----------FUNCTIONS-DEFINITION-END-----------*/
 
 /*
     This function returns configuration file path 
@@ -23,7 +21,34 @@ const char *get_value(char *pair);
 */
 const char *get_config_path() 
 {
-	char *tmp_home = getenv("HOME");
+	const char *home = get_home();
+	
+	if (!home) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		return NULL;
+	}
+   
+	char *path = malloc(sizeof(char) * (strlen(home) + 1 + strlen(CONFIG_PATH) + 1));
+
+	if (!path) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		if (home) free((char *) home);
+		return NULL;
+	}
+
+	sprintf(path, "%s/%s", home, CONFIG_PATH);
+
+	if (home) free((char *) home);
+    return path;
+}
+
+
+/*
+	Get home directory of current user.
+*/
+const char *get_home() 
+{
+	const char *tmp_home = getenv("HOME");	
 
 	if (!tmp_home) {
 		fprintf(stderr, "cannot find $HOME environment variable");
@@ -39,19 +64,9 @@ const char *get_config_path()
 	
 	strcpy(home, tmp_home);
 
-    char *path = malloc(sizeof(char) * (strlen(home) + 1 + strlen(CONFIG_PATH) + 1));
-
-	if (!path) {
-		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-		free(home);
-		return NULL;
-	}
-
-	sprintf(path, "%s/%s", home, CONFIG_PATH);
-
-	free(home);
-    return path;
+	return home;
 }
+
 
 /*
     This function add an environment variable in
@@ -100,6 +115,7 @@ ret:
 	if (config_file) free((char *) config_file);
     return ret_val;
 }
+
 
 /*
     This function returns the value mapped by
@@ -150,6 +166,7 @@ ret:
     return value;
 }
 
+
 /*
     This function returns a string containing
     a pair of format "key=value".
@@ -167,6 +184,7 @@ const char *build_pair(const char *key, const char *value)
 
     return pair;
 }
+
 
 /*
     This function returns the string following 

@@ -11,32 +11,19 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#define CONFIG_PATH "$HOME/.config/pwman.conf"
+#define DB_NAME ".pwstore"
 
-/* ---------- FUNCTIONS DEFINITION START ---------- */
 
 int setup();
-char *get_path();
-char *get_gpg_id();
-
-/* ----------- FUNCTIONS DEFINITION END ----------- */
-
-
-/*
-	To check if X11 is running:
-
-	if (!getenv("DISPLAY")) {
-		fprintf(stderr, "missing X11 display, have you forgotten something?\n");
-		exit(1);
-	}
-
-*/
+int check_X11();
+const char *get_store_path();
+const char *get_gpg_fpr();
 
 
 int main(int argc, char const *argv[]) 
 {
     if (setup() != 0) {
-        perror("psm: setup error");
+        fprintf(stderr, "psm:%s:%d: setup error", __FILE__, __LINE__);
         return -1;
     }
 
@@ -50,14 +37,17 @@ int main(int argc, char const *argv[])
 */
 int setup()
 {
-    char *path = NULL;
-    char *gpg_id = NULL;
+    int ret_code = -1;
+	
+	if (check_X11() != 0) {
+		fprintf(stderr, "missing needed X11 display\n");
+		goto ret;
+	}
+
     const char *config_file = get_config_path();
 
-    int ret_code = -1;
-
     if (!config_file) {
-        perror("psm: allocation error");
+        fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -69,33 +59,33 @@ int setup()
     }
 
     /* $HOME/.pwstore */
-    path = get_path();
+    const char *store_path = get_store_path();
 
     /* gpg key fingerprint */
-    gpg_id = get_gpg_id();
+    const char *gpg_fpr = get_gpg_fpr();
 
     /* Check allocation */
-    if (!path || !gpg_id) {
-      perror("psm: allocation error");
+    if (!store_path || !gpg_fpr) {
+      fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
       goto ret;
     }
 
 	struct stat st = {0};
 
     /* Create directory in path location with 700 permissions if it does not exist */
-    if ((stat(path, &st) == -1) && (mkdir(path, 0700) != 0)) {
-        perror("psm: I/O error");
+    if ((stat(store_path, &st) == -1) && (mkdir(store_path, 0700) != 0)) {
+        fprintf(stderr, "psm:%s:%d: I/O error", __FILE__, __LINE__);
         goto ret;
     }
 
 	/* Add PATH environment variable */
-    if (psm_putenv("PATH", path) != 0) {
+    if (psm_putenv("PATH", store_path) != 0) {
         fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
         goto ret;
     }
 
 	/* Add GPG_ID environment variable */
-    if (psm_putenv("GPG_ID", gpg_id) != 0) {
+    if (psm_putenv("GPG_ID", gpg_fpr) != 0) {
         fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
         goto ret;
     }
@@ -103,42 +93,48 @@ int setup()
 	ret_code = 0;
 
 ret:
-	if (path) free(path);
+	if (store_path) free((char *) store_path);
 	if (config_file) free((char *) config_file);
-    if (gpg_id) free(gpg_id);
+    if (gpg_fpr) free((char *) gpg_fpr);
     return ret_code;
+}
+
+/*
+	Check if X11 is running
+*/
+int check_X11() 
+{
+	if (!getenv("DISPLAY")) 
+		return -1;
+
+	return 0;
 }
 
 /*
     This function returns PATH in the format 
     "PATH=$HOME/.pwstore".
 */
-char *get_path() 
+const char *get_store_path() 
 {
-    char *home_dir;
-    char *db_name = ".pwstore";
-    char *path;
+	const char *home = get_home();
 
-    /* Get $HOME */
-    if ((home_dir = getenv("HOME"))) {
-        home_dir = getpwuid(getuid())->pw_dir;
-    } else {
-        perror("psm: $HOME not found");
-        return NULL;
-    }
-
-    path = calloc(strlen(home_dir) + 1 + strlen(db_name) + 1, sizeof(char));
+	if (!home) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		return NULL;
+	}
+    
+	char *path = (char *) malloc(sizeof(char) * (strlen(home) + 1 + strlen(DB_NAME) + 1));
 
     if (!path) {
-        perror("psm: allocation error");
-        return NULL;
+        fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
+		if (home) free((char *) home);
+		return NULL;
     }
 
     /* Build $HOME/.pwstore */
-    strcpy(path, home_dir);
-    strcat(path, "/");
-    strcat(path, db_name);
+	sprintf(path, "%s/%s", home, DB_NAME);
 
+	if (home) free((char *) home);
     return path;
 }
 
@@ -147,7 +143,7 @@ char *get_path()
     available gpg keys for encryption and
     returns its fingerprint.
 */
-char *get_gpg_id() 
+const char *get_gpg_fpr() 
 {
     gpgme_key_t key;
 
@@ -159,7 +155,7 @@ char *get_gpg_id()
 
     /* Check allocation */
     if (!keys) {
-        fprintf(stderr, "psm: allocation error\n");
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         return NULL;
     }
 
@@ -181,7 +177,7 @@ char *get_gpg_id()
 	char *ret_key = (char *) malloc(sizeof(char *) * (strlen(keys[user_input - 1]->fpr) + 1));
 	strcpy(ret_key, keys[user_input - 1]->fpr);
 
-	free(keys);
+	if (keys) free(keys);
 
     /* Returning key fingerprint */
     return ret_key;

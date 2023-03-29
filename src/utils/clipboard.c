@@ -4,6 +4,7 @@
 #include <string.h>
 #include <X11/Xlib.h>
 
+
 int XCopy(Atom selection, unsigned char *text, size_t size);
 
 Display *display;
