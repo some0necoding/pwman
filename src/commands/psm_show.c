@@ -1,21 +1,20 @@
 #include "./psm_show.h"
 #include "../utils/config.h"
 #include "../utils/path.h"
-#include <stddef.h>
 
 
 // this define needs to remain here (i.e. before including ftw.h)
 #define _XOPEN_SOURCE 500
 
 
-#include <stdio.h>
 #include <ftw.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <libgen.h>
-#include <sys/stat.h>
 #include <errno.h>
-
+#include <sys/stat.h>
     
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
 

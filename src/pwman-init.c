@@ -12,12 +12,9 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#define DB_NAME ".pwstore"
-
 
 int setup();
 int check_X11();
-const char *get_store_path();
 const char *get_gpg_fpr();
 
 
@@ -113,30 +110,6 @@ int check_X11()
 		return -1;
 
 	return 0;
-}
-
-/*
-    This function returns PATH in the format 
-    "PATH=$HOME/.pwstore".
-*/
-const char *get_store_path() 
-{
-	const char *home = get_home();
-
-	if (!home) {
-		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-		return NULL;
-	}
-    
-	const char *path = build_path(home, DB_NAME);
-
-	if (!path) {
-		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-		return NULL;
-	}
-
-	if (home) free((char *) home);
-    return path;
 }
 
 /*

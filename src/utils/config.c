@@ -11,6 +11,7 @@
 
 
 #define CONFIG_PATH ".config/pwman.conf"
+#define DB_NAME ".pwstore"
 
 
 const char *build_pair(const char *key, const char *value);
@@ -31,6 +32,31 @@ const char *get_config_path()
 	}
   
 	const char *path = build_path(home, CONFIG_PATH);
+
+	if (!path) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		return NULL;
+	}
+
+	if (home) free((char *) home);
+    return path;
+}
+
+
+/*
+    This function returns PATH in the format 
+    "PATH=$HOME/.pwstore".
+*/
+const char *get_store_path() 
+{
+	const char *home = get_home();
+
+	if (!home) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		return NULL;
+	}
+    
+	const char *path = build_path(home, DB_NAME);
 
 	if (!path) {
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
