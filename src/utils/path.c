@@ -1,4 +1,4 @@
-#include "./path.h"
+#include "path.h"
 #include "config.h"
 
 #include <asm-generic/errno-base.h>
@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <dirent.h>
 

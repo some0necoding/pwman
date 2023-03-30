@@ -1,4 +1,4 @@
-#include "./psm_show.h"
+#include "psm_show.h"
 #include "../utils/config.h"
 #include "../utils/path.h"
 
@@ -7,7 +7,6 @@
 #define _XOPEN_SOURCE 500
 
 
-#include <ftw.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -15,6 +14,7 @@
 #include <libgen.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <ftw.h>
     
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
 
