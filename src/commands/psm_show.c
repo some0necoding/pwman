@@ -17,6 +17,7 @@
 #include <ftw.h>
     
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf);
+const char *get_basename(const char *path);
 
 
 /*
@@ -70,20 +71,27 @@ ret:
 */
 int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
-	// TODO: write a get_basename function to pass a copy of path to it.
-    char *base_name = basename((char *) path);
+	size_t indentation = 0;
+
+	if (ftwbuf->level > 0) {
+		indentation = (ftwbuf->level - 1) * 4;
+	}
+    
+	const char *base_name = get_basename(path);
+
+	char *indent = (char *) malloc(indentation + 1);
 	char *file_name = NULL;
-	char *indent = NULL;
 
 	int ret_code = -1;
 
-	size_t indentation = (ftwbuf->level - 1) * 4; 
-
-    if (!base_name) {
+    if (!base_name || !indent) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
    
+    memset(indent, ' ', indentation);
+	indent[indentation] = '\0';
+
 	file_name = (char *) rm_ext(base_name, "gpg");
 
 	if (!file_name) {
@@ -98,21 +106,39 @@ int print_file(const char *path, const struct stat *sb, int typeflag, struct FTW
         goto ret;
     }
     
-	indent = (char *) malloc(sizeof(char) * indentation);
-
-    if (!indent) {
-        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-        goto ret; 
-    }
-
-    memset(indent, ' ', indentation);
-
 	printf("%s|---%s\n", indent, file_name);
 
     ret_code = 0;
 
 ret:
+	if (base_name) free((char *) base_name);
     if (file_name) free(file_name);
 	if (indent) free(indent);
     return ret_code;
+}
+
+const char *get_basename(const char *path)
+{
+	char *path_copy = (char *) malloc(strlen(path) + 1);
+
+	if (!path_copy) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		return NULL;
+	}
+
+	strcpy(path_copy, path);
+
+	const char *tmp_base_name = basename((char *) path_copy);
+	char *base_name = (char *) malloc(strlen(tmp_base_name) + 1);
+
+	if (!base_name) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		if (path_copy) free((char *) path_copy);
+		return NULL;
+	}
+
+	strcpy(base_name, tmp_base_name);
+
+	if (path_copy) free(path_copy);
+	return base_name;
 }
