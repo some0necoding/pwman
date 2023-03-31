@@ -21,6 +21,7 @@ int psm_rm(char **args)
     const char *file_name = NULL; 
 	const char *file_path = NULL;
     const char *PATH = NULL;
+	const char *dir_name = NULL;
     
 	int ret_code = -1;
 
@@ -56,7 +57,12 @@ int psm_rm(char **args)
     printf("Do you really want to permanently delete \"%s\" [y/N]:", file_path);
     int user_input = getchar();
 
-    /* Delete file */
+	if (!(dir_name = get_dirname(file_path))) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+        goto ret;
+	}
+    
+	/* Delete file */
     if (user_input == 'y' || user_input == 'Y') {
         if (remove(file_path) != 0) {
             fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
@@ -64,11 +70,17 @@ int psm_rm(char **args)
         }
     }
 
+	if (psm_rmdir(dir_name) != 0) {
+		fprintf(stderr, "psm:%s:%d: cannot delete directory %s\n", __FILE__, __LINE__, dir_name);
+		goto ret;
+	}
+
     ret_code = 0;
 
 ret:
     if (file_name) free((char *) file_name);
 	if (file_path) free((char *) file_path);
+	if (dir_name) free((char *) dir_name);
     if (PATH) free((char *) PATH);
     return ret_code;
 }

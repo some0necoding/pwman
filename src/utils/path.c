@@ -1,7 +1,6 @@
 #include "path.h"
 #include "config.h"
 
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -16,6 +15,8 @@
 #define BUFSIZE 32
 
 
+int cmplen(const void *a, const void *b);
+int is_parentdir(const char *path_1, const char *path_2);
 const char **get_dirs(const char *path); 
 const char **splitstr(const char *path, const char *delim);
 size_t arrlen(void **arr);
@@ -144,6 +145,79 @@ ret:
 	if (store_dir) closedir(store_dir);
 	return ret_code;
 }
+
+/*
+	This function recursively call rmdir to delete all
+	empty sbdirectories of a relative tree under STORE_PATH.
+*/
+int psm_rmdir(const char *relative_path)
+{
+	const char *PATH = get_store_path();
+	const char **dirs = NULL;
+	const char *dir = NULL;
+
+	int pos = 0;
+	int ret_code = -1;
+
+	if (!PATH) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		goto ret;
+	}
+
+	if (!(dirs = get_dirs(relative_path))) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		goto ret;
+	}
+
+	qsort(dirs, arrlen((void **) dirs), sizeof(char *), cmplen);
+
+	dir = dirs[pos++];
+	while (dir) {
+
+		if (!is_parentdir(dir, PATH) && rmdir(dir) != 0 && errno != EEXIST && errno != ENOTEMPTY) {
+			fprintf(stderr, "psm:%s:%d: I/O error: %s (%d)\n", __FILE__, __LINE__, strerror(errno), errno);
+			printf("%s\n", dir);
+			goto ret;
+		}
+
+		dir = dirs[pos++];
+	}
+
+	ret_code = 0;
+
+ret:
+	if (PATH) free((char *) PATH);
+	if (dirs) free(dirs);
+	if (dir) free((char *) dir);
+	return ret_code;
+}
+
+
+/*
+	This function compares the length of strings.
+*/
+int cmplen(const void *a, const void *b)
+{
+	return strlen(*(char * const *)b) - strlen(*(char * const *)a);
+}
+
+
+/*
+	This function checks if path_1 is parentdir of path_2.
+
+	Example:
+		is_parentdir("/foo/boo", "/foo") -> 0 (i.e. false)
+		is_parentdir("/foo", "/foo/boo") -> 1 (i.e. true)
+*/
+int is_parentdir(const char *path_1, const char *path_2)
+{
+	if (strncmp(path_1, path_2, strlen(path_1)) <= 0) {
+		return 1;
+	}
+
+	return 0;
+}
+
 
 const char **get_dirs(const char *path) 
 {

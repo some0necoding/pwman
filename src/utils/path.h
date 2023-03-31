@@ -13,6 +13,9 @@ const char *rm_ext(const char *fname, const char* ext);
 /* Recursively call mkdirat on all directories of path */
 int psm_mkdir(const char *relative_path);
 
+/* Recursively call rmdir on all directories of path */
+int psm_rmdir(const char *relative_path);
+
 /* Returns dirname from path */
 const char *get_dirname(const char *path);
 
