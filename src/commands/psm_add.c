@@ -3,6 +3,7 @@
 #include "../utils/config.h"
 #include "../utils/crypto.h"
 #include "../utils/path.h"
+#include "../utils/fio.h"
 
 #include <errno.h>
 #include <libgen.h>
@@ -11,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 
 const char *get_dirname(const char *path);
@@ -87,6 +89,12 @@ int psm_add(char **args)
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
+
+	if (access(file_path, F_OK) == 0) {
+		fprintf(stdout, "file %s already exists\n", file_path);
+		ret_code = 0;
+		goto ret;
+	}
 
 	if (!(dir_name = get_dirname(file_path))) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
