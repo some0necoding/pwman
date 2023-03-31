@@ -31,23 +31,20 @@
 */
 int psm_get(char **args)
 {
-    const char *file_name = NULL;
+	const char *PATH = psm_getenv("PATH");
+    const char *GPG_ID = psm_getenv("GPG_ID");
+    const char *file_name = add_ext(args[1], "gpg");
 	const char *file_path = NULL;
-	const char *PATH = NULL;
-    const char *GPG_ID = NULL;
 	const char *cyphertext = NULL;
     
-	char *plaintext = (char *) malloc(sizeof(char) * BUFSIZE);
+	char *plaintext = (char *) malloc(BUFSIZE);
 
     size_t rlen;
     int ret_code = -1;
 
     pthread_t thread_id;
 
-	PATH = psm_getenv("PATH");
-    GPG_ID = psm_getenv("GPG_ID");
-    
-	if (!PATH || !GPG_ID || !cyphertext || !plaintext) {
+	if (!PATH || !GPG_ID || !file_name || !plaintext) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
@@ -56,13 +53,6 @@ int psm_get(char **args)
     if (!args[1]) {
         printf("You missed an argument\n"
                         "\tSyntax: get [FILE]\n");
-        goto ret;
-    }
-
-    file_name = add_ext(args[1], "gpg");
-
-    if (!file_name) {
-        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;
     }
 
@@ -84,7 +74,6 @@ int psm_get(char **args)
         goto ret;
     } 
 
-	// TODO: this gpg_decrypt function could be revised.
     int err = gpg_decrypt(cyphertext, GPG_ID, &plaintext, BUFSIZE);
 
     if (err == 0) {
@@ -105,11 +94,10 @@ int psm_get(char **args)
     ret_code = 0;
 
 ret:
-    if (file_name) free((char *) file_name);
-    if (file_path) free((char *) file_path);
     if (PATH) free((char *) PATH);
     if (GPG_ID) free((char *) GPG_ID);
+    if (file_name) free((char *) file_name);
+    if (file_path) free((char *) file_path);
     if (cyphertext) free((char *) cyphertext);
-    if (plaintext) free(plaintext);
     return ret_code;  
 }

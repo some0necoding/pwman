@@ -285,13 +285,13 @@ gpgme_key_t *gpg_get_keys()
 gpgme_error_t passphrase_cb(void *opaque, const char *uid_hint, const char *passphrase_info, int last_was_bad, int fd)
 {
     int rlen;
-    char *pass = (char *) malloc(sizeof(char) * BUF_SIZE);
+    char *pass;
     int offset = 0;
 
     printf("Enter passphrase for openpgp key \n\t%s: ", uid_hint);
 
     /* Read pass with echo disabled (from input_aquisition.h) */
-    if (read_line_s(&pass, BUF_SIZE) != 0) {
+    if (!(pass = read_line_s())) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         return -1;   
     }
@@ -381,6 +381,8 @@ const char *data_to_buffer(gpgme_data_t dh)
 
         last_index += rlen;
     }
+
+	buffer[last_index] = '\0';
 
     /* 
         Reset read position to the beginning so that dh can be used as input
