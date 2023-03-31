@@ -12,6 +12,9 @@
 #include <dirent.h>
 
 
+#define BUFSIZE 32
+
+
 const char **get_dirs(const char *path); 
 const char **splitstr(const char *path, const char *delim);
 size_t arrlen(void **arr);
@@ -86,7 +89,7 @@ const char *rm_ext(const char *fname, const char* ext)
 	This function recursively call mkdir to create all
 	sbdirectories of a relative tree under STORE_PATH.
 */
-int psm_mkdir(const char *relative_path, mode_t mode)
+int psm_mkdir(const char *relative_path)
 {
 	const char *PATH = get_store_path();
 	const char **dirs = NULL;
@@ -110,7 +113,7 @@ int psm_mkdir(const char *relative_path, mode_t mode)
 		goto ret;
 	}
 
-	if ((store_fd = dirfd(store_dir)) != 0) {
+	if ((store_fd = dirfd(store_dir)) < 0) {
 		fprintf(stderr, "psm:%s:%d: I/O error: %s (%d)\n", __FILE__, __LINE__, strerror(errno), errno);
 		goto ret;
 	}
@@ -123,7 +126,7 @@ int psm_mkdir(const char *relative_path, mode_t mode)
 	dir = dirs[pos++];
 	while (dir) {
 		
-		if (mkdirat(store_fd, dir, mode) != 0 && errno != EEXIST) {
+		if (mkdirat(store_fd, dir, 0700) != 0 && errno != EEXIST) {
 			fprintf(stderr, "psm:%s:%d: I/O error: %s (%d)\n", __FILE__, __LINE__, strerror(errno), errno);
 			goto ret;
 		}
@@ -143,37 +146,54 @@ ret:
 
 const char **get_dirs(const char *path) 
 {
+	size_t bufsize = BUFSIZE;
 	const char **dir_names = splitstr(path, "/");
 	const char *dir_name = NULL;
 	
-	char *current_path = "";
+	char *current_path = (char *) malloc(sizeof(char) * bufsize);
 	
-	char **dirs = (char **) malloc(sizeof(char) * (arrlen((void **) dir_names) + 1));
+	char **dirs = (char **) malloc(sizeof(char *) * (arrlen((void **) dir_names) + 1));
 	char **ret_val = NULL;
 
 	int pos = 0;
 
-	if (!dir_names || !dirs) {
+	if (!dir_names || !dirs || !current_path) {
 		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 		goto ret;	
 	}
 
+	current_path[0] = '\0';
+	
 	dir_name = dir_names[pos];
 	while (dir_name) {
 
-		sprintf(current_path, "%s/%s", current_path, dir_name);	
-		
-		char *rel_path = (char *) malloc(sizeof(char) * (strlen(current_path) + 1));
+		char *rel_path = (char *) malloc(sizeof(char) * (strlen(current_path) + 1 + strlen(dir_name) + 1));
+
+		sprintf(rel_path, "%s/%s", current_path, dir_name);	
 	
 		if (!rel_path) {
 			fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 			goto ret;	
 		}
 
-		strcpy(rel_path, current_path);
+		if (strlen(rel_path) >= strlen(current_path)) {
+			
+			bufsize += BUFSIZE;
+			
+			current_path = (char *) realloc(current_path, (sizeof(char) * bufsize));
+
+			if (!current_path) {
+				fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+				goto ret;
+			}
+		
+		}
+		
+		strcpy(current_path, rel_path);
 
 		dirs[pos++] = rel_path;
 		dir_name = dir_names[pos];
+	
 	}
 
 	dirs[pos] = NULL;
@@ -182,7 +202,7 @@ const char **get_dirs(const char *path)
 ret:
 	if (dir_names) free(dir_names);
 	if (dir_name) free((char *) dir_name);
-	if (dirs) free(dirs);
+	if (current_path) free(current_path);
 	return (const char **) ret_val;
 }
 
@@ -208,28 +228,30 @@ const char **splitstr(const char *path, const char *delim)
 	tmp_token = strtok(path_copy, delim);
 	while (tmp_token) {
 
-		char *token = (char *) malloc(sizeof(char) * (strlen(token) + 1));
+		char *token = (char *) malloc(sizeof(char) * (strlen(tmp_token) + 1));
 
 		if (!token) {
 			fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 			goto ret;	
 		}
-
+		
 		strcpy(token, tmp_token);
 		tokens[pos++] = token;
 
 		if (pos >= (tokslen - 1)) {
 
-			tokens = (char **) realloc(tokens, ++tokslen);
+			tokens = (char **) realloc(tokens, (sizeof(char *) * ++tokslen));
 
 			if (!tokens) {
 				fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
 				goto ret;	
 			}
 		}
+
+		tmp_token = strtok(NULL, delim);
 	}
 
-	tokens[tokslen] = NULL;
+	tokens[pos] = NULL;
 	ret_val = tokens;
 
 ret:

@@ -99,7 +99,7 @@ int psm_add(char **args)
         goto ret;
     }
 
-	if (psm_mkdir(dir_name, 0700) != 0) {
+	if (psm_mkdir(dir_name) != 0) {
 		fprintf(stderr, "psm:%s:%d: cannot create directory %s\n", __FILE__, __LINE__, dir_name);
 		goto ret;
 	}
