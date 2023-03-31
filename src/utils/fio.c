@@ -42,7 +42,6 @@ ret:
     return ret_code;
 }
 
-
 /*
     This function returns all bytes of a stream
 */
@@ -100,8 +99,10 @@ ret:
 char *freadline(FILE *file) 
 {
 	char *line = (char *) malloc(sizeof(char) * MAX_LINE_LENGTH);
-    char c;
-    int pos = 0;
+    
+	char c;
+    
+	int pos = 0;
 
     if (!file || !line) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
