@@ -15,9 +15,6 @@
 #include <unistd.h>
 
 
-const char *get_dirname(const char *path);
-
-
 /*
     This function adds a new file to PATH encrypting it using
     public gpg key of id GPG_ID.
@@ -36,7 +33,7 @@ int psm_add(char **args)
     const char *PATH = NULL;
     const char *GPG_ID = NULL; 
     const char *cyphertext = NULL;
-	const char *dir_name;
+	const char *dir_name = NULL;
 
 	char *plaintext = (char *) malloc(sizeof(char));
 
@@ -136,42 +133,8 @@ ret:
     if (PATH) free((char *) PATH);
     if (GPG_ID) free((char *) GPG_ID);
     if (cyphertext) free((char *) cyphertext);
+	if (dir_name) free((char *) dir_name);
     if (plaintext) free(plaintext);
     if (file) fclose(file);
     return ret_code;
-}
-
-const char *get_dirname(const char *path)
-{
-	char *path_copy = (char *) malloc(sizeof(char) * (strlen(path) + 1));
-	char *tmp_dir_name = NULL;
-	char *dir_name = NULL;
-	char *ret_val = NULL;
-
-	if (!path_copy) {
-        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-        goto ret;
-	}
-
-	strcpy(path_copy, path);
-
-	if (!(tmp_dir_name = dirname(path_copy))) {
-        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-        goto ret;
-	}
-
-	dir_name = (char *) malloc(sizeof(char) * (strlen(tmp_dir_name) + 1));
-
-	if (!dir_name) {
-        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-        goto ret;
-	}
-
-	strcpy(dir_name, tmp_dir_name);
-
-	ret_val = dir_name;
-
-ret:
-	if (path_copy) free(path_copy);
-	return ret_val;
 }
