@@ -2,9 +2,11 @@
 #include "../utils/config.h"
 #include "../utils/path.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 /*
     This function removes a file from PATH.
@@ -64,8 +66,13 @@ int psm_rm(char **args)
     
 	/* Delete file */
     if (user_input == 'y' || user_input == 'Y') {
-        if (remove(file_path) != 0) {
-            fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
+
+		int ret = unlink(file_path);
+
+		if (ret != 0 && (errno == EISDIR || errno == ENOENT)) {
+			fprintf(stdout, "%s is not a valid file\n", file_path);
+		} else if (ret != 0 && errno != EISDIR) {
+            fprintf(stderr, "psm:%s:%d: I/O error: %s (%d)\n", __FILE__, __LINE__, strerror(errno), errno);
             goto ret;
         }
     }
