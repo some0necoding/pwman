@@ -152,7 +152,7 @@ int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize)
 	}
 
     /* Initialize input buffer. */
-    if ((err = gpgme_data_new_from_mem(&in,cypher, strlen(cypher), 0))) {
+    if ((err = gpgme_data_new_from_mem(&in, cypher, strlen(cypher), 0))) {
 		fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, gpgme_strsource(err), gpgme_strerror(err));
 		goto ret;	
 	}
