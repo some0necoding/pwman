@@ -6,6 +6,7 @@
 
 
 int XCopy(Atom selection, unsigned char *text, size_t size);
+int rm_trailing_space_if_present(char *text);
 
 Display *display;
 Window window;
@@ -29,9 +30,20 @@ int save_in_clipboard(unsigned char *text)
 
     Atom selection = XInternAtom(display, "CLIPBOARD", 0);
 
+	rm_trailing_space_if_present((char *) text);
+
     XCopy(selection, text, strlen((char *) text));
 
     return 0;
+}
+
+int rm_trailing_space_if_present(char *text)
+{
+	if (text[strlen(text) - 1] == '\n') {
+		text[strlen(text) - 1] = '\0';
+	}
+
+	return 0;
 }
 
 int XCopy(Atom selection, unsigned char *text, size_t size)
