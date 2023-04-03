@@ -5,11 +5,10 @@
 <!-- links and badges here -->
 
 # TODO
- - configure.sh: check that X11 is running
- - pwman-init.c: create password store directory, choose gpg key and put 
-				 everything in a config file. The config file should be 
-				 placed under $HOME/.config or $HOME/.{appname} if the 
-				 former does not exist.
+ - pwman-init.c: check that X11 is running, create password store directory, 
+				 choose gpg key and put everything in a config file. The config 
+				 file should be placed under $HOME/.config or $HOME/.{appname} 
+				 if the former does not exist.
 
  All of the above can be condesed into pwman.c
 
