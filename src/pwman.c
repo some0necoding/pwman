@@ -18,7 +18,9 @@
 #define LINE_SIZE 1024
 #define BUFSIZE 64
 #define TOKEN_DELIM " \t\r\n\a"
-
+#define WELCOME_MESSAGE "WELCOME TO PWMAN!\n" \
+                        "\tdigit \"help\" for help\n" \
+                        "\tdigit \"exit\" to exit pwman"
 
 void welcome_message();
 void start(void);
@@ -76,25 +78,12 @@ int main(int argc, char const *argv[])
 */
 void start(void) 
 {
-    welcome_message();
- 
+	printf("%s\n", WELCOME_MESSAGE);
+
     /* Starting shell loop */
     if (loop() != 0) {
         exit(EXIT_FAILURE);
     }
-}
-
-/*
-    This function prints a welcome message
-    at start.
-*/
-void welcome_message() 
-{
-    const char *start_txt = "WELCOME TO PWMAN!\n"
-                        "\tdigit \"help\" for help\n"
-                        "\tdigit \"exit\" to exit pwman";
-
-    printf("%s\n", start_txt);
 }
 
 /*
