@@ -1,6 +1,7 @@
 #include "./utils/input.h"
 #include "./utils/fio.h"
 #include "./utils/config.h"
+#include "./utils/init.h"
 
 #include "./commands/psm_show.h"
 #include "./commands/psm_add.h"
@@ -55,22 +56,25 @@ int main(int argc, char const *argv[])
 {
     const char *config_file = get_config_path();
 
+	int ret_code = -1;
+
     if (!config_file) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-        return -1;
+		goto ret; 
+	}
+
+    if (access(config_file, F_OK) != 0 && init() != 0) {
+		fprintf(stderr, "psm:%s:%d: error while pwman setup\n", __FILE__, __LINE__);
+		goto ret;	
     }
 
-    if (access(config_file, F_OK) != 0) {
-        printf("You have to run \"pwman-init\" before\n");
-        free((char *) config_file);
-        return 0;
-    }
+    start();		// starting the "shell"
 
-    /* starting the "shell" */
-    start();
+	ret_code = 0;
 
-    free((char *) config_file);
-    return 0;
+ret:
+    if (config_file) free((char *) config_file);
+    return ret_code;
 }
 
 /*

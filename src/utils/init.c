@@ -1,75 +1,54 @@
-#include "./utils/config.h"
-#include "./utils/crypto.h"
-#include "./utils/path.h"
+#include "config.h"
+#include "crypto.h"
+#include "path.h"
 
 #include <gpgme.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <pwd.h>
+//#include <pwd.h>
 #include <sys/stat.h>
-#include <errno.h>
-#include <sys/types.h>
+//#include <errno.h>
+//#include <sys/types.h>
 
 
-int setup();
+#define BUFSIZE 16
+
 int check_X11();
 const char *get_gpg_fpr();
 
-
-int main(int argc, char const *argv[]) 
-{
-    if (setup() != 0) {
-        fprintf(stderr, "psm:%s:%d: setup error", __FILE__, __LINE__);
-        return -1;
-    }
-
-    return 0;
-}
 
 /*
     This function sets up a config file containing path 
     to password store directory and gpg key fingerprint 
     that will be used.
 */
-int setup()
+int init()
 {
-    const char *config_file = NULL;
-    const char *store_path = NULL;
-    const char *gpg_fpr = NULL;
+    const char *config_file = get_config_path();	// $HOME/.config/pwman.conf
+    const char *store_path = get_store_path();		// $HOME/.pwstore
+    const char *gpg_fpr = get_gpg_fpr();			// gpg key fingerprint
     
 	int ret_code = -1;
-	
+
+	/* Check allocation */
+    if (!config_file || !store_path || !gpg_fpr) {
+        fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
+        goto ret;
+    }
+
+	/* Check if X11 is running */
 	if (check_X11() != 0) {
 		fprintf(stderr, "missing needed X11 display\n");
 		goto ret;
 	}
 
-    config_file = get_config_path();
-
-    if (!config_file) {
-        fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
-        goto ret;
-    }
-
-    /* Set up if CONFIG_FILE does no exist */
+	// TODO: maybe this should be removed now
+    /* Set up if config_file does not exist */
     if (access(config_file, F_OK) == 0) {
-        printf("pwman has already been initialized: %s file exists\n", config_file);
         ret_code = 0;
         goto ret;
-    }
-
-    /* $HOME/.pwstore */
-    store_path = get_store_path();
-
-    /* gpg key fingerprint */
-    gpg_fpr = get_gpg_fpr();
-
-    /* Check allocation */
-    if (!store_path || !gpg_fpr) {
-      fprintf(stderr, "psm:%s:%d: allocation error", __FILE__, __LINE__);
-      goto ret;
     }
 
 	struct stat st = {0};
@@ -117,42 +96,57 @@ int check_X11()
     available gpg keys for encryption and
     returns its fingerprint.
 */
-const char *get_gpg_fpr() 
+const char *get_gpg_fpr()
 {
     gpgme_key_t key;
-
-    /* Get available keys */
     gpgme_key_t *keys = gpg_get_keys();
 
-    int user_input;
+	char *user_input = (char *) malloc(BUFSIZE);
+	char *tmp_fpr, *fpr;
+	char *ret_val = NULL;
+
+	int key_pos;
     int pos = 0;
 
     /* Check allocation */
-    if (!keys) {
+    if (!keys || !user_input) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-        return NULL;
-    }
+		goto ret; 
+	}
 
     /* List secret keys */
-    while ((key = keys[pos])) {
-
-        char *fpr = key->fpr;
-        char *uid = key->uids->uid;
-
-        printf("%d. ID: %s\n"
-                        "\t%s\n", (pos + 1), fpr, uid);         
-
-        pos++;
+    while ((key = keys[pos++])) {
+        printf("[%d]: %s\n"
+               "\t%s\n", pos, key->fpr, key->uids->uid);
     }
 
     printf("Choose the gpg key you want to use to encrypt your passwords: ");
-    scanf("%d", &user_input);
 
-	char *ret_key = (char *) malloc(sizeof(char *) * (strlen(keys[user_input - 1]->fpr) + 1));
-	strcpy(ret_key, keys[user_input - 1]->fpr);
+	if (!(fgets(user_input, BUFSIZE, stdin))) {
+		fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
+		goto ret;	
+	}
 
+	if ((key_pos = atoi(user_input)) == 0) {
+		printf("%s is not a valid input\n", user_input);
+		goto ret;	
+	}
+	
+	tmp_fpr = keys[key_pos - 1]->fpr;
+
+	fpr = (char *) malloc(strlen(tmp_fpr) + 1);
+
+	if (!fpr) {
+		fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+		goto ret;	
+	}
+
+	strcpy(fpr, tmp_fpr);
+
+	ret_val = fpr;
+
+ret:
+	if (user_input) free(user_input);
 	if (keys) free(keys);
-
-    /* Returning key fingerprint */
-    return ret_key;
+    return ret_val;
 }
