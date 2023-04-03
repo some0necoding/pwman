@@ -22,10 +22,11 @@ uses gpg asymmetric encryption.
 ## Installation
 
 ```
-$ ./configure && make
-$ make install
-$ pwman-init                // only on first run
-$ pwman
+$ autoconf --install
+$ ./configure 
+$ make && make install
+$ ./pwman-init                // only on first run
+$ ./pwman
 ```
 
 Note that [gpgme](https://gnupg.org/software/gpgme/index.html) needs to be installed on your system for pwman to run (it's usually installed by default).
