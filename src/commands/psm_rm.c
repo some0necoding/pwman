@@ -55,7 +55,8 @@ int psm_rm(char **args)
     printf("Do you really want to permanently delete \"%s\" [y/N]: ", file_path);
 
 	if (!(fgets(user_input, BUFSIZE, stdin))) {
-
+		fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
+		goto ret;
 	}
 
 	if (!(dir_name = get_dirname(file_path))) {
