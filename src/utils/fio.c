@@ -56,17 +56,18 @@ char *fgetall(const char *path)
 
 	char c;
 
-    if (!file || !content) {
+	int pos = 0;
+    
+	if (!file || !content) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret; 
     }
 
-	int pos = 0;
 	while ((c = fgetc(file)) != EOF) {
-	
+
 		content[pos++] = c;
 
-		if (pos >= bufsize) {
+		if (pos >= (bufsize - 1)) {
 	
 			bufsize += MAX_LINE_LENGTH;
 			content = realloc(content, bufsize);
@@ -78,6 +79,8 @@ char *fgetall(const char *path)
 		}
 	}
 
+	content[pos++] = '\0';
+
 	if (c == EOF && ferror(file)) {
 		fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
 		goto ret;
@@ -88,6 +91,46 @@ char *fgetall(const char *path)
 ret:    
     if (file) fclose(file);
     return ret_val;
+}
+
+
+/*
+	This function gets n bytes from file stored at 
+	path. Returns NULL on I/O error or if n is greater
+	than file size.
+*/
+char *fgetn(const char *path, size_t n)
+{
+	FILE *file = fopen(path, "rb");
+
+	char *content = (char *) malloc(n);
+	char *ret_val = NULL;
+
+	char c;
+
+	int pos = 0;
+
+	if (!content || !file) {
+        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
+        goto ret; 
+	}
+
+	for (int i = 0; i < n; i++) {
+		c = fgetc(file);
+		content[pos++] = c;
+	}
+
+	if (c == EOF && ferror(file)) {
+		fprintf(stderr, "psm:%s:%d: I/O error\n", __FILE__, __LINE__);
+		goto ret;
+	}
+
+	ret_val = content;
+		
+ret:
+	if (file) fclose(file);
+	if (content) free(content);
+	return ret_val;
 }
 
 
