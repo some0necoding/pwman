@@ -16,11 +16,9 @@ uses gpg asymmetric encryption.
 $ autoconf --install
 $ ./configure 
 $ make && sudo make install
-$ ./pwman-init                // only on first run
-$ ./pwman
 ```
 
-Note that [gpgme](https://gnupg.org/software/gpgme/index.html) needs to be installed on your system for pwman to run (it's usually installed by default).
+Note that [gpgme](https://gnupg.org/software/gpgme/index.html) and [libsodium](https://doc.libsodium.org/) need to be installed on your system for pwman to run.
 
 ## Lincense
 
