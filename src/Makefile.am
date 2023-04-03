@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-bin_PROGRAMS = pwman pwman-init
+bin_PROGRAMS = pwman
 pwman_SOURCES = pwman.c \
 				utils/clipboard.c \
 				utils/clipboard.h \
@@ -12,6 +12,8 @@ pwman_SOURCES = pwman.c \
 				utils/crypto.h \
 				utils/fio.c \
 				utils/fio.h \
+				utils/init.c \
+				utils/init.h \
 				utils/input.c \
 				utils/input.h \
 				utils/path.c \
@@ -28,17 +30,3 @@ pwman_SOURCES = pwman.c \
 				commands/psm_rm.h \
 				commands/psm_show.c \
 				commands/psm_show.h
-				
-pwman_init_SOURCES = pwman-init.c \
-					 utils/config.c \
-					 utils/config.h \
-					 utils/crypto.c \
-					 utils/crypto.h \
-					 utils/fio.c \
-					 utils/fio.h \
-					 utils/input.c \
-					 utils/input.h \
-					 utils/console.c \
-					 utils/console.h \
-					 utils/path.c \
-					 utils/path.h
