@@ -68,10 +68,14 @@ int psm_get(char **args)
 
     int err = gpg_decrypt_file(file_path, GPG_ID, &plaintext, BUFSIZE);
 
-    if (err == 0) {
+    if (err == 1) {
         printf("Incorrect passphrase\n");
         ret_code = 0;
         goto ret;
+	} else if (err == 2) {
+		printf("%s is not a valid gpg file\n", file_path);
+		ret_code = 0;
+		goto ret;
     } else if (err == -1) {
         fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
         goto ret;

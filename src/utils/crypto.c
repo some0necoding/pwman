@@ -166,8 +166,11 @@ int gpg_decrypt_file(const char *filename, const char *fpr, char **buf, size_t b
     err = gpgme_op_decrypt(ctx, in, out);
 
     if (gpgme_err_code(err) == GPG_ERR_BAD_PASSPHRASE) {
-		ret_code = 0;	
-		goto ret; 
+		ret_code = 1;	
+		goto ret;
+	} else if (gpgme_err_code(err) == GPG_ERR_NO_DATA) {
+		ret_code = 2;
+		goto ret;
 	} else if (err) {
 		fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, gpgme_strsource(err), gpgme_strerror(err));
 		goto ret; 
@@ -197,7 +200,7 @@ int gpg_decrypt_file(const char *filename, const char *fpr, char **buf, size_t b
 
     strcpy(*buf, plaintext);
 
-	ret_code = 1;
+	ret_code = 0;
 
 ret:
     gpgme_data_release(in);
