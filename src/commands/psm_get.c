@@ -35,11 +35,9 @@ int psm_get(char **args)
     const char *GPG_ID = psm_getenv("GPG_ID");
     const char *file_name = add_ext(args[1], "gpg");
 	const char *file_path = NULL;
-	const char *cyphertext = NULL;
     
 	char *plaintext = (char *) malloc(BUFSIZE);
 
-    size_t rlen;
     int ret_code = -1;
 
     pthread_t thread_id;
@@ -68,13 +66,7 @@ int psm_get(char **args)
         goto ret;
     }
 
-    /* Retrieve cyphertext */
-    if (!(cyphertext = fgetall(file_path))) {
-        fprintf(stderr, "psm:%s:%d: allocation error\n", __FILE__, __LINE__);
-        goto ret;
-    } 
-
-    int err = gpg_decrypt(cyphertext, GPG_ID, &plaintext, BUFSIZE);
+    int err = gpg_decrypt_file(file_path, GPG_ID, &plaintext, BUFSIZE);
 
     if (err == 0) {
         printf("Incorrect passphrase\n");
@@ -98,6 +90,5 @@ ret:
     if (GPG_ID) free((char *) GPG_ID);
     if (file_name) free((char *) file_name);
     if (file_path) free((char *) file_path);
-    if (cyphertext) free((char *) cyphertext);
     return ret_code;  
 }
