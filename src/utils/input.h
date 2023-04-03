@@ -1,5 +1,5 @@
-#ifndef INPUT_ACQUISITION
-#define INPUT_ACQUISITION
+#ifndef INPUT_UTIL
+#define INPUT_UTIL
 
 #include <stdio.h>
 

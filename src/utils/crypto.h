@@ -1,5 +1,5 @@
-#ifndef CRYPTOGRAPHY
-#define CRYPTOGRAPHY
+#ifndef CRYPTO_UTIL
+#define CRYPTO_UTIL
 
 #include <gpgme.h>
 #include <stddef.h>

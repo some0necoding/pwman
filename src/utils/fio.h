@@ -1,5 +1,5 @@
-#ifndef STDIO_PLUS_PLUS
-#define STDIO_PLUS_PLUS
+#ifndef FIO_UTIL
+#define FIO_UTIL
 
 #include <stddef.h>
 #include <stdio.h>

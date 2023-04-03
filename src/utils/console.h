@@ -1,5 +1,5 @@
-#ifndef TERMIOS_PLUS_PLUS
-#define TERMIOS_PLUS_PLUS
+#ifndef CONSOLE_UTIL
+#define CONSOLE_UTIL
 
 #include <termios.h>
 

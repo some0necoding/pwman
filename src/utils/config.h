@@ -1,5 +1,5 @@
-#ifndef ENVIRONMENT_VARIABLES
-#define ENVIRONMENT_VARIABLES
+#ifndef CONFIG_UTIL
+#define CONFIG_UTIL 
 
 const char *get_config_path();
 const char *get_store_path();
