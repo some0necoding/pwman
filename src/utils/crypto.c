@@ -102,11 +102,11 @@ const char *gpg_encrypt(const char *plain, const char *fpr)
 
 
 /*
-    This function decrypts buffer cypher using openpgp private
-    key of fingerprint fpg. It returns a statically allocated
-    buffer containing plaintext.
+    This function decrypts file using openpgp private key of 
+	fingerprint fpg. It returns a statically allocated buffer 
+	containing plaintext.
 */
-int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize) 
+int gpg_decrypt_file(const char *filename, const char *fpr, char **buf, size_t bufsize) 
 {
     gpgme_ctx_t ctx;
     gpgme_error_t err;
@@ -151,8 +151,7 @@ int gpg_decrypt(const char *cypher, const char *fpr, char **buf, size_t bufsize)
 		goto ret;	
 	}
 
-    /* Initialize input buffer. */
-    if ((err = gpgme_data_new_from_mem(&in, cypher, strlen(cypher), 0))) {
+    if ((err = gpgme_data_new_from_file(&in, filename, 1))) {
 		fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, gpgme_strsource(err), gpgme_strerror(err));
 		goto ret;	
 	}
