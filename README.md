@@ -18,6 +18,11 @@ $ ./configure
 $ make && sudo make install
 ```
 
+And to run:
+```
+$ pwman
+```
+
 Note that [gpgme](https://gnupg.org/software/gpgme/index.html) and [libsodium](https://doc.libsodium.org/) need to be installed on your system for pwman to run.
 
 ## Lincense
