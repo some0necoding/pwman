@@ -23,7 +23,7 @@ uses gpg asymmetric encryption.
 ```
 $ autoconf --install
 $ ./configure 
-$ make && make install
+$ make && sudo make install
 $ ./pwman-init                // only on first run
 $ ./pwman
 ```
