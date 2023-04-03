@@ -4,14 +4,6 @@
 
 <!-- links and badges here -->
 
-# TODO
- - pwman-init.c: check that X11 is running, create password store directory, 
-				 choose gpg key and put everything in a config file. The config 
-				 file should be placed under $HOME/.config or $HOME/.{appname} 
-				 if the former does not exist.
-
- All of the above can be condesed into pwman.c
-
 ## Overview
 
 Pwman (pronounced *pi-double-u-man*) is a command line password manager written in C. Its simpler purpose is 
