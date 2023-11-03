@@ -13,7 +13,6 @@ uses gpg asymmetric encryption.
 ## Installation
 
 ```
-$ autoconf --install
 $ ./configure 
 $ make && sudo make install
 ```
