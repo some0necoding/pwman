@@ -1,9 +1,9 @@
 /* dynstr.c - dynamic strings
  *
- * Implementation of dynamic strings. This means not having anymore to check 
+ * Implementation of dynamic strings. This means not having anymore to check
  * for size and calling realloc.
  *
- * All dynstr objects must be created using one function between dynstr_new() 
+ * All dynstr objects must be created using one function between dynstr_new()
  * and dynstr_news() and must be freed with dynstr_free() after their use.
  */
 
@@ -16,7 +16,7 @@
 #include "estring.h"
 
 /**
- * Returns a new empty dynstr object of capacity cap. This function is meant 
+ * Returns a new empty dynstr object of capacity cap. This function is meant
  * for internal use only.
  */
 static dynstr* __dynstr_new(size_t cap) {
