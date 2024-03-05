@@ -14,7 +14,7 @@ stamp-h1
 configure
 configure~
 
-!src/utils/config.h
+!src/config/config.h
 
 **/.dirstamp
 **/.deps/
