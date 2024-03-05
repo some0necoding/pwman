@@ -9,8 +9,8 @@
  * representation of a dynstr header
  */
 typedef struct {
-    size_t __capacity;      // dynstr capacity
-    size_t __length;        // dynstr length
+    size_t __capacity;
+    size_t __length;
     char* __end;            // dynstr end (i.e. first null byte)
 } __dynstr_header;
 
@@ -19,25 +19,60 @@ typedef struct {
  */
 typedef struct {
     __dynstr_header header;
-    char *s;
+    char *s;                // actual string
 } dynstr;
 
-/** create a new empty dynstr */
+/**
+ * Create a new empty dynstr object. The returned object is dynamically
+ * allocated and should be freed by the client using dynstr_free().
+ *
+ * @return a new empty dynstr object
+ */
 dynstr* dynstr_new();
 
-/** create a new dynstr ontaining s */
+/**
+ * Create a new dynstr object containing s. The returned object is dynamically
+ * allocated and should be freed by the client using dynstr_free().
+ *
+ * @param s     null-terminated string that will be represented by the returned
+ *              dynstr.
+ * @return a new dynstr containing s if successful, NULL on allocation error
+ */
 dynstr* dynstr_news(char const s[static 1]);
 
-/** append str to the end of d */
+/**
+ * Append a string to the end of a dynstr.
+ *
+ * @param d     dynstr object
+ * @param s     null-terminated string to append after d
+ * @return 0 on success, -1 on allocation error.
+ */
 int dynstr_append(dynstr d[static 1], char const str[static 1]);
 
-/** append up to n bytes of str to the end of d */
+/**
+ * Append up to n bytes of a string to the end of a dynstr.
+ *
+ * @param d     dynstr object
+ * @param s     null-terminated string to append after d
+ * @param n     bytes of s to copy after d
+ * @return 0 on success, -1 on allocation error.
+ */
 int dynstr_appendn(dynstr d[static 1], char const s[static 1], size_t n);
 
-/** return a copy of the string represented by d */
+/**
+ * Create a copy of the string represented by a dynstr.
+ *
+ * @param d     dynstr object
+ * @return a null-terminated and heap-allocated string representing d if
+ *              successful, NULL otherwise.
+ */
 char const* dynstr_tostr(dynstr d[static 1]);
 
-/** free a dynstr object */
+/**
+ * Free a dynstr object.
+ *
+ * @param d     dynstr object
+ */
 void dynstr_free(dynstr d[static 1]);
 
 #endif
