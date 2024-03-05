@@ -14,6 +14,7 @@ stamp-h1
 configure
 configure~
 
+compile_flags.txt
 !src/config/config.h
 
 **/.dirstamp
