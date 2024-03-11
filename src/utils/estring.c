@@ -1,19 +1,23 @@
 /* estring.c - efficient string related functions */
 
+#include <bits/pthreadtypes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "estring.h"
 
-char *estrcat(char dstend[static 1], char const src[static 1]) {
-    while ((*dstend++ = *src++));
-    return --dstend;
+char *estrcat(char dst[static 1], char const src[static 1]) {
+    while (*dst) dst++;
+    while ((*dst++ = *src++));
+    return --dst;
 }
 
-char *estrncat(char dstend[static 1], char const src[static 1], size_t n) {
-    while (n-- && (*dstend++ = *src++));
-    *dstend = 0;
-    return dstend;
+char *estrncat(char dst[static 1], char const src[static 1], size_t n) {
+    while (*dst) dst++;
+    while (n-- && (*dst++ = *src++));
+    if (++n) dst--;
+    *dst = '\0';
+    return dst;
 }
 
 char *esstrcat(char dst[static 1], char dstend[static 1], size_t dsize[static 1], 
@@ -23,7 +27,8 @@ char *esstrcat(char dst[static 1], char dstend[static 1], size_t dsize[static 1]
 
 char *esstrncat(char *dst[static 1], char dstend[static 1], size_t dsize[static 1], 
         char const src[static 1], size_t n) {
-    size_t len = (dstend - *dst) + n;
+    size_t dstend_offset = dstend - *dst;
+    size_t len = dstend_offset + n;
     if (len >= *dsize) {
         while (len >= *dsize)
             *dsize *= 2;
@@ -32,6 +37,7 @@ char *esstrncat(char *dst[static 1], char dstend[static 1], size_t dsize[static 
             fprintf(stderr, "%s:%d: allocation error\n", __FILE__, __LINE__);
             return NULL;
         }
+        dstend = *dst + dstend_offset;
     }
     return estrncat(dstend, src, n);
 }

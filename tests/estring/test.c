@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../src/utils/estring.h"
+#include <sys/param.h>
+#include "../../src/utils/estring.h"
 
 void estrcat_test();
 void estrncat_test();
@@ -31,11 +32,14 @@ int main() {
 
 void estrncat_test() {
     const char TEST_STR[] = "ciao";
+    size_t const TEST_STR_LEN = strlen(TEST_STR);
+    size_t const OVERFLOW_OFFSET = 10;
 
     // test every possible length up to strlen(TEST_STR) both with prefix and 
     // empty string.
-    for (int i = 0; i <= strlen(TEST_STR); i++) {
+    for (uint i = 0; i <= TEST_STR_LEN + OVERFLOW_OFFSET; i++) {
         char const* src = strdup(TEST_STR);
+        uint i_cap = MIN(i, TEST_STR_LEN); 
 
         // prefixed dst
         char nempty_dst[10] = "test";
@@ -43,21 +47,23 @@ void estrncat_test() {
         char* nempty_end = estrncat(nempty_dst + prefixlen, src, i);
 
         // empty dst
-        char empty_dst[5];
+        char empty_dst[5] = "";
         char* empty_end = estrncat(empty_dst, src, i);
 
         // check that src remains unmodified
         assert(strcmp(src, TEST_STR) == 0); 
 
         // check that characters match
-        for (int j = 0; j < i; j++) {
-            assert(src[j] == empty_dst[j]);
-            assert(src[j] == nempty_dst[prefixlen + j]);
-        }
+        assert(strncmp(src, empty_dst, i_cap) == 0);
+        assert(strncmp(src, nempty_dst + prefixlen, i_cap) == 0);
 
-        // check that end is actually the first null byte after dst
-        assert(empty_end == (empty_dst + i) && *empty_end == 0);
-        assert(nempty_end == (nempty_dst + prefixlen + i) && *nempty_end == 0);
+        // check that dst is null-terminated
+        assert(*empty_end  == 0);
+        assert(*nempty_end == 0);
+
+        // check that end is actually at the end of dst
+        assert(empty_end  == (empty_dst + i_cap));
+        assert(nempty_end == (nempty_dst + prefixlen + i_cap));
     }
 }
 
@@ -72,30 +78,35 @@ void estrcat_test() {
     char* nempty_end = estrcat(nempty_dst + prefixlen, src);
 
     // empty dst
-    char empty_dst[5];
+    char empty_dst[5] = "";
     char* empty_end = estrcat(empty_dst, src);
 
     // check that src remains unmodified
     assert(strcmp(src, TEST_STR) == 0); 
 
     // check that characters match
-    for (int j = 0; j < srclen; j++) {
-        assert(src[j] == empty_dst[j]);
-        assert(src[j] == nempty_dst[prefixlen + j]);
-    }
+    assert(strcmp(src, empty_dst) == 0);
+    assert(strcmp(src, nempty_dst + prefixlen) == 0);
 
-    // check that end is actually the first null byte after dst
-    assert(empty_end == (empty_dst + srclen) && *empty_end == 0);
-    assert(nempty_end == (nempty_dst + prefixlen + srclen) && *nempty_end == 0);
+    // check that dst is null-terminated
+    assert(*empty_end  == 0);
+    assert(*nempty_end == 0);
+
+    // check that end is actually at the end of dst
+    assert(empty_end  == (empty_dst + srclen));
+    assert(nempty_end == (nempty_dst + prefixlen + srclen));
 }
 
 void esstrncat_test() {
     const char TEST_STR[] = "longerstring";
+    size_t const TEST_STR_LEN = strlen(TEST_STR);
+    size_t const OVERFLOW_OFFSET = 10;
 
     // test without overflow every possible length up to strlen(TEST_STR) both 
     // with prefix and empty string.
-    for (int i = 0; i <= strlen(TEST_STR); i++) {
+    for (int i = 0; i <= TEST_STR_LEN + OVERFLOW_OFFSET; i++) {
         char const* src = strdup(TEST_STR);
+        uint i_cap = MIN(i, TEST_STR_LEN); 
 
         // prefixed dst
         size_t SIZE = 32;
@@ -112,20 +123,23 @@ void esstrncat_test() {
         assert(strcmp(src, TEST_STR) == 0); 
 
         // check that characters match
-        for (int j = 0; j < i; j++) {
-            assert(src[j] == empty_dst[j]);
-            assert(src[j] == nempty_dst[prefixlen + j]);
-        }
+        assert(strncmp(src, empty_dst, i_cap) == 0);
+        assert(strncmp(src, nempty_dst + prefixlen, i_cap) == 0);
 
-        // check that end is actually the first null byte after dst
-        assert(empty_end == (empty_dst + i) && *empty_end == 0);
-        assert(nempty_end == (nempty_dst + prefixlen + i) && *nempty_end == 0);
+        // check that dst is null-terminated
+        assert(*empty_end  == 0);
+        assert(*nempty_end == 0);
+
+        // check that end is actually at the end of dst
+        assert(empty_end  == (empty_dst  + i_cap));
+        assert(nempty_end == (nempty_dst + prefixlen + i_cap));
     }
 
     // test with overflow every possible length up to strlen(TEST_STR) both 
     // with prefix and empty string.
-    for (int i = 0; i <= strlen(TEST_STR); i++) {
+    for (int i = 0; i <= TEST_STR_LEN + OVERFLOW_OFFSET; i++) {
         char const* src = strdup(TEST_STR);
+        uint i_cap = MIN(i, TEST_STR_LEN); 
 
         // prefixed dst
         size_t SIZE = 8;
@@ -142,14 +156,16 @@ void esstrncat_test() {
         assert(strcmp(src, TEST_STR) == 0); 
 
         // check that characters match
-        for (int j = 0; j < i; j++) {
-            assert(src[j] == empty_dst[j]);
-            assert(src[j] == nempty_dst[prefixlen + j]);
-        }
+        assert(strncmp(src, empty_dst, i_cap) == 0);
+        assert(strncmp(src, nempty_dst + prefixlen, i_cap) == 0);
 
-        // check that end is actually the first null byte after dst
-        assert(empty_end == (empty_dst + i) && *empty_end == 0);
-        assert(nempty_end == (nempty_dst + prefixlen + i) && *nempty_end == 0);
+        // check that dst is null-terminated
+        assert(*empty_end  == 0);
+        assert(*nempty_end == 0);
+
+        // check that end is actually at the end of dst
+        assert(empty_end  == (empty_dst  + i_cap));
+        assert(nempty_end == (nempty_dst + prefixlen + i_cap));
     }
 }
 
@@ -185,16 +201,20 @@ void esstrcat_test() {
     assert(strcmp(src, TEST_STR) == 0); 
 
     // check that characters match
-    for (int j = 0; j < srclen; j++) {
-        assert(src[j] == empty_nof_dst[j]);
-        assert(src[j] == empty_of_dst[j]);
-        assert(src[j] == nempty_nof_dst[prefixlen + j]);
-        assert(src[j] == nempty_of_dst[prefixlen + j]);
-    }
+    assert(strcmp(src, empty_nof_dst) == 0);
+    assert(strcmp(src, empty_of_dst)  == 0);
+    assert(strcmp(src, nempty_nof_dst + prefixlen) == 0);
+    assert(strcmp(src, nempty_of_dst  + prefixlen) == 0);
 
-    // check that end is actually the first null byte after dst
-    assert(empty_nof_end == (empty_nof_dst + srclen) && *empty_nof_end == 0);
-    assert(empty_of_end == (empty_of_dst + srclen) && *empty_of_end == 0);
-    assert(nempty_nof_end == (nempty_nof_dst + prefixlen + srclen) && *nempty_nof_end == 0);
-    assert(nempty_of_end == (nempty_of_dst + prefixlen + srclen) && *nempty_of_end == 0);
+    // check that dst is null-terminated
+    assert(*empty_nof_end  == 0);
+    assert(*empty_of_end   == 0);
+    assert(*nempty_nof_end == 0);
+    assert(*nempty_of_end  == 0);
+
+    // check that end is actually at the end of dst
+    assert(empty_nof_end  == (empty_nof_dst  + srclen));
+    assert(empty_of_end   == (empty_of_dst   + srclen));
+    assert(nempty_nof_end == (nempty_nof_dst + prefixlen + srclen));
+    assert(nempty_of_end  == (nempty_of_dst  + prefixlen + srclen));
 }
