@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../src/utils/dynstr.h"
+#include <sys/param.h>
+#include "../../src/utils/dynstr.h"
 
 void dynstr_new_test();
 void dynstr_news_test();
@@ -44,6 +45,7 @@ void dynstr_new_test() {
     dynstr* d = dynstr_new();
     assert(d != NULL);
     assert(d->s != NULL);
+    assert(strcmp(d->s, "") == 0);
     assert(d->header.__capacity == DEFAULT_CAP);
     assert(d->header.__length == 0);
     assert(d->header.__end == d->s);
@@ -61,49 +63,61 @@ void dynstr_news_test() {
 }
 
 void dynstr_appendn_test() {
-    char const* PREFIX = "prefix";
-    char const* SUFFIX = "suffix";
-    char* test_str_nempty = (char*) calloc(strlen(PREFIX) + strlen(SUFFIX) + 1, sizeof(char));
-    char* test_str_empty = (char*) calloc(strlen(SUFFIX) + 1, sizeof(char));
+    // strings to append
+    char const* const TEST_STRS[] = {
+        "suffix",
+        "dontknow",
+        "more difficult",
+        "that's hard bro",
+        "another one just to make sure",
+    };
+    size_t const NTEST_STRS = sizeof(TEST_STRS) / sizeof(TEST_STRS[0]);
+    size_t TOTAL_LEN = 0;
+    for (int i = 0; i < NTEST_STRS; i++)
+        TOTAL_LEN += strlen(TEST_STRS[i]);
+
+    // length of the longest test string
+    size_t MAX_LEN = 0;
+    for (int i = 0; i < NTEST_STRS; i++)
+        MAX_LEN = MAX(strlen(TEST_STRS[i]), MAX_LEN);
 
     // test all possible lengths
-    for (int i = 0; i <= strlen(SUFFIX); i++) {
+    for (int i = 0; i <= MAX_LEN; i++) {
+        char* test_str = (char*) calloc(TOTAL_LEN + 1, sizeof(char));
+        for (int j = 0; j < NTEST_STRS; j++)
+            test_str = strncat(test_str, TEST_STRS[j], i);
 
-        // test with prefix
-        snprintf(test_str_nempty, strlen(PREFIX) + i + 1, "%s%s", PREFIX, SUFFIX);
-        dynstr* d_nempty = dynstr_news(PREFIX);
-        dynstr_appendn(d_nempty, SUFFIX, i);
+        dynstr* d = dynstr_new();
+        for (int j = 0; j < NTEST_STRS; j++)
+            dynstr_appendn(d, TEST_STRS[j], i);
 
-        assert(strcmp(d_nempty->s, test_str_nempty) == 0);
-
-        // test without prefix
-        strncpy(test_str_empty, SUFFIX, i);
-        dynstr* d_empty = dynstr_new();
-        dynstr_appendn(d_empty, SUFFIX, i);
-
-        assert(strcmp(d_empty->s, test_str_empty) == 0);
+        assert(strcmp(d->s, test_str) == 0);
     }
 }
 
 void dynstr_append_test() {
-    char const* PREFIX = "prefix";
-    char const* SUFFIX = "suffix";
-    char* test_str_nempty = (char*) calloc(strlen(PREFIX) + strlen(SUFFIX) + 1, sizeof(char));
-    char* test_str_empty = (char*) calloc(strlen(SUFFIX) + 1, sizeof(char));
+    // strings to append
+    char const* const TEST_STRS[] = {
+        "suffix",
+        "dontknow",
+        "more difficult",
+        "that's hard bro",
+        "another one just to make sure",
+    };
+    size_t const NTEST_STRS = sizeof(TEST_STRS) / sizeof(TEST_STRS[0]);
+    size_t TOTAL_LEN = 0;
+    for (int i = 0; i < NTEST_STRS; i++)
+        TOTAL_LEN += strlen(TEST_STRS[i]);
 
-    // test with prefix
-    snprintf(test_str_nempty, strlen(PREFIX) + strlen(SUFFIX) + 1, "%s%s", PREFIX, SUFFIX);
-    dynstr* d_nempty = dynstr_news(PREFIX);
-    dynstr_append(d_nempty, SUFFIX);
+    char* test_str = (char*) calloc(TOTAL_LEN + 1, sizeof(char));
+    for (int j = 0; j < NTEST_STRS; j++)
+        test_str = strcat(test_str, TEST_STRS[j]);
 
-    assert(strcmp(d_nempty->s, test_str_nempty) == 0);
-
-    // test without prefix
-    strcpy(test_str_empty, SUFFIX);
     dynstr* d_empty = dynstr_new();
-    dynstr_append(d_empty, SUFFIX);
+    for (int i = 0; i < NTEST_STRS; i++)
+        dynstr_append(d_empty, TEST_STRS[i]);
 
-    assert(strcmp(d_empty->s, test_str_empty) == 0);
+    assert(strcmp(d_empty->s, test_str) == 0);
 }
 
 void dynstr_tostr_test() {

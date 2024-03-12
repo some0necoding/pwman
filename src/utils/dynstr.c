@@ -68,5 +68,8 @@ char const* dynstr_tostr(dynstr d[static 1]) {
 
 void dynstr_free(dynstr d[static 1]) {
     free(d->s);
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wfree-nonheap-object"
     free(d);
+    #pragma GCC diagnostic pop
 }
