@@ -66,7 +66,7 @@ int dynstr_appendn(dynstr d[static 1], char const s[static 1], size_t n);
  * @return a null-terminated and heap-allocated string representing d if
  *              successful, NULL otherwise.
  */
-char const* dynstr_tostr(dynstr d[static 1]);
+char* const dynstr_tostr(dynstr d[static 1]);
 
 /**
  * Free a dynstr object.

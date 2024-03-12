@@ -62,7 +62,7 @@ int dynstr_appendn(dynstr d[static 1], char const s[static 1], size_t n) {
     return 0;
 }
 
-char const* dynstr_tostr(dynstr d[static 1]) {
+char* const dynstr_tostr(dynstr d[static 1]) {
     return strdup(d->s);
 }
 
