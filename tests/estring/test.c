@@ -5,10 +5,15 @@
 #include <sys/param.h>
 #include "../../src/utils/estring.h"
 
+#define BUF_SIZE 64
+
 void estrcat_test();
 void estrncat_test();
 void esstrcat_test();
 void esstrncat_test();
+void trimr_test();
+void triml_test();
+void trim_test();
 
 int main() {
 
@@ -26,6 +31,18 @@ int main() {
 
     printf("== RUN -- esstrcat()\n");
     esstrcat_test();
+    printf("== PASS\n");
+
+    printf("== RUN -- trimr()\n");
+    trimr_test();
+    printf("== PASS\n");
+
+    printf("== RUN -- triml()\n");
+    triml_test();
+    printf("== PASS\n");
+
+    printf("== RUN -- trim()\n");
+    trim_test();
     printf("== PASS\n");
 
 }
@@ -217,4 +234,139 @@ void esstrcat_test() {
     assert(empty_of_end   == (empty_of_dst   + srclen));
     assert(nempty_nof_end == (nempty_nof_dst + prefixlen + srclen));
     assert(nempty_of_end  == (nempty_of_dst  + prefixlen + srclen));
+}
+
+void trimr_test() {
+
+    char* HEAP_TEST_STR_1 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_2 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_3 = calloc(BUF_SIZE, sizeof(char));
+
+    strcpy(HEAP_TEST_STR_1, "    string");
+    strcpy(HEAP_TEST_STR_2, "string    ");
+    strcpy(HEAP_TEST_STR_3, "    string    ");
+
+    char* const TEST_STRS[] = {
+        "    string  ",
+        "string",
+        "",
+        "  string",
+        "string    ",
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const EXPECTED[] = {
+        "    string",
+        "string",
+        "",
+        "  string",
+        "string",
+        "    string",
+        "string",
+        "    string",
+        NULL
+    };
+
+    for (int i = 0; TEST_STRS[i]; i++) {
+        char* s = strdup(TEST_STRS[i]);
+        trimr(s);
+        assert(strcmp(EXPECTED[i], s) == 0);
+    }
+
+    free(HEAP_TEST_STR_1);
+    free(HEAP_TEST_STR_2);
+    free(HEAP_TEST_STR_3);    
+}
+
+void triml_test() {
+
+    char* HEAP_TEST_STR_1 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_2 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_3 = calloc(BUF_SIZE, sizeof(char));
+
+    strcpy(HEAP_TEST_STR_1, "    string");
+    strcpy(HEAP_TEST_STR_2, "string    ");
+    strcpy(HEAP_TEST_STR_3, "    string    ");
+
+    char* const TEST_STRS[] = {
+        "    string  ",
+        "string",
+        "",
+        "  string",
+        "string    ",
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const EXPECTED[] = {
+        "string  ",
+        "string",
+        "",
+        "string",
+        "string    ",
+        "string",
+        "string    ",
+        "string    ",
+        NULL,
+    };
+
+    for (int i = 0; TEST_STRS[i]; i++) {
+        char* s = strdup(TEST_STRS[i]);
+        triml(s);
+        assert(strcmp(EXPECTED[i], s) == 0);
+    }
+
+    free(HEAP_TEST_STR_1);
+    free(HEAP_TEST_STR_2);
+    free(HEAP_TEST_STR_3);    
+}
+
+void trim_test() {
+
+    char* HEAP_TEST_STR_1 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_2 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_3 = calloc(BUF_SIZE, sizeof(char));
+
+    strcpy(HEAP_TEST_STR_1, "    string");
+    strcpy(HEAP_TEST_STR_2, "string    ");
+    strcpy(HEAP_TEST_STR_3, "    string    ");
+
+    char* const TEST_STRS[] = {
+        "    string  ",
+        "string",
+        "",
+        "  string",
+        "string    ",
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const EXPECTED[] = {
+        "string",
+        "string",
+        "",
+        "string",
+        "string",
+        "string",
+        "string",
+        "string",
+        NULL,
+    };
+
+    for (int i = 0; TEST_STRS[i]; i++) {
+        char* s = strdup(TEST_STRS[i]);
+        trim(s);
+        assert(strcmp(EXPECTED[i], s) == 0);
+    }
+
+    free(HEAP_TEST_STR_1);
+    free(HEAP_TEST_STR_2);
+    free(HEAP_TEST_STR_3);    
 }

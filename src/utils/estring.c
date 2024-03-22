@@ -1,6 +1,7 @@
 /* estring.c - efficient string related functions */
 
 #include <bits/pthreadtypes.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,4 +41,25 @@ char *esstrncat(char *dst[static 1], char dstend[static 1], size_t dsize[static 
         dstend = *dst + dstend_offset;
     }
     return estrncat(dstend, src, n);
+}
+
+void trimr(char* s) {
+    char* end = (s + strlen(s) - 1);
+    while (end >= s && isspace((unsigned char) *end)) end--;
+    *(++end) = 0;
+}
+
+void triml(char* s) {
+    char* start = s;
+    size_t offset = 0;
+    while (isspace((unsigned char) *start++)) offset++;
+    int i;
+    for (i = offset; s[i]; i++)
+        s[i - offset] = s[i];
+    s[i - offset] = 0;
+}
+
+void trim(char* s) {
+    triml(s);
+    trimr(s);
 }

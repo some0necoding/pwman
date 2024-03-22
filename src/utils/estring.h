@@ -78,4 +78,35 @@ char *esstrcat(char dst[static 1], char dstend[static 1], size_t dsize[static 1]
 char *esstrncat(char *dst[static 1], char dstend[static 1], size_t dsize[static 1],
         char const src[static 1], size_t n);
 
+
+/**
+ * trim in place all whitespace characters (i.e. the ones recognised by @ref 
+ * isspace) on the right of s.
+ *
+ * @param s a null-terminated string. It can be both statically and dynamically
+ *          allocated.
+ */
+void trimr(char* s);
+
+
+/**
+ * trim in place all whitespace characters (i.e. the ones recognised by @ref 
+ * isspace) on the left of s.
+ *
+ * @param s a null-terminated string. It can be both statically and dynamically
+ *          allocated.
+ */
+void triml(char* s);
+
+
+/**
+ * trim in place all whitespace characters (i.e. the ones recognised by @ref 
+ * isspace) on the left and on the right of s.
+ *
+ * @param s a null-terminated string. It can be both statically and dynamically
+ *          allocated.
+ */
+void trim(char* s);
+
+
 #endif
