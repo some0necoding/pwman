@@ -11,6 +11,9 @@ void estrcat_test();
 void estrncat_test();
 void esstrcat_test();
 void esstrncat_test();
+void trimcr_test();
+void trimcl_test();
+void trimc_test();
 void trimr_test();
 void triml_test();
 void trim_test();
@@ -31,6 +34,18 @@ int main() {
 
     printf("== RUN -- esstrcat()\n");
     esstrcat_test();
+    printf("== PASS\n");
+
+    printf("== RUN -- trimcr()\n");
+    trimcr_test();
+    printf("== PASS\n");
+
+    printf("== RUN -- trimcl()\n");
+    trimcl_test();
+    printf("== PASS\n");
+
+    printf("== RUN -- trimc()\n");
+    trimc_test();
     printf("== PASS\n");
 
     printf("== RUN -- trimr()\n");
@@ -236,6 +251,175 @@ void esstrcat_test() {
     assert(nempty_of_end  == (nempty_of_dst  + prefixlen + srclen));
 }
 
+void trimcr_test() {
+
+    char* HEAP_TEST_STR_1 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_2 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_3 = calloc(BUF_SIZE, sizeof(char));
+
+    strcpy(HEAP_TEST_STR_1, "xxxxstring");
+    strcpy(HEAP_TEST_STR_2, "stringxxxx");
+    strcpy(HEAP_TEST_STR_3, "xxxxstringxxxx");
+
+    char* HEAP_TEST_STRS[] = {
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const HEAP_EXPECTED[] = {
+        "xxxxstring",
+        "string",
+        "xxxxstring",
+    };
+
+    char TEST_STRS[][20] = {
+        "xxxxstringxx",
+        "string",
+        "",
+        "xxstring",
+        "stringxxxx",
+    };
+
+    char* const EXPECTED[] = {
+        "xxxxstring",
+        "string",
+        "",
+        "xxstring",
+        "string",
+    };
+
+    int const N_TEST_STRS = sizeof(TEST_STRS) / 20;
+
+    for (int i = 0; HEAP_TEST_STRS[i]; i++) {
+        trimcr(HEAP_TEST_STRS[i], 'x');
+        assert(strcmp(HEAP_EXPECTED[i], HEAP_TEST_STRS[i]) == 0);
+    }
+
+    for (int i = 0; i < N_TEST_STRS; i++) {
+        trimcr(TEST_STRS[i], 'x');
+        assert(strcmp(EXPECTED[i], TEST_STRS[i]) == 0);
+    }
+
+    free(HEAP_TEST_STR_1);
+    free(HEAP_TEST_STR_2);
+    free(HEAP_TEST_STR_3);    
+}
+
+void trimcl_test() {
+
+    char* HEAP_TEST_STR_1 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_2 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_3 = calloc(BUF_SIZE, sizeof(char));
+
+    strcpy(HEAP_TEST_STR_1, "xxxxstring");
+    strcpy(HEAP_TEST_STR_2, "stringxxxx");
+    strcpy(HEAP_TEST_STR_3, "xxxxstringxxxx");
+
+    char* HEAP_TEST_STRS[] = {
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const HEAP_EXPECTED[] = {
+        "string",
+        "stringxxxx",
+        "stringxxxx",
+    };
+
+    char TEST_STRS[][20] = {
+        "xxxxstringxx",
+        "string",
+        "",
+        "xxstring",
+        "stringxxxx",
+    };
+
+    char* const EXPECTED[] = {
+        "stringxx",
+        "string",
+        "",
+        "string",
+        "stringxxxx",
+    };
+
+    int const N_TEST_STRS = sizeof(TEST_STRS) / 20;
+
+    for (int i = 0; HEAP_TEST_STRS[i]; i++) {
+        trimcl(HEAP_TEST_STRS[i], 'x');
+        assert(strcmp(HEAP_EXPECTED[i], HEAP_TEST_STRS[i]) == 0);
+    }
+
+    for (int i = 0; i < N_TEST_STRS; i++) {
+        trimcl(TEST_STRS[i], 'x');
+        assert(strcmp(EXPECTED[i], TEST_STRS[i]) == 0);
+    }
+
+    free(HEAP_TEST_STR_1);
+    free(HEAP_TEST_STR_2);
+    free(HEAP_TEST_STR_3);    
+}
+
+void trimc_test() {
+
+    char* HEAP_TEST_STR_1 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_2 = calloc(BUF_SIZE, sizeof(char));
+    char* HEAP_TEST_STR_3 = calloc(BUF_SIZE, sizeof(char));
+
+    strcpy(HEAP_TEST_STR_1, "xxxxstring");
+    strcpy(HEAP_TEST_STR_2, "stringxxxx");
+    strcpy(HEAP_TEST_STR_3, "xxxxstringxxxx");
+
+    char* HEAP_TEST_STRS[] = {
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const HEAP_EXPECTED[] = {
+        "string",
+        "string",
+        "string",
+        NULL,
+    };
+
+    char TEST_STRS[][20] = {
+        "xxxxstringxx",
+        "string",
+        "",
+        "xxstring",
+        "stringxxxx",
+    };
+
+    char* const EXPECTED[] = {
+        "string",
+        "string",
+        "",
+        "string",
+        "string",
+    };
+
+    int const N_TEST_STRS = sizeof(TEST_STRS) / 20;
+
+    for (int i = 0; HEAP_TEST_STRS[i]; i++) {
+        trimc(HEAP_TEST_STRS[i], 'x');
+        assert(strcmp(HEAP_EXPECTED[i], HEAP_TEST_STRS[i]) == 0);
+    }
+
+    for (int i = 0; i < N_TEST_STRS; i++) {
+        trimc(TEST_STRS[i], 'x');
+        assert(strcmp(EXPECTED[i], TEST_STRS[i]) == 0);
+    }
+
+    free(HEAP_TEST_STR_1);
+    free(HEAP_TEST_STR_2);
+    free(HEAP_TEST_STR_3);    
+}
+
 void trimr_test() {
 
     char* HEAP_TEST_STR_1 = calloc(BUF_SIZE, sizeof(char));
@@ -246,16 +430,26 @@ void trimr_test() {
     strcpy(HEAP_TEST_STR_2, "string    ");
     strcpy(HEAP_TEST_STR_3, "    string    ");
 
-    char* const TEST_STRS[] = {
+    char* HEAP_TEST_STRS[] = {
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const HEAP_EXPECTED[] = {
+        "    string",
+        "string",
+        "    string",
+        NULL,
+    };
+
+    char TEST_STRS[][20] = {
         "    string  ",
         "string",
         "",
         "  string",
         "string    ",
-        HEAP_TEST_STR_1,
-        HEAP_TEST_STR_2,
-        HEAP_TEST_STR_3,
-        NULL,
     };
 
     char* const EXPECTED[] = {
@@ -264,16 +458,18 @@ void trimr_test() {
         "",
         "  string",
         "string",
-        "    string",
-        "string",
-        "    string",
-        NULL
     };
 
-    for (int i = 0; TEST_STRS[i]; i++) {
-        char* s = strdup(TEST_STRS[i]);
-        trimr(s);
-        assert(strcmp(EXPECTED[i], s) == 0);
+    int const N_TEST_STRS = sizeof(TEST_STRS) / 20;
+
+    for (int i = 0; HEAP_TEST_STRS[i]; i++) {
+        trimr(HEAP_TEST_STRS[i]);
+        assert(strcmp(HEAP_EXPECTED[i], HEAP_TEST_STRS[i]) == 0);
+    }
+
+    for (int i = 0; i < N_TEST_STRS; i++) {
+        trimr(TEST_STRS[i]);
+        assert(strcmp(EXPECTED[i], TEST_STRS[i]) == 0);
     }
 
     free(HEAP_TEST_STR_1);
@@ -291,16 +487,26 @@ void triml_test() {
     strcpy(HEAP_TEST_STR_2, "string    ");
     strcpy(HEAP_TEST_STR_3, "    string    ");
 
-    char* const TEST_STRS[] = {
+    char* HEAP_TEST_STRS[] = {
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const HEAP_EXPECTED[] = {
+        "string",
+        "string    ",
+        "string    ",
+        NULL,
+    };
+
+    char TEST_STRS[][20] = {
         "    string  ",
         "string",
         "",
         "  string",
         "string    ",
-        HEAP_TEST_STR_1,
-        HEAP_TEST_STR_2,
-        HEAP_TEST_STR_3,
-        NULL,
     };
 
     char* const EXPECTED[] = {
@@ -309,16 +515,18 @@ void triml_test() {
         "",
         "string",
         "string    ",
-        "string",
-        "string    ",
-        "string    ",
-        NULL,
     };
 
-    for (int i = 0; TEST_STRS[i]; i++) {
-        char* s = strdup(TEST_STRS[i]);
-        triml(s);
-        assert(strcmp(EXPECTED[i], s) == 0);
+    int const N_TEST_STRS = sizeof(TEST_STRS) / 20;
+
+    for (int i = 0; HEAP_TEST_STRS[i]; i++) {
+        triml(HEAP_TEST_STRS[i]);
+        assert(strcmp(HEAP_EXPECTED[i], HEAP_TEST_STRS[i]) == 0);
+    }
+
+    for (int i = 0; i < N_TEST_STRS; i++) {
+        triml(TEST_STRS[i]);
+        assert(strcmp(EXPECTED[i], TEST_STRS[i]) == 0);
     }
 
     free(HEAP_TEST_STR_1);
@@ -336,16 +544,26 @@ void trim_test() {
     strcpy(HEAP_TEST_STR_2, "string    ");
     strcpy(HEAP_TEST_STR_3, "    string    ");
 
-    char* const TEST_STRS[] = {
+    char* HEAP_TEST_STRS[] = {
+        HEAP_TEST_STR_1,
+        HEAP_TEST_STR_2,
+        HEAP_TEST_STR_3,
+        NULL,
+    };
+
+    char* const HEAP_EXPECTED[] = {
+        "string",
+        "string",
+        "string",
+        NULL,
+    };
+
+    char TEST_STRS[][20] = {
         "    string  ",
         "string",
         "",
         "  string",
         "string    ",
-        HEAP_TEST_STR_1,
-        HEAP_TEST_STR_2,
-        HEAP_TEST_STR_3,
-        NULL,
     };
 
     char* const EXPECTED[] = {
@@ -354,16 +572,18 @@ void trim_test() {
         "",
         "string",
         "string",
-        "string",
-        "string",
-        "string",
-        NULL,
     };
 
-    for (int i = 0; TEST_STRS[i]; i++) {
-        char* s = strdup(TEST_STRS[i]);
-        trim(s);
-        assert(strcmp(EXPECTED[i], s) == 0);
+    int const N_TEST_STRS = sizeof(TEST_STRS) / 20;
+
+    for (int i = 0; HEAP_TEST_STRS[i]; i++) {
+        trim(HEAP_TEST_STRS[i]);
+        assert(strcmp(HEAP_EXPECTED[i], HEAP_TEST_STRS[i]) == 0);
+    }
+
+    for (int i = 0; i < N_TEST_STRS; i++) {
+        trim(TEST_STRS[i]);
+        assert(strcmp(EXPECTED[i], TEST_STRS[i]) == 0);
     }
 
     free(HEAP_TEST_STR_1);

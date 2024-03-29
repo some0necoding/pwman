@@ -43,6 +43,28 @@ char *esstrncat(char *dst[static 1], char dstend[static 1], size_t dsize[static 
     return estrncat(dstend, src, n);
 }
 
+void trimcr(char* s, char c) {
+    char* end = (s + strlen(s) - 1);
+    while (end >= s && *end == c) end--;
+    *(++end) = 0;
+}
+
+void trimcl(char* s, char c) {
+    char* start = s;
+    char* end = (s + strlen(s) - 1);
+    size_t offset = 0;
+    while (start <= end && *start++ == c) offset++;
+    int i;
+    for (i = offset; s[i]; i++)
+        s[i - offset] = s[i];
+    s[i - offset] = 0;
+}
+
+void trimc(char* s, char c) {
+    trimcl(s, c);
+    trimcr(s, c);
+}
+
 void trimr(char* s) {
     char* end = (s + strlen(s) - 1);
     while (end >= s && isspace((unsigned char) *end)) end--;

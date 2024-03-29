@@ -10,8 +10,8 @@
 #include <stddef.h>
 
 /*
- * efficient strcat(). It copies all bytes of src right after the end of dst, 
- * then it returns a pointer to the new end of dst (first null byte). This 
+ * efficient strcat(). It copies all bytes of src right after the end of dst,
+ * then it returns a pointer to the new end of dst (first null byte). This
  * avoids having to traverse the destination string in every call.
  * More info at https://www.joelonsoftware.com/2001/12/11/back-to-basics/
  *
@@ -27,7 +27,7 @@ char *estrcat(char dst[static 1], char const src[static 1]);
 /*
  * efficient strncat(). It copies at most n bytes of src right after the end of
  * dst, followed by a null character, then it returns a pointer to the new end
- * of dst (first null byte). This avoids having to traverse the destination 
+ * of dst (first null byte). This avoids having to traverse the destination
  * string in every call.
  * More info at https://www.joelonsoftware.com/2001/12/11/back-to-basics/
  *
@@ -43,11 +43,11 @@ char *estrncat(char dst[static 1], char const src[static 1], size_t n);
 
 /*
  * efficient and safe strcat(). It copies all bytes of src right after dstend,
- * followed by a null character, then it returns a pointer to the new dstend 
- * (first null byte of dst). This avoids having to traverse the dst in 
+ * followed by a null character, then it returns a pointer to the new dstend
+ * (first null byte of dst). This avoids having to traverse the dst in
  * every call.
  * More info at https://www.joelonsoftware.com/2001/12/11/back-to-basics/
- * It also ensures that the dst buffer is large enough to contain the new 
+ * It also ensures that the dst buffer is large enough to contain the new
  * string, updating dsize accordingly.
  *
  * @param dst    null-terminated destination string
@@ -62,7 +62,7 @@ char *esstrcat(char dst[static 1], char dstend[static 1], size_t dsize[static 1]
 /*
  * efficient and safe strncat(). It copies the first n bytes of src right after
  * dstend, followed by a null character, then it returns a pointer to the new
- * dstend (first null byte of dst). This avoids having to traverse dst in 
+ * dstend (first null byte of dst). This avoids having to traverse dst in
  * every call.
  * More info at https://www.joelonsoftware.com/2001/12/11/back-to-basics/
  * It also ensures that the dst buffer is large enough to contain the new
@@ -80,7 +80,38 @@ char *esstrncat(char *dst[static 1], char dstend[static 1], size_t dsize[static 
 
 
 /**
- * trim in place all whitespace characters (i.e. the ones recognised by @ref 
+ * trim in place all occurencies of the specified character on the right of s.
+ *
+ * @param s a null-terminated string. It can be both statically and dynamically
+ *          allocated.
+ * @param c character to trim
+ */
+void trimcr(char* s, char c);
+
+
+/**
+ * trim in place all occurencies of the specified character on the left of s.
+ *
+ * @param s a null-terminated string. It can be both statically and dynamically
+ *          allocated.
+ * @param c character to trim
+ */
+void trimcl(char* s, char c);
+
+
+/**
+ * trim in place all occurencies of the specified character both on the left and
+ * on the right of s.
+ *
+ * @param s a null-terminated string. It can be both statically and dynamically
+ *          allocated.
+ * @param c character to trim
+ */
+void trimc(char* s, char c);
+
+
+/**
+ * trim in place all whitespace characters (i.e. the ones recognised by @ref
  * isspace) on the right of s.
  *
  * @param s a null-terminated string. It can be both statically and dynamically
@@ -90,7 +121,7 @@ void trimr(char* s);
 
 
 /**
- * trim in place all whitespace characters (i.e. the ones recognised by @ref 
+ * trim in place all whitespace characters (i.e. the ones recognised by @ref
  * isspace) on the left of s.
  *
  * @param s a null-terminated string. It can be both statically and dynamically
@@ -100,8 +131,8 @@ void triml(char* s);
 
 
 /**
- * trim in place all whitespace characters (i.e. the ones recognised by @ref 
- * isspace) on the left and on the right of s.
+ * trim in place all whitespace characters (i.e. the ones recognised by @ref
+ * isspace) both on the left and on the right of s.
  *
  * @param s a null-terminated string. It can be both statically and dynamically
  *          allocated.
