@@ -15,20 +15,31 @@
 
 
 /**
+ * List of data types supported by config files
+ */
+enum Types {
+    STRING,
+};
+
+
+/**
+ * This struct is used to map every variable of @ref Config to its name.
+ */
+typedef struct {
+    enum Types  type;           /**< Data type of var */
+    bool        is_required;    /**< Is a required variable */
+    char*       name;           /**< Variable name  */
+    void**      var;            /**< Pointer to a @ref Config variable */
+} VariableMapping;
+
+
+/**
  * Initialize a @ref Config object with all default values. If a variable is
  * set to NULL it means that there is no default.
  *
  * @return a @ref Config instance containing defaults
  */
 static Config* Config_init();
-
-
-/**
- * Free a @ref Config instance allocated by Config_init().
- *
- * @param config pointer to the @ref Config variable to free
- */
-static void Config_free(Config config[static 1]);
 
 
 /**
@@ -51,7 +62,7 @@ static VariableMapping** VariableMapping_init(Config* config);
  * @param config_ref    a pointer to a pointer to a variable contained inside a 
  *                      @ref Config instance
  */
-void VariableMapping_init_var(VariableMapping* v[static 1], enum Types type,
+static void VariableMapping_init_var(VariableMapping* v[static 1], enum Types type,
         char const name[static 1], void* config_ref[static 1], bool is_required);
 
 
@@ -223,7 +234,7 @@ static Config* Config_init() {
 }
 
 
-static void Config_free(Config config[static 1]) {
+void Config_free(Config config[static 1]) {
     if (config->storage) free((void*) config->storage);
     if (config->gpg_fpr) free((void*) config->gpg_fpr);
     #pragma GCC diagnostic push
@@ -248,7 +259,7 @@ static VariableMapping** VariableMapping_init(Config* config) {
 }
 
 
-void VariableMapping_init_var(VariableMapping* v[static 1], enum Types type,
+static void VariableMapping_init_var(VariableMapping* v[static 1], enum Types type,
         char const name[static 1], void* config_ref[static 1], bool is_required) {
     size_t const sname = strlen(name);
     *v = calloc(1, sizeof(VariableMapping));
